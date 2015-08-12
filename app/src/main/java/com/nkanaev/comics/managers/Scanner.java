@@ -73,7 +73,10 @@ public class Scanner extends AsyncTask<Void, Void, Void> {
         public File next() {
             File f = mFiles.pop();
             if (f.isDirectory()) {
-                mFiles.addAll(Arrays.asList(f.listFiles()));
+                File[] files = f.listFiles();
+                if (files != null) {
+                    mFiles.addAll(Arrays.asList(files));
+                }
             }
             return f;
         }

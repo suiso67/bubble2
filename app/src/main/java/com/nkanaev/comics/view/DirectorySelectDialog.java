@@ -23,13 +23,13 @@ public class DirectorySelectDialog
     private OnDirectorySelectListener mListener;
     private ListView mListView;
     private TextView mTitleTextView;
-    private File mRootDir;
+    private File mRootDir = new File("/");
     private File mCurrentDir;
     private File[] mSubdirs;
     private FileFilter mDirectoryFilter;
 
     public interface OnDirectorySelectListener {
-        public void onDirectorySelect(File file);
+        void onDirectorySelect(File file);
     }
 
     public DirectorySelectDialog(Context context) {
@@ -54,13 +54,18 @@ public class DirectorySelectDialog
     }
 
     public void setCurrentDirectory(File path) {
-        if (mCurrentDir == null) {
-            mRootDir = path;
-        }
         mCurrentDir = path;
 
-        ArrayList<File> subDirs = new ArrayList<>(Arrays.asList(mCurrentDir.listFiles(mDirectoryFilter)));
-        if (!mCurrentDir.getPath().equals(mRootDir.getPath())) {
+        File[] subs = mCurrentDir.listFiles(mDirectoryFilter);
+        ArrayList<File> subDirs = null;
+        if (subs != null) {
+            subDirs = new ArrayList<>(Arrays.asList(subs));
+        }
+        else {
+            subDirs = new ArrayList<>();
+        }
+
+        if (!mCurrentDir.getAbsolutePath().equals(mRootDir.getAbsolutePath())) {
             subDirs.add(0, mCurrentDir.getParentFile());
         }
         Collections.sort(subDirs);

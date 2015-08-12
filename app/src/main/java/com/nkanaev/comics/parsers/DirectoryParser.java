@@ -19,12 +19,15 @@ public class DirectoryParser implements Parser {
             throw new IOException("Not a directory: " + dir.getAbsolutePath());
         }
 
-        for (File f : dir.listFiles()) {
-            if (f.isDirectory()) {
-                throw new IOException("Probably not a comic directory");
-            }
-            if (Utils.isImage(f.getAbsolutePath())) {
-                mFiles.add(f);
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File f : dir.listFiles()) {
+                if (f.isDirectory()) {
+                    throw new IOException("Probably not a comic directory");
+                }
+                if (Utils.isImage(f.getAbsolutePath())) {
+                    mFiles.add(f);
+                }
             }
         }
 

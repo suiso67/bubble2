@@ -24,7 +24,7 @@ public class BrowserFragment extends Fragment
 
     private ListView mListView;
     private File mCurrentDir;
-    private File mRootDir;
+    private File mRootDir = new File("/");
     private File[] mSubdirs = new File[]{};
     private TextView mDirTextView;
 
@@ -32,12 +32,11 @@ public class BrowserFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mRootDir = Environment.getExternalStorageDirectory();
         if (savedInstanceState != null) {
             mCurrentDir = (File) savedInstanceState.getSerializable(STATE_CURRENT_DIR);
         }
         else {
-            mCurrentDir = mRootDir;
+            mCurrentDir = Environment.getExternalStorageDirectory();
         }
 
         getActivity().setTitle(R.string.menu_browser);
@@ -81,9 +80,12 @@ public class BrowserFragment extends Fragment
         if (!mCurrentDir.getAbsolutePath().equals(mRootDir.getAbsolutePath())) {
             subdirs.add(mCurrentDir.getParentFile());
         }
-        for (File f : mCurrentDir.listFiles()) {
-            if (f.isDirectory() || Utils.isArchive(f.getName())) {
-                subdirs.add(f);
+        File[] files = mCurrentDir.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isDirectory() || Utils.isArchive(f.getName())) {
+                    subdirs.add(f);
+                }
             }
         }
         Collections.sort(subdirs);
@@ -93,8 +95,7 @@ public class BrowserFragment extends Fragment
             mListView.invalidateViews();
         }
 
-        String relPath = mRootDir.toURI().relativize(mCurrentDir.toURI()).getPath();
-        mDirTextView.setText("/" + relPath);
+        mDirTextView.setText(dir.getAbsolutePath());
     }
 
     @Override
