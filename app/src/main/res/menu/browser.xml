@@ -18,6 +18,8 @@
                       android:checked="true"/>
                 <item android:id="@+id/menu_browser_filter_unread"
                       android:title="@string/menu_browser_filter_unread"/>
+                <item android:id="@+id/menu_browser_filter_reading"
+                      android:title="@string/menu_browser_filter_reading"/>
                 <item android:id="@+id/menu_browser_filter_read"
                       android:title="@string/menu_browser_filter_read"/>
             </group>
