@@ -5,8 +5,7 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/drawer_layout"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:fitsSystemWindows="true">
+        android:layout_height="fill_parent">
 
     <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
@@ -38,7 +37,7 @@
             android:background="@color/light"
             app:headerLayout="@layout/nav_header"
             app:menu="@menu/drawer"
-            app:itemTextColor="@color/text"
+            app:itemTextColor="@drawable/nav_item"
             app:itemIconTint="@drawable/nav_item"/>
 
 </android.support.v4.widget.DrawerLayout>
