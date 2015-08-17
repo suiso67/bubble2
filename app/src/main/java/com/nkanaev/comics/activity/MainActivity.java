@@ -29,7 +29,7 @@ import java.util.Comparator;
 import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
     private final static String  CURRENT_MENU_ITEM = "STATE::CURRENT_NAV_ITEM";
 
     private DrawerLayout mDrawerLayout;
@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportFragmentManager().addOnBackStackChangedListener(this);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -70,12 +71,8 @@ public class MainActivity extends AppCompatActivity {
             navigationView.getMenu().findItem(mCurrentNavItem).setChecked(true);
         }
         else {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            if (fragmentManager.getBackStackEntryCount() > 0) {
-                mDrawerToggle.setDrawerIndicatorEnabled(false);
-            }
+            onBackStackChanged();  // force-call method to ensure indicator is shown properly
             mCurrentNavItem = savedInstanceState.getInt(CURRENT_MENU_ITEM);
-
             navigationView.getMenu().findItem(mCurrentNavItem).setChecked(true);
         }
     }
@@ -120,17 +117,11 @@ public class MainActivity extends AppCompatActivity {
                 .replace(R.id.content_frame, fragment)
                 .addToBackStack(null)
                 .commit();
-
-        mDrawerToggle.setDrawerIndicatorEnabled(false);
     }
 
     private boolean popFragment() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         if (fragmentManager.getBackStackEntryCount() > 0) {
-            if (fragmentManager.getBackStackEntryCount() == 1) {
-                mDrawerToggle.setDrawerIndicatorEnabled(true);
-            }
-
             fragmentManager.popBackStack();
             return true;
         }
@@ -165,6 +156,11 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+    }
+
+    @Override
+    public void onBackStackChanged() {
+        mDrawerToggle.setDrawerIndicatorEnabled(getSupportFragmentManager().getBackStackEntryCount() == 0);
     }
 
     private LibsFragment createAboutFragment() {
