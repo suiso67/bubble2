@@ -103,7 +103,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setFragment(Fragment fragment) {
-        getSupportFragmentManager()
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        if (fragmentManager.getBackStackEntryCount() >= 1) {
+            fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        }
+
+        fragmentManager
                 .beginTransaction()
                 .replace(R.id.content_frame, fragment)
                 .commit();
