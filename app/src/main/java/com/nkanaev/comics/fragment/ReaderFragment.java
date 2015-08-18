@@ -42,6 +42,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     public static final String PARAM_HANDLER = "PARAM_HANDLER";
     public static final String PARAM_MODE = "PARAM_MODE";
 
+    public static final String STATE_FULLSCREEN = "STATE_FULLSCREEN";
+
     private ViewPager mViewPager;
     private LinearLayout mPageNavLayout;
     private SeekBar mPageSeekBar;
@@ -196,7 +198,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             setCurrentPage(mCurrentPage);
             mCurrentPage = -1;
         }
-        setFullscreen(true);
+
+        boolean fullscreen = true;
+        if (savedInstanceState != null) {
+            fullscreen = savedInstanceState.getBoolean(STATE_FULLSCREEN);
+        }
+        setFullscreen(fullscreen);
         getActivity().setTitle(mFilename);
 
         return view;
@@ -217,6 +224,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 menu.findItem(R.id.view_mode_fit_width).setChecked(true);
                 break;
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(STATE_FULLSCREEN, isFullscreen());
+        super.onSaveInstanceState(outState);
     }
 
     @Override
