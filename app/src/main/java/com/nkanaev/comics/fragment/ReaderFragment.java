@@ -7,6 +7,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.content.Context;
+import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.SparseArray;
@@ -199,11 +200,19 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             mCurrentPage = -1;
         }
 
-        boolean fullscreen = true;
         if (savedInstanceState != null) {
-            fullscreen = savedInstanceState.getBoolean(STATE_FULLSCREEN);
+            boolean fullscreen = savedInstanceState.getBoolean(STATE_FULLSCREEN);
+            setFullscreen(fullscreen);
         }
-        setFullscreen(fullscreen);
+        else {
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    setFullscreen(true);
+                }
+            }, 100);
+        }
         getActivity().setTitle(mFilename);
 
         return view;
