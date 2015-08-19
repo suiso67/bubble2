@@ -1,5 +1,6 @@
 package com.nkanaev.comics.fragment;
 
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.content.Context;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.SparseArray;
 import android.view.*;
@@ -19,12 +21,14 @@ import android.support.v4.view.PagerAdapter;
 
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.R;
+import com.nkanaev.comics.activity.ReaderActivity;
 import com.nkanaev.comics.managers.LocalComicHandler;
 import com.nkanaev.comics.managers.Utils;
 import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
 import com.nkanaev.comics.parsers.ParserFactory;
 import com.nkanaev.comics.parsers.RarParser;
+import com.nkanaev.comics.view.ComicViewPager;
 import com.nkanaev.comics.view.PageImageView;
 import com.nkanaev.comics.parsers.Parser;
 
@@ -44,8 +48,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     public static final String PARAM_MODE = "PARAM_MODE";
 
     public static final String STATE_FULLSCREEN = "STATE_FULLSCREEN";
+    public static final String STATE_NEW_COMIC = "STATE_NEW_COMIC";
+    public static final String STATE_NEW_COMIC_TITLE = "STATE_NEW_COMIC_TITLE";
 
-    private ViewPager mViewPager;
+    private ComicViewPager mViewPager;
     private LinearLayout mPageNavLayout;
     private SeekBar mPageSeekBar;
     private TextView mPageNavTextView;
@@ -58,6 +64,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     private int mCurrentPage;
     private String mFilename;
     private Constants.PageViewMode mPageViewMode;
+    private float mStartingX;
 
     private Parser mParser;
     private Picasso mPicasso;
@@ -65,6 +72,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     private SparseArray<Target> mTargets = new SparseArray<>();
 
     private Comic mComic;
+    private Comic mNewComic;
+    private int mNewComicTitle;
 
     public enum Mode {
         MODE_LIBRARY,
@@ -173,14 +182,25 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
         });
         mPageNavTextView = (TextView) mPageNavLayout.findViewById(R.id.pageNavTextView);
-        mViewPager = (ViewPager) view.findViewById(R.id.viewPager);
+        mViewPager = (ComicViewPager) view.findViewById(R.id.viewPager);
         mViewPager.setAdapter(mPagerAdapter);
         mViewPager.setOffscreenPageLimit(3);
         mViewPager.setOnTouchListener(this);
-        mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+        mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
                 setCurrentPage(position + 1);
+            }
+        });
+        mViewPager.setOnSwipeOutListener(new ComicViewPager.OnSwipeOutListener() {
+            @Override
+            public void onSwipeOutAtStart() {
+                hitBeginning();
+            }
+
+            @Override
+            public void onSwipeOutAtEnd() {
+                hitEnding();
             }
         });
 
@@ -203,6 +223,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         if (savedInstanceState != null) {
             boolean fullscreen = savedInstanceState.getBoolean(STATE_FULLSCREEN);
             setFullscreen(fullscreen);
+
+            int newComicId = savedInstanceState.getInt(STATE_NEW_COMIC);
+            if (newComicId != -1) {
+                int titleRes = savedInstanceState.getInt(STATE_NEW_COMIC_TITLE);
+                confirmSwitch(Storage.getStorage(getActivity()).getComic(newComicId), titleRes);
+            }
         }
         else {
             final Handler handler = new Handler();
@@ -238,6 +264,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putBoolean(STATE_FULLSCREEN, isFullscreen());
+        outState.putInt(STATE_NEW_COMIC, mNewComic != null ? mNewComic.getId() : -1);
+        outState.putInt(STATE_NEW_COMIC_TITLE, mNewComic != null ? mNewComicTitle : -1);
         super.onSaveInstanceState(outState);
     }
 
@@ -288,7 +316,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     }
 
     private void setCurrentPage(int page) {
-        mViewPager.setCurrentItem(page - 1);
+        mViewPager.setCurrentItem(page-1);
         String navPage = new StringBuilder()
                 .append(page).append("/").append(mParser.numPages())
                 .toString();
@@ -299,6 +327,11 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     }
 
     private class ComicPagerAdapter extends PagerAdapter {
+        @Override
+        public int getItemPosition(Object object) {
+            return POSITION_NONE;
+        }
+
         @Override
         public int getCount() {
             return mParser.numPages();
@@ -420,10 +453,19 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
             float x = e.getX();
 
-            if (x < (float) mViewPager.getWidth() / 3)
-                setCurrentPage(getCurrentPage() - 1);
-            else if (x > (float) mViewPager.getWidth() / 3 * 2)
-                setCurrentPage(getCurrentPage() + 1);
+            if (x < (float) mViewPager.getWidth() / 3) {
+                if (getCurrentPage() == 1)
+                    hitBeginning();
+                else
+                    setCurrentPage(getCurrentPage() - 1);
+            }
+            else if (x > (float) mViewPager.getWidth() / 3 * 2) {
+
+                if (getCurrentPage() == mParser.numPages())
+                    hitEnding();
+                else
+                    setCurrentPage(getCurrentPage() + 1);
+            }
             else
                 setFullscreen(false, true);
 
@@ -489,5 +531,41 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
     private boolean isFullscreen() {
         return mIsFullscreen;
+    }
+
+    private void hitBeginning() {
+        if (mComic != null) {
+            Comic c = Storage.getStorage(getActivity()).getPrevComic(mComic);
+            confirmSwitch(c, R.string.switch_prev_comic);
+        }
+    }
+
+    private void hitEnding() {
+        if (mComic != null) {
+            Comic c = Storage.getStorage(getActivity()).getNextComic(mComic);
+            confirmSwitch(c, R.string.switch_next_comic);
+        }
+    }
+
+    private void confirmSwitch(Comic newComic, int titleRes) {
+        if (newComic == null)
+            return;
+
+        mNewComic = newComic;
+        mNewComicTitle = titleRes;
+
+        AlertDialog dialog = new AlertDialog.Builder(getActivity())
+                .setTitle(titleRes)
+                .setMessage(newComic.getFile().getName())
+                .setPositiveButton(R.string.switch_action_positive, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ReaderActivity activity = (ReaderActivity) getActivity();
+                        activity.setFragment(ReaderFragment.create(mNewComic.getId()));
+                    }
+                })
+                .setNegativeButton(R.string.switch_action_negative, null)
+                .create();
+        dialog.show();
     }
 }

@@ -50,4 +50,9 @@ public class Comic implements Comparable {
     public int compareTo(Object another) {
         return mFile.compareTo(((Comic) another).getFile());
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof Comic) && getId() == ((Comic)o).getId();
+    }
 }

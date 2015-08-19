@@ -190,4 +190,20 @@ public class Storage {
         String whereClause = Book.COLUMN_NAME_ID + '=' + Integer.toString(comicId);
         db.delete(Book.TABLE_NAME, whereClause, null);
     }
+
+    public Comic getPrevComic(Comic comic) {
+        ArrayList<Comic> comics = listComics(comic.getFile().getParent());
+        int idx = comics.indexOf(comic);
+        if (idx != 0)
+            return comics.get(idx-1);
+        return null;
+    }
+
+    public Comic getNextComic(Comic comic) {
+        ArrayList<Comic> comics = listComics(comic.getFile().getParent());
+        int idx = comics.indexOf(comic);
+        if (idx != (comics.size() - 1))
+            return comics.get(idx+1);
+        return null;
+    }
 }

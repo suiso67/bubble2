@@ -1,7 +1,7 @@
 package com.nkanaev.comics.activity;
 
-import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -39,16 +39,21 @@ public class ReaderActivity extends AppCompatActivity {
                 fragment = ReaderFragment.create((File) extras.getSerializable(ReaderFragment.PARAM_HANDLER));
             }
 
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.content_frame_reader, fragment)
-                    .commit();
+            setFragment(fragment);
         }
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+    }
+
+    public void setFragment(Fragment fragment) {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.content_frame_reader, fragment)
+                .commit();
+
     }
 
     @Override
