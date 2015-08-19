@@ -554,7 +554,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         mNewComic = newComic;
         mNewComicTitle = titleRes;
 
-        AlertDialog dialog = new AlertDialog.Builder(getActivity())
+        AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.AppCompatAlertDialogStyle)
                 .setTitle(titleRes)
                 .setMessage(newComic.getFile().getName())
                 .setPositiveButton(R.string.switch_action_positive, new DialogInterface.OnClickListener() {
