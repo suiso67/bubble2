@@ -9,6 +9,7 @@ import android.provider.BaseColumns;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 
 public class Storage {
@@ -100,14 +101,19 @@ public class Storage {
 
         Cursor c = db.query(
                 Book.TABLE_NAME, Book.columns, null, null,
-                Book.COLUMN_NAME_FILEPATH, null,
-                null);
+                null, null,
+                SORT_ORDER);
 
         ArrayList<Comic> comics = new ArrayList<>();
         if (c.getCount() == 0) return comics;
 
+        HashSet<String> group = new HashSet<>();
         c.moveToFirst();
         do {
+            String filepath = c.getString(c.getColumnIndex(Book.COLUMN_NAME_FILEPATH));
+            if (group.contains(filepath))
+                continue;
+            group.add(filepath);
             comics.add(comicFromCursor(c));
         } while (c.moveToNext());
 
