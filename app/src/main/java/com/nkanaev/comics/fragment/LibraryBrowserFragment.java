@@ -29,10 +29,9 @@ public class LibraryBrowserFragment extends Fragment
     private ArrayList<Comic> mComics;
     private ArrayList<Integer> mDisplayedIndexes;
     private Picasso mPicasso;
-    private int mCurrentComicIndex = -1;
     private String mFilterSearch = "";
     private int mFilterRead = R.id.menu_browser_filter_all;
-
+    private String mPath;
 
     public static LibraryBrowserFragment create(String path) {
         LibraryBrowserFragment fragment = new LibraryBrowserFragment();
@@ -47,12 +46,8 @@ public class LibraryBrowserFragment extends Fragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        String path = getArguments().getString(PARAM_PATH);
-
-        mComics = Storage.getStorage(getActivity()).listComics(path);
-        filterContent();
-
+        mPath = getArguments().getString(PARAM_PATH);
+        getComics();
         setHasOptionsMenu(true);
     }
 
@@ -79,13 +74,8 @@ public class LibraryBrowserFragment extends Fragment
 
     @Override
     public void onResume() {
-        if (mCurrentComicIndex != -1) {
-            Comic currentComic = mComics.get(mCurrentComicIndex);
-            Comic updatedComic = Storage.getStorage(getActivity()).getComic(currentComic.getId());
-            mComics.set(mCurrentComicIndex, updatedComic);
-            mCurrentComicIndex = -1;
-            mGridView.invalidateViews();
-        }
+        getComics();
+        mGridView.invalidateViews();
         super.onResume();
     }
 
@@ -131,12 +121,16 @@ public class LibraryBrowserFragment extends Fragment
 
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Comic comic = mComics.get(mDisplayedIndexes.get(position));
-        mCurrentComicIndex = mDisplayedIndexes.get(position);
 
         Intent intent = new Intent(getActivity(), ReaderActivity.class);
         intent.putExtra(ReaderFragment.PARAM_HANDLER, comic.getId());
         intent.putExtra(ReaderFragment.PARAM_MODE, ReaderFragment.Mode.MODE_LIBRARY);
         startActivity(intent);
+    }
+
+    private void getComics() {
+        mComics = Storage.getStorage(getActivity()).listComics(mPath);
+        filterContent();
     }
 
     private void filterContent() {
