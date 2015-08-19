@@ -62,6 +62,8 @@ public class Storage {
     private ComicDbHelper mDbHelper;
     private static Storage mSharedInstance;
 
+    private static final String SORT_ORDER = "lower(" + Book.COLUMN_NAME_FILEPATH + "|| '/' || " + Book.COLUMN_NAME_FILENAME + ") ASC";
+
     private Storage(Context context) {
         mDbHelper = new ComicDbHelper(context);
     }
@@ -99,7 +101,7 @@ public class Storage {
         Cursor c = db.query(
                 Book.TABLE_NAME, Book.columns, null, null,
                 Book.COLUMN_NAME_FILEPATH, null,
-                Book.COLUMN_NAME_FILENAME + " DESC");
+                null);
 
         ArrayList<Comic> comics = new ArrayList<>();
         if (c.getCount() == 0) return comics;
@@ -121,13 +123,12 @@ public class Storage {
     public ArrayList<Comic> listComics(String path) {
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
-        String order = Book.COLUMN_NAME_FILEPATH + " DESC";
         String selection = "";
         if (path != null) {
             selection = Book.COLUMN_NAME_FILEPATH + "=\"" + path +  "\"";
         }
 
-        Cursor c = db.query(Book.TABLE_NAME, Book.columns, selection, null, null, null, order);
+        Cursor c = db.query(Book.TABLE_NAME, Book.columns, selection, null, null, null, SORT_ORDER);
         ArrayList<Comic> comics = new ArrayList<>();
 
         c.moveToFirst();

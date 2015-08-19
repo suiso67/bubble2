@@ -2,7 +2,6 @@ package com.nkanaev.comics.fragment;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -52,7 +51,6 @@ public class LibraryBrowserFragment extends Fragment
         String path = getArguments().getString(PARAM_PATH);
 
         mComics = Storage.getStorage(getActivity()).listComics(path);
-        Collections.sort(mComics);
         filterContent();
 
         setHasOptionsMenu(true);
