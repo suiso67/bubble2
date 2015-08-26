@@ -11,6 +11,10 @@
     <string name="action_view_mode_aspect_fit">Aspect Fit</string>
     <string name="action_view_mode_fit_width">Fit Width</string>
 
+    <string name="action_reading_mode"></string>
+    <string name="action_reading_mode_left_to_right">Comics</string>
+    <string name="action_reading_mode_right_to_left">Manga</string>
+
     <string name="menu_browser_filter">Filter</string>
     <string name="menu_browser_filter_all">All</string>
     <string name="menu_browser_filter_read">Read</string>
