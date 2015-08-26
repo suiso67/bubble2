@@ -9,6 +9,7 @@ Android comic book reader.
 * Optimized for tablets
 * Supports CBZ/ZIP and CBR/RAR
 * Advanced zoom and scaling modes
+* Comics/manga reading mode
 * Library management with automatic bookmarks
 * Simple file browser
 * Free, open-source, no ads, gluten-free

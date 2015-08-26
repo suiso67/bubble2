@@ -8,6 +8,7 @@ public class Constants {
     public static final String SETTINGS_LIBRARY_DIR = "SETTINGS_LIBRARY_DIR";
 
     public static final String SETTINGS_PAGE_VIEW_MODE = "SETTINGS_PAGE_VIEW_MODE";
+    public static final String SETTINGS_READING_LEFT_TO_RIGHT = "SETTINGS_READING_LEFT_TO_RIGHT";
 
     public enum PageViewMode {
         ASPECT_FILL(0),
