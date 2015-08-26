@@ -39,6 +39,10 @@ public final class Utils {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1;
     }
 
+    public static boolean isJellyBeanMR1orLater() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1;
+    }
+
     public static boolean isKitKatOrLater() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
     }

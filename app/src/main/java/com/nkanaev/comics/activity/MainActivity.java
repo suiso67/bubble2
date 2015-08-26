@@ -14,6 +14,7 @@ import android.support.v7.widget.Toolbar;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
 
+import com.nkanaev.comics.fragment.HeaderFragment;
 import com.squareup.picasso.Picasso;
 import com.mikepenz.aboutlibraries.LibsBuilder;
 import com.mikepenz.aboutlibraries.entity.Library;
@@ -24,13 +25,11 @@ import com.nkanaev.comics.fragment.LibraryFragment;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.managers.LocalCoverHandler;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 
 public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
-    private final static String  CURRENT_MENU_ITEM = "STATE::CURRENT_NAV_ITEM";
+    private final static String STATE_CURRENT_MENU_ITEM = "STATE_CURRENT_MENU_ITEM";
 
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
@@ -67,12 +66,13 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
 
         if (savedInstanceState == null) {
             setFragment(new LibraryFragment());
+            setNavBar();
             mCurrentNavItem = R.id.drawer_menu_library;
             navigationView.getMenu().findItem(mCurrentNavItem).setChecked(true);
         }
         else {
             onBackStackChanged();  // force-call method to ensure indicator is shown properly
-            mCurrentNavItem = savedInstanceState.getInt(CURRENT_MENU_ITEM);
+            mCurrentNavItem = savedInstanceState.getInt(STATE_CURRENT_MENU_ITEM);
             navigationView.getMenu().findItem(mCurrentNavItem).setChecked(true);
         }
     }
@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putInt(CURRENT_MENU_ITEM, mCurrentNavItem);
+        outState.putInt(STATE_CURRENT_MENU_ITEM, mCurrentNavItem);
         super.onSaveInstanceState(outState);
     }
 
@@ -97,6 +97,13 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
 
     public Picasso getPicasso() {
         return mPicasso;
+    }
+
+    private void setNavBar() {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.header, new HeaderFragment())
+                .commit();
     }
 
     private void setFragment(Fragment fragment) {
