@@ -628,7 +628,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                         activity.setFragment(ReaderFragment.create(mNewComic.getId()));
                     }
                 })
-                .setNegativeButton(R.string.switch_action_negative, null)
+                .setNegativeButton(R.string.switch_action_negative, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mNewComic = null;
+                    }
+                })
                 .create();
         dialog.show();
     }
