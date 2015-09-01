@@ -164,7 +164,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_reader, container, false);
 
-        mPageNavLayout = (LinearLayout) view.findViewById(R.id.pageNavLayout);
+        mPageNavLayout = (LinearLayout) getActivity().findViewById(R.id.pageNavLayout);
         mPageSeekBar = (SeekBar) mPageNavLayout.findViewById(R.id.pageSeekBar);
         mPageSeekBar.setMax(mParser.numPages() - 1);
         mPageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -221,17 +221,6 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                     hitBeginning();
             }
         });
-
-        if (Utils.isKitKatOrLater()) {
-            Resources resources = getActivity().getResources();
-            int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
-            if (resourceId > 0) {
-                int navBarheight = resources.getDimensionPixelSize(resourceId);
-                FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mPageNavLayout.getLayoutParams();
-                params.bottomMargin = navBarheight + 80;
-                mPageNavLayout.setLayoutParams(params);
-            }
-        }
 
         if (mCurrentPage != -1) {
             setCurrentPage(mCurrentPage);

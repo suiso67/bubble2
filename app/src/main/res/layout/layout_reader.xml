@@ -7,13 +7,64 @@
     <FrameLayout
             android:id="@+id/content_frame_reader"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="false"/>
 
-    <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar_reader"
+    <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="?android:attr/actionBarSize"
-            android:background="@color/dark_semitransparent"
-            android:layout_gravity="center_horizontal|top"/>
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="true">
+
+        <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar_reader"
+                android:layout_width="match_parent"
+                android:layout_height="?android:attr/actionBarSize"
+                android:background="@color/dark_semitransparent"/>
+
+        <LinearLayout
+                android:id="@+id/pageNavLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_marginBottom="40dp"
+                android:orientation="vertical"
+                android:background="@drawable/reader_nav_bg"
+                android:gravity="center_horizontal"
+                android:paddingTop="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp">
+
+            <TextView
+                    android:id="@+id/pageNavTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="@dimen/card_text"
+                    android:textColor="@color/light"/>
+
+            <SeekBar
+                    android:id="@+id/pageSeekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="20dp"
+                    android:minHeight="2dp"
+                    android:maxHeight="2dp"
+                    android:thumb="@drawable/reader_nav_thumb"
+                    android:thumbOffset="6dp"
+                    android:progressDrawable="@drawable/reader_nav_progress"/>
+
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!--<FrameLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="center_horizontal|bottom"-->
+            <!--android:fitsSystemWindows="true"-->
+            <!--android:background="@color/primary">-->
+
+    <!--</FrameLayout>-->
 
 </FrameLayout>

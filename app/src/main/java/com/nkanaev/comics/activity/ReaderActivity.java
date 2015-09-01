@@ -23,9 +23,6 @@ public class ReaderActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_reader);
         setSupportActionBar(toolbar);
-        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) toolbar.getLayoutParams();
-        params.setMargins(0, getStatusBarHeight(), 0, 0);
-        toolbar.setLayoutParams(params);
 
         if (savedInstanceState == null) {
             Bundle extras = getIntent().getExtras();
