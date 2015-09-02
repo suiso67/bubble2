@@ -34,6 +34,10 @@ public class ParserFactory {
         catch (IOException e) {
             return null;
         }
+
+        if (parser instanceof DirectoryParser && parser.numPages() < 4)
+            return null;
+
         return parser;
     }
 }

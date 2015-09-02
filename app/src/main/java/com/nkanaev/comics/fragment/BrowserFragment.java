@@ -12,6 +12,8 @@ import android.widget.*;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.ReaderActivity;
 import com.nkanaev.comics.managers.Utils;
+import com.nkanaev.comics.parsers.Parser;
+import com.nkanaev.comics.parsers.ParserFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -102,14 +104,18 @@ public class BrowserFragment extends Fragment
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         File file = mSubdirs[position];
         if (file.isDirectory()) {
-            setCurrentDir(file);
+            // check if directory is folder-based comic
+            Parser p = ParserFactory.create(file);
+            if (p == null) {
+                setCurrentDir(file);
+                return;
+            }
         }
-        else {
-            Intent intent = new Intent(getActivity(), ReaderActivity.class);
-            intent.putExtra(ReaderFragment.PARAM_HANDLER, file);
-            intent.putExtra(ReaderFragment.PARAM_MODE, ReaderFragment.Mode.MODE_BROWSER);
-            startActivity(intent);
-        }
+
+        Intent intent = new Intent(getActivity(), ReaderActivity.class);
+        intent.putExtra(ReaderFragment.PARAM_HANDLER, file);
+        intent.putExtra(ReaderFragment.PARAM_MODE, ReaderFragment.Mode.MODE_BROWSER);
+        startActivity(intent);
     }
 
     private void setIcon(View convertView, File file) {
