@@ -23,4 +23,6 @@
 
     <color name="dialog_subtitle">#444</color>
     <color name="separator">#D1D1D1</color>
+
+    <color name="grey_empty">#606060</color>
 </resources>

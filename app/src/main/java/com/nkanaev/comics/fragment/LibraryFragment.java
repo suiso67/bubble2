@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
 import android.support.v4.app.Fragment;
@@ -37,12 +37,11 @@ public class LibraryFragment extends Fragment
     private ArrayList<Comic> mComics;
     private DirectorySelectDialog mDirectorySelectDialog;
     private SwipeRefreshLayout mRefreshLayout;
+    private View mEmptyView;
     private GridView mGridView;
     private Storage mStorage;
     private Scanner mScanner;
     private Picasso mPicasso;
-
-    private boolean mFirstLaunch = false;
 
     public LibraryFragment() {}
 
@@ -52,12 +51,6 @@ public class LibraryFragment extends Fragment
 
         mStorage = Storage.getStorage(getActivity());
         getComics();
-
-        if (mComics.size() == 0) {
-            SharedPreferences preferences = getActivity()
-                    .getSharedPreferences(Constants.SETTINGS_NAME, 0);
-            mFirstLaunch = !preferences.contains(Constants.SETTINGS_LIBRARY_DIR);
-        }
 
         mDirectorySelectDialog = new DirectorySelectDialog(getActivity());
         mDirectorySelectDialog.setCurrentDirectory(Environment.getExternalStorageDirectory());
@@ -74,22 +67,21 @@ public class LibraryFragment extends Fragment
 
         mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.fragmentLibraryLayout);
         mRefreshLayout.setColorSchemeColors(R.color.primary);
-        mRefreshLayout.setEnabled(!mFirstLaunch);
         mRefreshLayout.setOnRefreshListener(this);
+        mRefreshLayout.setEnabled(true);
 
         mGridView = (GridView) view.findViewById(R.id.groupGridView);
         mGridView.setAdapter(new GroupBrowserAdapter());
         mGridView.setOnItemClickListener(this);
+
+        mEmptyView = view.findViewById(R.id.library_empty);
 
         int deviceWidth = Utils.getDeviceWidth(getActivity());
         int columnWidth = getActivity().getResources().getInteger(R.integer.grid_group_column_width);
         int numColumns = Math.round((float) deviceWidth / columnWidth);
         mGridView.setNumColumns(numColumns);
 
-        if (mFirstLaunch) {
-            mDirectorySelectDialog.show();
-        }
-
+        showEmptyMessage(mComics.size() == 0);
         getActivity().setTitle(R.string.menu_library);
 
         return view;
@@ -123,8 +115,7 @@ public class LibraryFragment extends Fragment
 
     @Override
     public void onDirectorySelect(File file) {
-        mFirstLaunch = false;
-        mRefreshLayout.setEnabled(true);
+        showEmptyMessage(false);
 
         SharedPreferences preferences = getActivity()
                 .getSharedPreferences(Constants.SETTINGS_NAME, 0);
@@ -144,8 +135,8 @@ public class LibraryFragment extends Fragment
                 @Override
                 protected void onPostExecute(Void aVoid) {
                     mRefreshLayout.setRefreshing(false);
-                    mRefreshLayout.setEnabled(true);
                     getComics();
+                    showEmptyMessage(mComics.size() == 0);
                     mGridView.requestLayout();
                 }
             };
@@ -183,6 +174,7 @@ public class LibraryFragment extends Fragment
                 protected void onPostExecute(Void aVoid) {
                     mRefreshLayout.setRefreshing(false);
                     getComics();
+                    showEmptyMessage(mComics.size() == 0);
                     mGridView.requestLayout();
                 }
             };
@@ -199,6 +191,20 @@ public class LibraryFragment extends Fragment
                         .compareTo(rhs.getFile().getParentFile().getName());
             }
         });
+    }
+
+    private void showEmptyMessage(boolean show) {
+        mRefreshLayout.setVisibility(!show ? View.VISIBLE : View.GONE);
+        mEmptyView.setVisibility(show ? View.VISIBLE : View.GONE);
+
+        if (!show) {
+            // workaround: indicator does not show on view first appearance
+            // https://code.google.com/p/android/issues/detail?id=77712
+            mRefreshLayout.setProgressViewOffset(false, 0,
+                    (int) TypedValue.applyDimension(
+                            TypedValue.COMPLEX_UNIT_DIP, 24,
+                            getResources().getDisplayMetrics()));
+        }
     }
 
     private final class GroupBrowserAdapter extends BaseAdapter {

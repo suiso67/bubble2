@@ -1,25 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<android.support.v4.widget.SwipeRefreshLayout
+<RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/fragmentLibraryLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
 
-    <GridView
-            android:id="@+id/groupGridView"
+    <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/fragmentLibraryLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|top"
-            android:horizontalSpacing="@dimen/grid_margin"
-            android:verticalSpacing="@dimen/grid_margin"
-            android:stretchMode="columnWidth"
-            android:gravity="center"
-            android:focusableInTouchMode="false"
-            android:focusable="false"
-            android:padding="@dimen/grid_margin"
-            android:clipToPadding="false"
-            android:scrollbarStyle="insideOverlay"
-            android:drawSelectorOnTop="true"/>
+            android:layout_height="match_parent">
 
-</android.support.v4.widget.SwipeRefreshLayout>
+        <GridView
+                android:id="@+id/groupGridView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_horizontal|top"
+                android:horizontalSpacing="@dimen/grid_margin"
+                android:verticalSpacing="@dimen/grid_margin"
+                android:stretchMode="columnWidth"
+                android:gravity="center"
+                android:focusableInTouchMode="false"
+                android:focusable="false"
+                android:padding="@dimen/grid_margin"
+                android:clipToPadding="false"
+                android:scrollbarStyle="insideOverlay"
+                android:drawSelectorOnTop="true"/>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+    <LinearLayout
+            android:id="@+id/library_empty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:orientation="vertical">
+
+        <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_hops_grey600_48dp"
+                android:scaleType="center"/>
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/library_empty"
+                android:textColor="@color/grey_empty"
+                android:textSize="@dimen/card_text"
+                android:gravity="center"
+                android:padding="@dimen/button_horizontal_padding"/>
+    </LinearLayout>
+</RelativeLayout>

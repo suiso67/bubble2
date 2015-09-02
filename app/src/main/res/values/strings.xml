@@ -42,4 +42,6 @@
     <string name="switch_action_negative">No</string>
     <string name="switch_next_comic">Would you like to switch to the next comic?</string>
     <string name="switch_prev_comic">Would you like to switch to the previous comic?</string>
+
+    <string name="library_empty">Your collection seems empty. Click \"folder\" icon to select library directory</string>
 </resources>
