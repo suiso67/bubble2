@@ -7,7 +7,7 @@ Android comic book reader.
 ## Features
 
 * Optimized for tablets
-* Supports CBZ/ZIP and CBR/RAR
+* Supports CBZ/ZIP, CBR/RAR and folder based comics
 * Advanced zoom and scaling modes
 * Comics/manga reading mode
 * Library management with automatic bookmarks
