@@ -238,13 +238,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
         }
         else {
-            final Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    setFullscreen(true);
-                }
-            }, 100);
+            setFullscreen(true);
         }
         getActivity().setTitle(mFilename);
         updateSeekBar();
@@ -590,6 +584,18 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             mViewPager.setSystemUiVisibility(flag);
 
             mPageNavLayout.setVisibility(View.VISIBLE);
+
+            // status bar & navigation bar background won't show in some cases
+            if (Utils.isLollipopOrLater()) {
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Window w = getActivity().getWindow();
+                        w.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                        w.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                    }
+                }, 300);
+            }
         }
     }
 
