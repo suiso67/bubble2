@@ -513,7 +513,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             else if (x > (float) mViewPager.getWidth() / 3 * 2) {
                 if (mIsLeftToRight) {
                     if (getCurrentPage() == mViewPager.getAdapter().getCount())
-                        hitBeginning();
+                        hitEnding();
                     else
                         setCurrentPage(getCurrentPage() + 1);
                 }
