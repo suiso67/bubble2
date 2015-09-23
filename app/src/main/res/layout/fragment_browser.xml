@@ -4,8 +4,7 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/light">
-
+        android:background="@color/lightest">
     <ListView
             android:id="@+id/listview_browser"
             android:layout_width="match_parent"

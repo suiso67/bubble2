@@ -1,7 +1,7 @@
 package com.nkanaev.comics.view;
 
-import android.app.Dialog;
 import android.content.Context;
+import android.support.v7.app.AppCompatDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +16,7 @@ import java.util.Collections;
 
 
 public class DirectorySelectDialog
-        extends Dialog
+        extends AppCompatDialog
         implements View.OnClickListener, AdapterView.OnItemClickListener {
     private Button mSetButton;
     private Button mCancelButton;
@@ -33,7 +33,7 @@ public class DirectorySelectDialog
     }
 
     public DirectorySelectDialog(Context context) {
-        super(context, R.style.MyDialogStyle);
+        super(context);
         setContentView(R.layout.dialog_directorypicker);
         mSetButton = (Button) findViewById(R.id.directory_picker_confirm);
         mCancelButton = (Button) findViewById(R.id.directory_picker_cancel);

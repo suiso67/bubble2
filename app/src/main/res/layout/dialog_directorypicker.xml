@@ -4,30 +4,23 @@
         android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
-
     <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="24dp">
-
         <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:lines="1"
-                android:textColor="@color/text"
                 android:textStyle="bold"
                 android:text="@string/directory_picker_header"/>
-
         <TextView
                 android:id="@+id/directory_current_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/text"
                 android:lines="1"/>
-
     </LinearLayout>
-
     <ListView
             android:id="@+id/directory_listview"
             android:layout_width="match_parent"
@@ -45,7 +38,6 @@
         <Button
                 android:id="@+id/directory_picker_confirm"
                 android:text="@string/directory_picker_confirm"
-                android:textColor="@color/primary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
@@ -57,7 +49,6 @@
         <Button
                 android:id="@+id/directory_picker_cancel"
                 android:text="@string/directory_picker_cancel"
-                android:textColor="@color/primary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toLeftOf="@id/directory_picker_confirm"
@@ -65,5 +56,4 @@
                 android:minWidth="64dp"
                 style="?android:attr/borderlessButtonStyle"/>
     </RelativeLayout>
-
 </LinearLayout>

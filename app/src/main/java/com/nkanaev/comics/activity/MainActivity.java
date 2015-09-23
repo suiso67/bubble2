@@ -15,6 +15,7 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
 
 import com.nkanaev.comics.fragment.HeaderFragment;
+import com.nkanaev.comics.managers.Utils;
 import com.squareup.picasso.Picasso;
 import com.mikepenz.aboutlibraries.LibsBuilder;
 import com.mikepenz.aboutlibraries.entity.Library;
@@ -44,6 +45,10 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
+
+        if (Utils.isLollipopOrLater()) {
+            toolbar.setElevation(8);
+        }
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
