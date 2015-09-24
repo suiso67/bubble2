@@ -1,12 +1,12 @@
 package com.nkanaev.comics.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
-import android.widget.FrameLayout;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.fragment.ReaderFragment;
 
@@ -25,18 +25,21 @@ public class ReaderActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         if (savedInstanceState == null) {
-            Bundle extras = getIntent().getExtras();
-
-            ReaderFragment fragment = null;
-            ReaderFragment.Mode mode = (ReaderFragment.Mode) extras.getSerializable(ReaderFragment.PARAM_MODE);
-            if (mode == ReaderFragment.Mode.MODE_LIBRARY) {
-                fragment = ReaderFragment.create(extras.getInt(ReaderFragment.PARAM_HANDLER));
+            if (Intent.ACTION_VIEW.equals(getIntent().getAction())) {
+                ReaderFragment fragment = ReaderFragment.create(new File(getIntent().getData().getPath()));
+                setFragment(fragment);
             }
             else {
-                fragment = ReaderFragment.create((File) extras.getSerializable(ReaderFragment.PARAM_HANDLER));
-            }
+                Bundle extras = getIntent().getExtras();
+                ReaderFragment fragment = null;
+                ReaderFragment.Mode mode = (ReaderFragment.Mode) extras.getSerializable(ReaderFragment.PARAM_MODE);
 
-            setFragment(fragment);
+                if (mode == ReaderFragment.Mode.MODE_LIBRARY)
+                    fragment = ReaderFragment.create(extras.getInt(ReaderFragment.PARAM_HANDLER));
+                else
+                    fragment = ReaderFragment.create((File) extras.getSerializable(ReaderFragment.PARAM_HANDLER));
+                setFragment(fragment);
+            }
         }
 
         ActionBar actionBar = getSupportActionBar();
@@ -67,14 +70,5 @@ public class ReaderActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         finish();
-    }
-
-    private int getStatusBarHeight() {
-        int result = 0;
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            result = getResources().getDimensionPixelSize(resourceId);
-        }
-        return result;
     }
 }
