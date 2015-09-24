@@ -16,10 +16,10 @@ import android.widget.OverScroller;
 import com.nkanaev.comics.Constants;
 
 public class PageImageView extends ImageView {
-
     private Constants.PageViewMode mViewMode;
     private Matrix mImageMatrix;
     private boolean mEdited;
+    private boolean mTranslateRightEdge = false;
     private OnTouchListener mOuterTouchListener;
     private ScaleGestureDetector mScaleGestureDetector;
     private GestureDetector mDragGestureDetector;
@@ -83,6 +83,10 @@ public class PageImageView extends ImageView {
         mOuterTouchListener = l;
     }
 
+    public void setTranslateToRightEdge(boolean translate) {
+        mTranslateRightEdge = translate;
+    }
+
     private void scale() {
         Drawable drawable = getDrawable();
         if (drawable == null) return;
@@ -100,7 +104,8 @@ public class PageImageView extends ImageView {
 
             if (dwidth * vheight > vwidth * dheight) {
                 scale = (float) vheight / (float) dheight;
-                dx = (vwidth - dwidth * scale) * 0.5f;
+                if (mTranslateRightEdge)
+                    dx = vwidth - dwidth * scale;
             } else {
                 scale = (float) vwidth / (float) dwidth;
             }

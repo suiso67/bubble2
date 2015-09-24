@@ -383,6 +383,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             View layout = inflater.inflate(R.layout.fragment_reader_page, container, false);
 
             PageImageView pageImageView = (PageImageView) layout.findViewById(R.id.pageImageView);
+            if (mPageViewMode == Constants.PageViewMode.ASPECT_FILL)
+                pageImageView.setTranslateToRightEdge(!mIsLeftToRight);
             pageImageView.setViewMode(mPageViewMode);
             pageImageView.setOnTouchListener(ReaderFragment.this);
 
@@ -538,7 +540,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 updatePageViews((ViewGroup)child);
             }
             else if (child instanceof PageImageView) {
-                ((PageImageView) child).setViewMode(mPageViewMode);
+                PageImageView view = (PageImageView) child;
+                if (mPageViewMode == Constants.PageViewMode.ASPECT_FILL)
+                    view.setTranslateToRightEdge(!mIsLeftToRight);
+                view.setViewMode(mPageViewMode);
             }
         }
     }
