@@ -44,4 +44,5 @@
     <string name="switch_prev_comic">Would you like to switch to the previous comic?</string>
 
     <string name="library_empty">Your collection seems empty. Click \"folder\" icon to select library directory</string>
+    <string name="menu_browser_filter_unfinished">Unfinished</string>
 </resources>

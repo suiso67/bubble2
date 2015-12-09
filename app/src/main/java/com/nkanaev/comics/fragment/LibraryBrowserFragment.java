@@ -97,6 +97,7 @@ public class LibraryBrowserFragment extends Fragment
             case R.id.menu_browser_filter_all:
             case R.id.menu_browser_filter_read:
             case R.id.menu_browser_filter_unread:
+            case R.id.menu_browser_filter_unfinished:
             case R.id.menu_browser_filter_reading:
                 item.setChecked(true);
                 mFilterRead = item.getItemId();
@@ -143,6 +144,8 @@ public class LibraryBrowserFragment extends Fragment
                 if (mFilterRead == R.id.menu_browser_filter_read && c.getCurrentPage() != c.getTotalPages())
                     continue;
                 if (mFilterRead == R.id.menu_browser_filter_unread && c.getCurrentPage() != 0)
+                    continue;
+                if (mFilterRead == R.id.menu_browser_filter_unfinished && c.getCurrentPage() == c.getTotalPages())
                     continue;
                 if (mFilterRead == R.id.menu_browser_filter_reading &&
                         (c.getCurrentPage() == 0 || c.getCurrentPage() == c.getTotalPages()))
