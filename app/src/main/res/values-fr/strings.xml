@@ -20,11 +20,16 @@
     <string name="action_view_mode_aspect_fit">Adaptée</string>
     <string name="action_view_mode_fit_width">Largeur adaptée</string>
 
+    <string name="action_reading_mode"></string>
+    <string name="action_reading_mode_left_to_right"></string>
+    <string name="action_reading_mode_right_to_left"></string>
+
     <string name="menu_browser_filter">Filtre</string>
     <string name="menu_browser_filter_all">Tout</string>
     <string name="menu_browser_filter_read">Lu</string>
     <string name="menu_browser_filter_reading">En lecture</string>
     <string name="menu_browser_filter_unread">Non lu</string>
+    <string name="menu_browser_filter_unfinished">Inachevé</string>
 
     <string name="drawer_open">Ouvrir le volet de navigation</string>
     <string name="drawer_close">Fermer le volet de navigation</string>
@@ -42,4 +47,11 @@
     <string name="browser_search_hint">Veuillez entrer un terme de recherche</string>
 
     <string name="reload">Recharger</string>
+
+    <string name="switch_action_negative"></string>
+    <string name="switch_action_positive"></string>
+    <string name="switch_next_comic"></string>
+    <string name="switch_prev_comic"></string>
+    
+    <string name="library_empty"></string>
 </resources>
