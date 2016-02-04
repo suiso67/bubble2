@@ -17,6 +17,9 @@ Android comic book reader.
 <a href="https://f-droid.org/repository/browse/?fdid=com.nkanaev.comics">
   <img height="44" width="auto" src='https://upload.wikimedia.org/wikipedia/commons/0/0d/Get_it_on_F-Droid.svg'></img>
 </a>
+<a href="https://play.google.com/store/apps/details?id=com.nkanaev.comics">
+  <img height="44" width="auto" src='https://upload.wikimedia.org/wikipedia/commons/c/cd/Get_it_on_Google_play.svg'></img>
+</a>
 
 ## License
 
