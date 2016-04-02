@@ -15,6 +15,7 @@ public class RarParser implements Parser {
     private ArrayList<FileHeader> mHeaders = new ArrayList<FileHeader>();
     private Archive mArchive;
     private File mCacheDir;
+    private boolean mSolidFileExtracted = false;
 
     @Override
     public void parse(File file) throws IOException {
@@ -55,9 +56,24 @@ public class RarParser implements Parser {
 
     @Override
     public InputStream getPage(int num) throws IOException {
-        try {
-            FileHeader header = mHeaders.get(num);
+        if (mArchive.getMainHeader().isSolid()) {
+            // solid archives require special treatment
+            synchronized (this) {
+                if (!mSolidFileExtracted) {
+                    for (FileHeader h : mArchive.getFileHeaders()) {
+                        if (!h.isDirectory() && Utils.isImage(getName(h))) {
+                            getPageStream(h);
+                        }
+                    }
+                    mSolidFileExtracted = true;
+                }
+            }
+        }
+        return getPageStream(mHeaders.get(num));
+    }
 
+    private InputStream getPageStream(FileHeader header) throws IOException {
+        try {
             if (mCacheDir != null) {
                 String name = getName(header);
                 File cacheFile = new File(mCacheDir, Utils.MD5(name));
