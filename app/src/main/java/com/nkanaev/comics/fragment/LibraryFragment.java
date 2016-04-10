@@ -1,23 +1,18 @@
 package com.nkanaev.comics.fragment;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
-import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
-
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.MainActivity;
+import com.nkanaev.comics.managers.DirectoryListingManager;
 import com.nkanaev.comics.managers.LocalCoverHandler;
 import com.nkanaev.comics.managers.Scanner;
 import com.nkanaev.comics.managers.Utils;
@@ -25,6 +20,9 @@ import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
 import com.nkanaev.comics.view.DirectorySelectDialog;
 import com.squareup.picasso.Picasso;
+
+import java.io.File;
+import java.util.List;
 
 
 public class LibraryFragment extends Fragment
@@ -34,7 +32,8 @@ public class LibraryFragment extends Fragment
         SwipeRefreshLayout.OnRefreshListener {
     private final static String BUNDLE_DIRECTORY_DIALOG_SHOWN = "BUNDLE_DIRECTORY_DIALOG_SHOWN";
 
-    private ArrayList<Comic> mComics;
+//    private ArrayList<Comic> mComics;
+    private DirectoryListingManager mComicsListManager;
     private DirectorySelectDialog mDirectorySelectDialog;
     private SwipeRefreshLayout mRefreshLayout;
     private View mEmptyView;
@@ -42,6 +41,7 @@ public class LibraryFragment extends Fragment
     private Storage mStorage;
     private Scanner mScanner;
     private Picasso mPicasso;
+    private boolean mIsLoading;
 
     public LibraryFragment() {}
 
@@ -81,7 +81,7 @@ public class LibraryFragment extends Fragment
         int numColumns = Math.round((float) deviceWidth / columnWidth);
         mGridView.setNumColumns(numColumns);
 
-        showEmptyMessage(mComics.size() == 0);
+        showEmptyMessage(mComicsListManager.getCount() == 0);
         getActivity().setTitle(R.string.menu_library);
 
         return view;
@@ -127,17 +127,12 @@ public class LibraryFragment extends Fragment
             mScanner = new Scanner(getActivity(), mStorage, file) {
                 @Override
                 protected void onPreExecute() {
-                    mRefreshLayout.setRefreshing(true);
-                    mComics.clear();
-                    mGridView.requestLayout();
+                    setLoading(true);
                 }
 
                 @Override
                 protected void onPostExecute(Void aVoid) {
-                    mRefreshLayout.setRefreshing(false);
-                    getComics();
-                    showEmptyMessage(mComics.size() == 0);
-                    mGridView.requestLayout();
+                    setLoading(false);
                 }
             };
             mScanner.execute();
@@ -146,9 +141,7 @@ public class LibraryFragment extends Fragment
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Comic comic = mComics.get(position);
-
-        String path = comic.getFile().getParent();
+        String path = mComicsListManager.getDirectoryAtIndex(position);
         LibraryBrowserFragment fragment = LibraryBrowserFragment.create(path);
         ((MainActivity)getActivity()).pushFragment(fragment);
     }
@@ -156,26 +149,19 @@ public class LibraryFragment extends Fragment
     @Override
     public void onRefresh() {
         if (mScanner == null || mScanner.getStatus() == AsyncTask.Status.FINISHED) {
-            String libraryDir = getActivity()
-                    .getSharedPreferences(Constants.SETTINGS_NAME, 0)
-                    .getString(Constants.SETTINGS_LIBRARY_DIR, null);
+            String libraryDir = getLibraryDir();
             if (libraryDir == null)
                 return;
 
             mScanner = new Scanner(getActivity(), mStorage, new File(libraryDir)) {
                 @Override
                 protected void onPreExecute() {
-                    mRefreshLayout.setRefreshing(true);
-                    mComics.clear();
-                    mGridView.requestLayout();
+                    setLoading(true);
                 }
 
                 @Override
                 protected void onPostExecute(Void aVoid) {
-                    mRefreshLayout.setRefreshing(false);
-                    getComics();
-                    showEmptyMessage(mComics.size() == 0);
-                    mGridView.requestLayout();
+                    setLoading(false);
                 }
             };
             mScanner.execute();
@@ -183,14 +169,29 @@ public class LibraryFragment extends Fragment
     }
 
     private void getComics() {
-        mComics = Storage.getStorage(getActivity()).listDirectoryComics();
-        Collections.sort(mComics, new Comparator<Comic>() {
-            @Override
-            public int compare(Comic lhs, Comic rhs) {
-                return lhs.getFile().getParentFile().getName()
-                        .compareTo(rhs.getFile().getParentFile().getName());
-            }
-        });
+        List<Comic> comics = Storage.getStorage(getActivity()).listDirectoryComics();
+        mComicsListManager = new DirectoryListingManager(comics, getLibraryDir());
+    }
+
+    private void setLoading(boolean isLoading) {
+        mIsLoading = isLoading;
+
+        if (isLoading) {
+            mRefreshLayout.setRefreshing(true);
+            mGridView.requestLayout();
+        }
+        else {
+            mRefreshLayout.setRefreshing(false);
+            getComics();
+            showEmptyMessage(mComicsListManager.getCount() == 0);
+            mGridView.requestLayout();
+        }
+    }
+
+    private String getLibraryDir() {
+        return getActivity()
+                .getSharedPreferences(Constants.SETTINGS_NAME, 0)
+                .getString(Constants.SETTINGS_LIBRARY_DIR, null);
     }
 
     private void showEmptyMessage(boolean show) {
@@ -210,12 +211,12 @@ public class LibraryFragment extends Fragment
     private final class GroupBrowserAdapter extends BaseAdapter {
         @Override
         public int getCount() {
-            return mComics.size();
+            return mIsLoading ? 0 : mComicsListManager.getCount();
         }
 
         @Override
         public Object getItem(int position) {
-            return mComics.get(position);
+            return mComicsListManager.getComicAtIndex(position);
         }
 
         @Override
@@ -225,7 +226,8 @@ public class LibraryFragment extends Fragment
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            Comic comic = mComics.get(position);
+            Comic comic = mComicsListManager.getComicAtIndex(position);
+            String dirDisplay = mComicsListManager.getDirectoryDisplayAtIndex(position);
 
             if (convertView == null) {
                 convertView = getActivity().getLayoutInflater().inflate(R.layout.card_group, parent, false);
@@ -237,7 +239,7 @@ public class LibraryFragment extends Fragment
                     .into(groupImageView);
 
             TextView tv = (TextView) convertView.findViewById(R.id.comic_group_folder);
-            tv.setText(comic.getFile().getParentFile().getName());
+            tv.setText(dirDisplay);
 
             return convertView;
         }
