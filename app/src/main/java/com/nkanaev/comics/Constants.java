@@ -4,6 +4,9 @@ public class Constants {
     public static final int COVER_THUMBNAIL_HEIGHT = 300;
     public static final int COVER_THUMBNAIL_WIDTH = 200;
 
+    public static final int MAX_PAGE_HEIGHT = 2400;
+    public static final int MAX_PAGE_WIDTH = 1500;
+
     public static final String SETTINGS_NAME = "SETTINGS_COMICS";
     public static final String SETTINGS_LIBRARY_DIR = "SETTINGS_LIBRARY_DIR";
 

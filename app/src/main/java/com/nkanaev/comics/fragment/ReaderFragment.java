@@ -428,7 +428,9 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         mPicasso.load(mComicHandler.getPageUri(pos))
                 .memoryPolicy(MemoryPolicy.NO_STORE)
                 .tag(getActivity())
-                .resize(0, 2000)
+                .resize(Constants.MAX_PAGE_WIDTH, Constants.MAX_PAGE_HEIGHT)
+                .centerInside()
+                .onlyScaleDown()
                 .into(t);
     }
 
