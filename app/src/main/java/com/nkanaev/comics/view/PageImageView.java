@@ -283,7 +283,7 @@ public class PageImageView extends ImageView {
     @Override
     public void setImageMatrix(Matrix matrix) {
         super.setImageMatrix(fixMatrix(matrix));
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             postInvalidate();
         }
     }
