@@ -1,17 +1,18 @@
 package com.nkanaev.comics.view;
 
 import android.content.Context;
+import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
-import android.graphics.Matrix;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.*;
 import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.Interpolator;
 import android.widget.ImageView;
-
 import android.widget.OverScroller;
 import com.nkanaev.comics.Constants;
 
@@ -25,6 +26,7 @@ public class PageImageView extends ImageView {
     private OverScroller mScroller;
     private float[] mMatrixValues = new float[9];
     private float mMinScale, mMaxScale;
+    private float mOriginalScale;
 
     public PageImageView(Context context) {
         super(context);
@@ -133,8 +135,8 @@ public class PageImageView extends ImageView {
             mMinScale = Math.min(dwidth, vwidth) * 0.75f / dwidth;
             mMaxScale = Math.max(dheight, vheight) * 1.5f / dheight;
         }
-
         setImageMatrix(getImageMatrix());
+        mOriginalScale = getCurrentScale();
     }
 
     private class PrivateScaleDetector extends ScaleGestureDetector.SimpleOnScaleGestureListener {
@@ -211,6 +213,19 @@ public class PageImageView extends ImageView {
             ViewCompat.postInvalidateOnAnimation(PageImageView.this);
             return true;
         }
+
+        @Override
+        public boolean onDoubleTapEvent(MotionEvent e) {
+            if (e.getAction() == MotionEvent.ACTION_UP) {
+                float scale = (mOriginalScale == getCurrentScale()) ? mMaxScale : mOriginalScale;
+                zoomAnimated(e, scale);
+            }
+            return true;
+        }
+    }
+
+    private void zoomAnimated(MotionEvent e, float scale) {
+        post(new ZoomAnimation(e.getX(), e.getY(), scale));
     }
 
     @Override
@@ -227,6 +242,11 @@ public class PageImageView extends ImageView {
             ViewCompat.postInvalidateOnAnimation(this);
         }
         super.computeScroll();
+    }
+
+    private float getCurrentScale() {
+        getImageMatrix().getValues(mMatrixValues);
+        return mMatrixValues[Matrix.MSCALE_X];
     }
 
     private Point computeCurrentImageSize() {
@@ -309,5 +329,51 @@ public class PageImageView extends ImageView {
             return false;
         }
         return true;
+    }
+
+    private class ZoomAnimation implements Runnable {
+        public final static int ZOOM_DURATION = 200;
+        float mX;
+        float mY;
+        float mScale;
+        Interpolator mInterpolator;
+        float mStartScale;
+        long mStartTime;
+
+        ZoomAnimation(float x, float y, float scale) {
+            getImageMatrix().getValues(mMatrixValues);
+            mX = x;
+            mY = y;
+            mScale = scale;
+
+            mInterpolator = new AccelerateDecelerateInterpolator();
+            mStartScale = getCurrentScale();
+            mStartTime = System.currentTimeMillis();
+        }
+
+        @Override
+        public void run() {
+            float t = (float)(System.currentTimeMillis() - mStartTime) / ZOOM_DURATION;
+            float interpolateRatio = mInterpolator.getInterpolation(t);
+            t = (t > 1f) ? 1f : t;
+
+            getImageMatrix().getValues(mMatrixValues);
+            float newScale = mStartScale + interpolateRatio * (mScale - mStartScale);
+            float newScaleFactor = newScale / mMatrixValues[Matrix.MSCALE_X];
+
+            getImageMatrix().postScale(newScaleFactor, newScaleFactor, mX, mY);
+            setImageMatrix(getImageMatrix());
+
+            if (t < 1f) {
+                post(this);
+            }
+            else {
+                // set exact scale
+                getImageMatrix().getValues(mMatrixValues);
+                getImageMatrix().setScale(mScale, mScale);
+                getImageMatrix().postTranslate(mMatrixValues[Matrix.MTRANS_X], mMatrixValues[Matrix.MTRANS_Y]);
+                setImageMatrix(getImageMatrix());
+            }
+        }
     }
 }
