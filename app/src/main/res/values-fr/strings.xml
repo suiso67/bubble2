@@ -54,4 +54,5 @@
     <string name="switch_prev_comic"></string>
     
     <string name="library_empty"></string>
+    <string name="warning_missing_file"></string>
 </resources>

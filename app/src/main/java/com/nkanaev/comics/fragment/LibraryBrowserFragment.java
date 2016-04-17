@@ -11,6 +11,7 @@ import android.view.*;
 import android.widget.*;
 import android.support.v7.widget.SearchView;
 
+import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.MainActivity;
 import com.nkanaev.comics.activity.ReaderActivity;
@@ -122,6 +123,14 @@ public class LibraryBrowserFragment extends Fragment
 
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Comic comic = mComics.get(mDisplayedIndexes.get(position));
+
+        if (!comic.getFile().exists()) {
+            Toast.makeText(
+                    getActivity(),
+                    R.string.warning_missing_file,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         Intent intent = new Intent(getActivity(), ReaderActivity.class);
         intent.putExtra(ReaderFragment.PARAM_HANDLER, comic.getId());
