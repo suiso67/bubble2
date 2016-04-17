@@ -1,32 +1,26 @@
 package com.nkanaev.comics.activity;
 
-import android.os.Bundle;
-import android.view.MenuItem;
 import android.content.res.Configuration;
+import android.os.Bundle;
+import android.support.design.widget.NavigationView;
+import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.support.design.widget.NavigationView;
-import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
-
+import android.view.MenuItem;
+import com.nkanaev.comics.R;
+import com.nkanaev.comics.fragment.AboutFragment;
+import com.nkanaev.comics.fragment.BrowserFragment;
 import com.nkanaev.comics.fragment.HeaderFragment;
+import com.nkanaev.comics.fragment.LibraryFragment;
+import com.nkanaev.comics.managers.LocalCoverHandler;
 import com.nkanaev.comics.managers.Utils;
 import com.squareup.picasso.Picasso;
-import com.mikepenz.aboutlibraries.LibsBuilder;
-import com.mikepenz.aboutlibraries.entity.Library;
-import com.mikepenz.aboutlibraries.ui.LibsFragment;
-
-import com.nkanaev.comics.fragment.BrowserFragment;
-import com.nkanaev.comics.fragment.LibraryFragment;
-import com.nkanaev.comics.R;
-import com.nkanaev.comics.managers.LocalCoverHandler;
-
-import java.util.*;
 
 
 public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
@@ -158,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
                         break;
                     case R.id.drawer_menu_about:
                         setTitle(R.string.menu_about);
-                        setFragment(createAboutFragment());
+                        setFragment(new AboutFragment());
                         break;
                 }
 
@@ -173,29 +167,6 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
     @Override
     public void onBackStackChanged() {
         mDrawerToggle.setDrawerIndicatorEnabled(getSupportFragmentManager().getBackStackEntryCount() == 0);
-    }
-
-    private LibsFragment createAboutFragment() {
-        final List<String> libraryOrder = Arrays.asList("Picasso", "Junrar", "AboutLibraries");
-
-        return new LibsBuilder()
-                .withAboutIconShown(true)
-                .withAboutAppName(getString(R.string.app_name))
-                .withAboutDescription(getString(R.string.app_description))
-                .withAboutVersionShown(true)
-                .withAnimations(false)
-                .withLicenseShown(true)
-                .withFields(R.string.class.getFields())
-                .withLibraries("Picasso", "Junrar")
-                .withLibraryComparator(new Comparator<Library>() {
-                    @Override
-                    public int compare(Library l1, Library l2) {
-                        Integer i1 = libraryOrder.indexOf(l1.getDefinedName());
-                        Integer i2 = libraryOrder.indexOf(l2.getDefinedName());
-                        return i1.compareTo(i2);
-                    }
-                })
-                .fragment();
     }
 
     @Override
