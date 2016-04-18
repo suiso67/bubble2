@@ -18,15 +18,17 @@ import com.nkanaev.comics.Constants;
 
 public class PageImageView extends ImageView {
     private Constants.PageViewMode mViewMode;
-    private boolean mEdited;
+    private boolean mHaveFrame = false;
+    private boolean mSkipScaling = false;
     private boolean mTranslateRightEdge = false;
     private OnTouchListener mOuterTouchListener;
     private ScaleGestureDetector mScaleGestureDetector;
     private GestureDetector mDragGestureDetector;
     private OverScroller mScroller;
-    private float[] mMatrixValues = new float[9];
     private float mMinScale, mMaxScale;
     private float mOriginalScale;
+    private float[] m = new float[9];
+    private Matrix mMatrix;
 
     public PageImageView(Context context) {
         super(context);
@@ -40,25 +42,30 @@ public class PageImageView extends ImageView {
 
     public void setViewMode(Constants.PageViewMode viewMode) {
         mViewMode = viewMode;
-        mEdited = false;
+        mSkipScaling = false;
         requestLayout();
-    }
-
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
-        scale();
+        invalidate();
     }
 
     @Override
     protected boolean setFrame(int l, int t, int r, int b) {
+        boolean changed = super.setFrame(l, t, r, b);
+        mHaveFrame = true;
         scale();
-        return super.setFrame(l, t, r, b);
+        return changed;
+    }
+
+    @Override
+    public void setImageDrawable(Drawable drawable) {
+        super.setImageDrawable(drawable);
+        mSkipScaling = false;
+        scale();
     }
 
     private void init() {
-        mEdited = false;
+        mMatrix = new Matrix();
         setScaleType(ScaleType.MATRIX);
+        setImageMatrix(mMatrix);
 
         mScaleGestureDetector = new ScaleGestureDetector(getContext(), new PrivateScaleDetector());
         mDragGestureDetector = new GestureDetector(getContext(), new PrivateDragListener());
@@ -88,8 +95,7 @@ public class PageImageView extends ImageView {
 
     private void scale() {
         Drawable drawable = getDrawable();
-        if (drawable == null) return;
-        if (mEdited) return;
+        if (drawable == null || !mHaveFrame || mSkipScaling) return;
 
         int dwidth = drawable.getIntrinsicWidth();
         int dheight = drawable.getIntrinsicHeight();
@@ -109,19 +115,19 @@ public class PageImageView extends ImageView {
                 scale = (float) vwidth / (float) dwidth;
             }
 
-            getImageMatrix().setScale(scale, scale);
-            getImageMatrix().postTranslate((int) (dx + 0.5f), 0);
+            mMatrix.setScale(scale, scale);
+            mMatrix.postTranslate((int) (dx + 0.5f), 0);
         }
         else if (mViewMode == Constants.PageViewMode.ASPECT_FIT) {
             RectF mTempSrc = new RectF(0, 0, dwidth, dheight);
             RectF mTempDst = new RectF(0, 0, vwidth, vheight);
 
-            getImageMatrix().setRectToRect(mTempSrc, mTempDst, Matrix.ScaleToFit.CENTER);
+            mMatrix.setRectToRect(mTempSrc, mTempDst, Matrix.ScaleToFit.CENTER);
         }
         else if (mViewMode == Constants.PageViewMode.FIT_WIDTH) {
             float widthScale = (float)getWidth()/drawable.getIntrinsicWidth();
-            getImageMatrix().setScale(widthScale, widthScale);
-            getImageMatrix().postTranslate(0, 0);
+            mMatrix.setScale(widthScale, widthScale);
+            mMatrix.postTranslate(0, 0);
         }
 
         // calculate min/max scale
@@ -129,24 +135,23 @@ public class PageImageView extends ImageView {
         float w = dwidth * heightRatio;
         if (w < vwidth) {
             mMinScale = vheight * 0.75f / dheight;
-            mMaxScale = Math.max(dwidth, vwidth) * 1.5f / dwidth;
+            mMaxScale = Math.max(dwidth, vwidth) * 1.2f / dwidth;
         }
         else {
             mMinScale = vwidth * 0.75f / dwidth;
-            mMaxScale = Math.max(dheight, vheight) * 1.5f / dheight;
+            mMaxScale = Math.max(dheight, vheight) * 1.2f / dheight;
         }
-        setImageMatrix(getImageMatrix());
+        setImageMatrix(mMatrix);
         mOriginalScale = getCurrentScale();
+        mSkipScaling = true;
     }
 
     private class PrivateScaleDetector extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-            mEdited = true;
+            mMatrix.getValues(m);
 
-            getImageMatrix().getValues(mMatrixValues);
-
-            float scale = mMatrixValues[Matrix.MSCALE_X];
+            float scale = m[Matrix.MSCALE_X];
             float scaleFactor = detector.getScaleFactor();
             float scaleNew = scale * scaleFactor;
             boolean scalable = true;
@@ -160,10 +165,10 @@ public class PageImageView extends ImageView {
                 scalable = false;
             }
 
-            getImageMatrix().postScale(
+            mMatrix.postScale(
                     scaleFactor, scaleFactor,
                     detector.getFocusX(), detector.getFocusY());
-            setImageMatrix(getImageMatrix());
+            setImageMatrix(mMatrix);
 
             return scalable;
         }
@@ -178,17 +183,13 @@ public class PageImageView extends ImageView {
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            mEdited = true;
-
-            getImageMatrix().postTranslate(-distanceX, -distanceY);
-            setImageMatrix(getImageMatrix());
+            mMatrix.postTranslate(-distanceX, -distanceY);
+            setImageMatrix(mMatrix);
             return true;
         }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            mEdited = true;
-
             Point imageSize = computeCurrentImageSize();
             Point offset = computeCurrentOffset();
 
@@ -234,28 +235,28 @@ public class PageImageView extends ImageView {
             int curX = mScroller.getCurrX();
             int curY = mScroller.getCurrY();
 
-            getImageMatrix().getValues(mMatrixValues);
-            mMatrixValues[Matrix.MTRANS_X] = curX;
-            mMatrixValues[Matrix.MTRANS_Y] = curY;
-            getImageMatrix().setValues(mMatrixValues);
-            setImageMatrix(getImageMatrix());
+            mMatrix.getValues(m);
+            m[Matrix.MTRANS_X] = curX;
+            m[Matrix.MTRANS_Y] = curY;
+            mMatrix.setValues(m);
+            setImageMatrix(mMatrix);
             ViewCompat.postInvalidateOnAnimation(this);
         }
         super.computeScroll();
     }
 
     private float getCurrentScale() {
-        getImageMatrix().getValues(mMatrixValues);
-        return mMatrixValues[Matrix.MSCALE_X];
+        mMatrix.getValues(m);
+        return m[Matrix.MSCALE_X];
     }
 
     private Point computeCurrentImageSize() {
         final Point size = new Point();
         Drawable d = getDrawable();
         if (d != null) {
-            getImageMatrix().getValues(mMatrixValues);
+            mMatrix.getValues(m);
 
-            float scale = mMatrixValues[Matrix.MSCALE_X];
+            float scale = m[Matrix.MSCALE_X];
             float width = d.getIntrinsicWidth() * scale;
             float height = d.getIntrinsicHeight() * scale;
 
@@ -271,9 +272,9 @@ public class PageImageView extends ImageView {
     private Point computeCurrentOffset() {
         final Point offset = new Point();
 
-        getImageMatrix().getValues(mMatrixValues);
-        float transX = mMatrixValues[Matrix.MTRANS_X];
-        float transY = mMatrixValues[Matrix.MTRANS_Y];
+        mMatrix.getValues(m);
+        float transX = m[Matrix.MTRANS_X];
+        float transY = m[Matrix.MTRANS_Y];
 
         offset.set((int)transX, (int)transY);
 
@@ -292,7 +293,7 @@ public class PageImageView extends ImageView {
         if (getDrawable() == null)
             return matrix;
 
-        matrix.getValues(mMatrixValues);
+        matrix.getValues(m);
 
         Point imageSize = computeCurrentImageSize();
 
@@ -302,15 +303,15 @@ public class PageImageView extends ImageView {
         int maxTransY = imageHeight - getHeight();
 
         if (imageWidth > getWidth())
-            mMatrixValues[Matrix.MTRANS_X] = Math.min(0, Math.max(mMatrixValues[Matrix.MTRANS_X], -maxTransX));
+            m[Matrix.MTRANS_X] = Math.min(0, Math.max(m[Matrix.MTRANS_X], -maxTransX));
         else
-            mMatrixValues[Matrix.MTRANS_X] = getWidth() / 2 - imageWidth / 2;
+            m[Matrix.MTRANS_X] = getWidth() / 2 - imageWidth / 2;
         if (imageHeight > getHeight())
-            mMatrixValues[Matrix.MTRANS_Y] = Math.min(0, Math.max(mMatrixValues[Matrix.MTRANS_Y], -maxTransY));
+            m[Matrix.MTRANS_Y] = Math.min(0, Math.max(m[Matrix.MTRANS_Y], -maxTransY));
         else
-            mMatrixValues[Matrix.MTRANS_Y] = getHeight() / 2 - imageHeight / 2;
+            m[Matrix.MTRANS_Y] = getHeight() / 2 - imageHeight / 2;
 
-        matrix.setValues(mMatrixValues);
+        matrix.setValues(m);
         return matrix;
     }
 
@@ -341,7 +342,7 @@ public class PageImageView extends ImageView {
         long mStartTime;
 
         ZoomAnimation(float x, float y, float scale) {
-            getImageMatrix().getValues(mMatrixValues);
+            mMatrix.getValues(m);
             mX = x;
             mY = y;
             mScale = scale;
@@ -357,22 +358,22 @@ public class PageImageView extends ImageView {
             float interpolateRatio = mInterpolator.getInterpolation(t);
             t = (t > 1f) ? 1f : t;
 
-            getImageMatrix().getValues(mMatrixValues);
+            mMatrix.getValues(m);
             float newScale = mStartScale + interpolateRatio * (mScale - mStartScale);
-            float newScaleFactor = newScale / mMatrixValues[Matrix.MSCALE_X];
+            float newScaleFactor = newScale / m[Matrix.MSCALE_X];
 
-            getImageMatrix().postScale(newScaleFactor, newScaleFactor, mX, mY);
-            setImageMatrix(getImageMatrix());
+            mMatrix.postScale(newScaleFactor, newScaleFactor, mX, mY);
+            setImageMatrix(mMatrix);
 
             if (t < 1f) {
                 post(this);
             }
             else {
                 // set exact scale
-                getImageMatrix().getValues(mMatrixValues);
-                getImageMatrix().setScale(mScale, mScale);
-                getImageMatrix().postTranslate(mMatrixValues[Matrix.MTRANS_X], mMatrixValues[Matrix.MTRANS_Y]);
-                setImageMatrix(getImageMatrix());
+                mMatrix.getValues(m);
+                mMatrix.setScale(mScale, mScale);
+                mMatrix.postTranslate(m[Matrix.MTRANS_X], m[Matrix.MTRANS_Y]);
+                setImageMatrix(mMatrix);
             }
         }
     }
