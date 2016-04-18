@@ -23,7 +23,7 @@ public class DirectoryListingManager {
             }
         });
         mComics = comics;
-        mLibraryDir = new File(libraryDir);
+        mLibraryDir = new File(libraryDir != null ? libraryDir : "/");
 
         List<String> directoryDisplays = new ArrayList<>();
         for (Comic comic : mComics) {
