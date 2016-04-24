@@ -1,7 +1,6 @@
 package com.nkanaev.comics.model;
 
 import java.io.File;
-import android.net.Uri;
 
 
 public class Comic implements Comparable {
@@ -11,15 +10,17 @@ public class Comic implements Comparable {
     private int mId;
     private String mType;
     private File mFile;
+    public final int updatedAt;
 
     public Comic(Storage shelf, int id, String filepath, String filename,
-                 String type, int numPages, int currentPage) {
+                 String type, int numPages, int currentPage, int updatedAt) {
         mShelf = shelf;
         mId = id;
         mNumPages = numPages;
         mCurrentPage = currentPage;
         mFile = new File(filepath, filename);
         mType = type;
+        this.updatedAt = updatedAt;
     }
 
     public int getId() {

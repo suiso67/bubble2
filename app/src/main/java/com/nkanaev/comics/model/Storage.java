@@ -22,6 +22,7 @@ public class Storage {
         public static final String COLUMN_NAME_NUM_PAGES = "num_pages";
         public static final String COLUMN_NAME_CURRENT_PAGE = "cur_page";
         public static final String COLUMN_NAME_TYPE = "type";
+        public static final String COLUMN_NAME_UPDATED_AT = "updated_at";
 
         public static final String[] columns = {
                 Book.COLUMN_NAME_ID,
@@ -29,12 +30,13 @@ public class Storage {
                 Book.COLUMN_NAME_FILENAME,
                 Book.COLUMN_NAME_NUM_PAGES,
                 Book.COLUMN_NAME_CURRENT_PAGE,
-                Book.COLUMN_NAME_TYPE
+                Book.COLUMN_NAME_TYPE,
+                Book.COLUMN_NAME_UPDATED_AT
         };
     }
 
     public class ComicDbHelper extends SQLiteOpenHelper {
-        public static final int DATABASE_VERSION = 1;
+        public static final int DATABASE_VERSION = 2;
         public static final String DATABASE_NAME = "comics.db";
 
         public ComicDbHelper(Context context) {
@@ -49,14 +51,17 @@ public class Storage {
                     + Book.COLUMN_NAME_FILENAME + " TEXT,"
                     + Book.COLUMN_NAME_NUM_PAGES + " INTEGER,"
                     + Book.COLUMN_NAME_CURRENT_PAGE + " INTEGER DEFAULT 0,"
-                    + Book.COLUMN_NAME_TYPE + " TEXT"
+                    + Book.COLUMN_NAME_TYPE + " TEXT,"
+                    + Book.COLUMN_NAME_UPDATED_AT + " INTEGER"
                     + ")";
             db.execSQL(sql);
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+            if (oldVersion < 2) {
+                db.execSQL("ALTER TABLE " + Book.TABLE_NAME + " ADD COLUMN " + Book.COLUMN_NAME_UPDATED_AT + " INTEGER");
+            }
         }
     }
 
@@ -173,13 +178,15 @@ public class Storage {
         int numPages = c.getInt(c.getColumnIndex(Book.COLUMN_NAME_NUM_PAGES));
         int currentPage = c.getInt(c.getColumnIndex(Book.COLUMN_NAME_CURRENT_PAGE));
         String type = c.getString(c.getColumnIndex(Book.COLUMN_NAME_TYPE));
+        int updatedAt = c.getInt(c.getColumnIndex(Book.COLUMN_NAME_UPDATED_AT));
 
-        return new Comic(this, id, path, name, type, numPages, currentPage);
+        return new Comic(this, id, path, name, type, numPages, currentPage, updatedAt);
     }
 
     public void bookmarkPage(int comicId, int page) {
         ContentValues values = new ContentValues();
         values.put(Book.COLUMN_NAME_CURRENT_PAGE, page);
+        values.put(Book.COLUMN_NAME_UPDATED_AT, "strftime('%s', 'now')");
         String filter = Book.COLUMN_NAME_ID + "=" + Integer.toString(comicId);
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         db.update(Book.TABLE_NAME, values, filter, null);
