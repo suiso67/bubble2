@@ -186,7 +186,7 @@ public class Storage {
     public void bookmarkPage(int comicId, int page) {
         ContentValues values = new ContentValues();
         values.put(Book.COLUMN_NAME_CURRENT_PAGE, page);
-        values.put(Book.COLUMN_NAME_UPDATED_AT, "strftime('%s', 'now')");
+        values.put(Book.COLUMN_NAME_UPDATED_AT, System.currentTimeMillis());
         String filter = Book.COLUMN_NAME_ID + "=" + Integer.toString(comicId);
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         db.update(Book.TABLE_NAME, values, filter, null);
