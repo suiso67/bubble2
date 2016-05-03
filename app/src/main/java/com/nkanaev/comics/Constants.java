@@ -7,6 +7,8 @@ public class Constants {
     public static final int MAX_PAGE_HEIGHT = 1600;
     public static final int MAX_PAGE_WIDTH = 2000;
 
+    public static final int MAX_RECENT_COUNT = 5;
+
     public static final String SETTINGS_NAME = "SETTINGS_COMICS";
     public static final String SETTINGS_LIBRARY_DIR = "SETTINGS_LIBRARY_DIR";
 

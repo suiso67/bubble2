@@ -29,6 +29,9 @@
     <string name="menu_browser">Browser</string>
     <string name="menu_about">About</string>
 
+    <string name="library_header_recent">Recent</string>
+    <string name="library_header_all">All</string>
+
     <string name="directory_picker_header">Set a library directory</string>
     <string name="directory_picker_confirm">Select</string>
     <string name="directory_picker_cancel">Cancel</string>
