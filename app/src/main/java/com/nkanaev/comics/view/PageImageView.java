@@ -135,11 +135,11 @@ public class PageImageView extends ImageView {
         float w = dwidth * heightRatio;
         if (w < vwidth) {
             mMinScale = vheight * 0.75f / dheight;
-            mMaxScale = Math.max(dwidth, vwidth) * 1.2f / dwidth;
+            mMaxScale = Math.max(dwidth, vwidth) * 1.5f / dwidth;
         }
         else {
             mMinScale = vwidth * 0.75f / dwidth;
-            mMaxScale = Math.max(dheight, vheight) * 1.2f / dheight;
+            mMaxScale = Math.max(dheight, vheight) * 1.5f / dheight;
         }
         setImageMatrix(mMatrix);
         mOriginalScale = getCurrentScale();
