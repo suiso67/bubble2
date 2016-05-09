@@ -10,10 +10,10 @@ public class Comic implements Comparable {
     private int mId;
     private String mType;
     private File mFile;
-    public final int updatedAt;
+    public final long updatedAt;
 
     public Comic(Storage shelf, int id, String filepath, String filename,
-                 String type, int numPages, int currentPage, int updatedAt) {
+                 String type, int numPages, int currentPage, long updatedAt) {
         mShelf = shelf;
         mId = id;
         mNumPages = numPages;

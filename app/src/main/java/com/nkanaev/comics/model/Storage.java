@@ -178,7 +178,7 @@ public class Storage {
         int numPages = c.getInt(c.getColumnIndex(Book.COLUMN_NAME_NUM_PAGES));
         int currentPage = c.getInt(c.getColumnIndex(Book.COLUMN_NAME_CURRENT_PAGE));
         String type = c.getString(c.getColumnIndex(Book.COLUMN_NAME_TYPE));
-        int updatedAt = c.getInt(c.getColumnIndex(Book.COLUMN_NAME_UPDATED_AT));
+        long updatedAt = c.getLong(c.getColumnIndex(Book.COLUMN_NAME_UPDATED_AT));
 
         return new Comic(this, id, path, name, type, numPages, currentPage, updatedAt);
     }
@@ -186,7 +186,7 @@ public class Storage {
     public void bookmarkPage(int comicId, int page) {
         ContentValues values = new ContentValues();
         values.put(Book.COLUMN_NAME_CURRENT_PAGE, page);
-        values.put(Book.COLUMN_NAME_UPDATED_AT, System.currentTimeMillis());
+        values.put(Book.COLUMN_NAME_UPDATED_AT, System.currentTimeMillis() / 1000);
         String filter = Book.COLUMN_NAME_ID + "=" + Integer.toString(comicId);
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         db.update(Book.TABLE_NAME, values, filter, null);
