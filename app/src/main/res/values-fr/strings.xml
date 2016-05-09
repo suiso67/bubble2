@@ -55,4 +55,6 @@
     
     <string name="library_empty"></string>
     <string name="warning_missing_file"></string>
+    <string name="library_header_all"></string>
+    <string name="library_header_recent"></string>
 </resources>
