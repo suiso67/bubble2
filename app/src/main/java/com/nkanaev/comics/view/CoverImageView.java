@@ -34,7 +34,7 @@ public class CoverImageView extends ImageView {
             int width = drawable.getIntrinsicWidth();
             int height = drawable.getIntrinsicHeight();
             double ratio = (double)height/(double)width;
-            if (1.2 <= ratio && ratio <= 1.5) {
+            if (1.2 <= ratio && ratio <= 1.6) {
                 setScaleType(ScaleType.CENTER_CROP);
             }
             else {
