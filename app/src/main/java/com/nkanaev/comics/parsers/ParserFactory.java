@@ -1,5 +1,7 @@
 package com.nkanaev.comics.parsers;
 
+import com.nkanaev.comics.managers.Utils;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -15,11 +17,14 @@ public class ParserFactory {
         if (file.isDirectory()) {
             parser = new DirectoryParser();
         }
-        if (fileName.matches(".+(cbz|zip)$")) {
+        if (Utils.isZip(fileName)) {
             parser = new ZipParser();
         }
-        else if (fileName.matches(".+(cbr|rar)$")) {
+        else if (Utils.isRar(fileName)) {
             parser = new RarParser();
+        }
+        else if (Utils.isTarball(fileName)) {
+            parser = new TarParser();
         }
         return tryParse(parser, file);
     }

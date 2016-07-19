@@ -10,10 +10,8 @@ import android.content.pm.ApplicationInfo;
 import android.os.Environment;
 import android.util.DisplayMetrics;
 
-import java.io.Closeable;
-import java.io.IOException;
+import java.io.*;
 import java.security.MessageDigest;
-import java.io.File;
 
 import static android.content.Context.ACTIVITY_SERVICE;
 import static android.content.pm.ApplicationInfo.FLAG_LARGE_HEAP;
@@ -84,8 +82,12 @@ public final class Utils {
         return filename.toLowerCase().matches(".*\\.(rar|cbr)$");
     }
 
+    public static boolean isTarball(String filename) {
+        return filename.toLowerCase().matches(".*\\.(cbt)$");
+    }
+
     public static boolean isArchive(String filename) {
-        return isZip(filename) || isRar(filename);
+        return isZip(filename) || isRar(filename) || isTarball(filename);
     }
 
     public static int getDeviceWidth(Context context) {
@@ -144,5 +146,19 @@ public final class Utils {
 
     public static File getCacheFile(Context context, String identifier) {
         return new File(context.getExternalCacheDir(), Utils.MD5(identifier));
+    }
+
+    public static byte[] toByteArray(InputStream is) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try {
+            byte[] b = new byte[4096];
+            int n = 0;
+            while ((n = is.read(b)) != -1) {
+                output.write(b, 0, n);
+            }
+            return output.toByteArray();
+        } finally {
+            output.close();
+        }
     }
 }
