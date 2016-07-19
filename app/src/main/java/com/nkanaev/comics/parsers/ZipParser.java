@@ -10,6 +10,7 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import com.nkanaev.comics.managers.NaturalOrderComparator;
 import com.nkanaev.comics.managers.Utils;
 
 
@@ -30,9 +31,10 @@ public class ZipParser implements Parser {
             }
         }
 
-        Collections.sort(mEntries, new Comparator<ZipEntry>() {
-            public int compare(ZipEntry a, ZipEntry b) {
-                return a.getName().compareTo(b.getName());
+        Collections.sort(mEntries, new NaturalOrderComparator() {
+            @Override
+            public String stringValue(Object o) {
+                return ((ZipEntry) o).getName();
             }
         });
     }

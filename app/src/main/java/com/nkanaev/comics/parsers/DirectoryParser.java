@@ -1,6 +1,7 @@
 package com.nkanaev.comics.parsers;
 
 
+import com.nkanaev.comics.managers.NaturalOrderComparator;
 import com.nkanaev.comics.managers.Utils;
 
 import java.io.File;
@@ -31,7 +32,12 @@ public class DirectoryParser implements Parser {
             }
         }
 
-        Collections.sort(mFiles);
+        Collections.sort(mFiles, new NaturalOrderComparator() {
+            @Override
+            public String stringValue(Object o) {
+                return ((File) o).getName();
+            }
+        });
     }
 
     @Override
