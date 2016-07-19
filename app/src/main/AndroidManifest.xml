@@ -33,6 +33,8 @@
                 <data android:pathPattern="/.*\\.rar" />
                 <data android:pathPattern="/.*\\.cbr" />
                 <data android:pathPattern="/.*\\.cbt" />
+                <data android:pathPattern="/.*\\.cb7" />
+                <data android:pathPattern="/.*\\.7z" />
             </intent-filter>
         </activity>
     </application>

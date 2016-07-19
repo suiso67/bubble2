@@ -86,8 +86,12 @@ public final class Utils {
         return filename.toLowerCase().matches(".*\\.(cbt)$");
     }
 
+    public static boolean isSevenZ(String filename) {
+        return filename.toLowerCase().matches(".*\\.(cb7|7z)$");
+    }
+
     public static boolean isArchive(String filename) {
-        return isZip(filename) || isRar(filename) || isTarball(filename);
+        return isZip(filename) || isRar(filename) || isTarball(filename) || isSevenZ(filename);
     }
 
     public static int getDeviceWidth(Context context) {

@@ -26,6 +26,9 @@ public class ParserFactory {
         else if (Utils.isTarball(fileName)) {
             parser = new TarParser();
         }
+        else if (Utils.isSevenZ(fileName)) {
+            parser = new SevenZParser();
+        }
         return tryParse(parser, file);
     }
 
