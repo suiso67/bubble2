@@ -37,11 +37,18 @@ public class DirectoryListingManager {
             else {
                 List<String> intermediateDirs = new ArrayList<>();
                 File current = comicDir;
-                while (!current.equals(mLibraryDir)) {
+
+                while (current != null && !current.equals(mLibraryDir)) {
                     intermediateDirs.add(0, current.getName());
                     current = current.getParentFile();
                 }
-                directoryDisplays.add(TextUtils.join(" | ", intermediateDirs));
+                if (current == null) {
+                    // impossible, but occurs
+                    directoryDisplays.add(comicDir.getName());
+                }
+                else {
+                    directoryDisplays.add(TextUtils.join(" | ", intermediateDirs));
+                }
             }
         }
 
