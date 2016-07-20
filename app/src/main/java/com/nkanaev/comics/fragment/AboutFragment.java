@@ -44,7 +44,21 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
                 "Unrar License",
                 "Edmund Wagner",
                 "https://github.com/edmund-wagner/junrar"
-        )
+        ),
+        new LibraryDescription(
+                "Apache Commons Compress",
+                "Defines an API for working with tar, zip and bzip2 files",
+                "Apache Version 2.0",
+                "Apache Software Foundation",
+                "https://commons.apache.org/proper/commons-compress/"
+        ),
+        new LibraryDescription(
+                "XZ Utils",
+                "XZ Utils is free general-purpose data compression software with a high compression ratio",
+                "Public Domain",
+                "Tukaani Developers",
+                "http://tukaani.org/xz/java.html"
+        ),
     };
 
     @Override
