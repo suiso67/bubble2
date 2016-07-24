@@ -18,8 +18,9 @@ public class DirectoryListingManager {
         Collections.sort(comics, new Comparator<Comic>() {
             @Override
             public int compare(Comic lhs, Comic rhs) {
-                return lhs.getFile().getParentFile().getName()
-                        .compareTo(rhs.getFile().getParentFile().getAbsolutePath());
+                String leftPath = lhs.getFile().getParentFile().getAbsolutePath();
+                String rightPath = rhs.getFile().getParentFile().getAbsolutePath();
+                return leftPath.compareTo(rightPath);
             }
         });
         mComics = comics;
