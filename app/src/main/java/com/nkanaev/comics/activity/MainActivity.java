@@ -19,6 +19,7 @@ import com.nkanaev.comics.fragment.BrowserFragment;
 import com.nkanaev.comics.fragment.HeaderFragment;
 import com.nkanaev.comics.fragment.LibraryFragment;
 import com.nkanaev.comics.managers.LocalCoverHandler;
+import com.nkanaev.comics.managers.Scanner;
 import com.nkanaev.comics.managers.Utils;
 import com.squareup.picasso.Picasso;
 
@@ -62,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
                 this, mDrawerLayout,
                 R.string.drawer_open, R.string.drawer_close);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+        Scanner.getInstance().scanLibrary();
 
         if (savedInstanceState == null) {
             setFragment(new LibraryFragment());

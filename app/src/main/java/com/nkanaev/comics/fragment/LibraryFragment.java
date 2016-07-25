@@ -1,15 +1,17 @@
 package com.nkanaev.comics.fragment;
 
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
 import com.nkanaev.comics.Constants;
+import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.MainActivity;
 import com.nkanaev.comics.managers.DirectoryListingManager;
@@ -22,6 +24,7 @@ import com.nkanaev.comics.view.DirectorySelectDialog;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 
@@ -32,31 +35,42 @@ public class LibraryFragment extends Fragment
         SwipeRefreshLayout.OnRefreshListener {
     private final static String BUNDLE_DIRECTORY_DIALOG_SHOWN = "BUNDLE_DIRECTORY_DIALOG_SHOWN";
 
-//    private ArrayList<Comic> mComics;
     private DirectoryListingManager mComicsListManager;
     private DirectorySelectDialog mDirectorySelectDialog;
     private SwipeRefreshLayout mRefreshLayout;
     private View mEmptyView;
     private GridView mGridView;
-    private Storage mStorage;
-    private Scanner mScanner;
     private Picasso mPicasso;
-    private boolean mIsLoading;
+    private boolean mIsRefreshPlanned = false;
+    private Handler mUpdateHandler = new UpdateHandler(this);
 
     public LibraryFragment() {}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        mStorage = Storage.getStorage(getActivity());
-        getComics();
-
         mDirectorySelectDialog = new DirectorySelectDialog(getActivity());
         mDirectorySelectDialog.setCurrentDirectory(Environment.getExternalStorageDirectory());
         mDirectorySelectDialog.setOnDirectorySelectListener(this);
 
+        getComics();
+
         setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Scanner.getInstance().addUpdateHandler(mUpdateHandler);
+        if (Scanner.getInstance().isRunning()) {
+            setLoading(true);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        Scanner.getInstance().removeUpdateHandler(mUpdateHandler);
+        super.onPause();
     }
 
     @Override
@@ -97,8 +111,9 @@ public class LibraryFragment extends Fragment
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menuLibrarySetDir) {
-            if (mScanner != null && mScanner.getStatus() != AsyncTask.Status.FINISHED)
-                mScanner.cancel(true);
+            if (Scanner.getInstance().isRunning()) {
+                Scanner.getInstance().stop();
+            }
 
             mDirectorySelectDialog.show();
             return true;
@@ -115,28 +130,14 @@ public class LibraryFragment extends Fragment
 
     @Override
     public void onDirectorySelect(File file) {
-        showEmptyMessage(false);
-
-        SharedPreferences preferences = getActivity()
-                .getSharedPreferences(Constants.SETTINGS_NAME, 0);
+        SharedPreferences preferences = MainApplication.getPreferences();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putString(Constants.SETTINGS_LIBRARY_DIR, file.getAbsolutePath());
         editor.apply();
 
-        if (mScanner == null || mScanner.getStatus() == AsyncTask.Status.FINISHED) {
-            mScanner = new Scanner(getActivity(), mStorage, file) {
-                @Override
-                protected void onPreExecute() {
-                    setLoading(true);
-                }
-
-                @Override
-                protected void onPostExecute(Void aVoid) {
-                    setLoading(false);
-                }
-            };
-            mScanner.execute();
-        }
+        Scanner.getInstance().forceScanLibrary();
+        showEmptyMessage(false);
+        setLoading(true);
     }
 
     @Override
@@ -148,23 +149,9 @@ public class LibraryFragment extends Fragment
 
     @Override
     public void onRefresh() {
-        if (mScanner == null || mScanner.getStatus() == AsyncTask.Status.FINISHED) {
-            String libraryDir = getLibraryDir();
-            if (libraryDir == null)
-                return;
-
-            mScanner = new Scanner(getActivity(), mStorage, new File(libraryDir)) {
-                @Override
-                protected void onPreExecute() {
-                    setLoading(true);
-                }
-
-                @Override
-                protected void onPostExecute(Void aVoid) {
-                    setLoading(false);
-                }
-            };
-            mScanner.execute();
+        if (!Scanner.getInstance().isRunning()) {
+            setLoading(true);
+            Scanner.getInstance().scanLibrary();
         }
     }
 
@@ -173,18 +160,30 @@ public class LibraryFragment extends Fragment
         mComicsListManager = new DirectoryListingManager(comics, getLibraryDir());
     }
 
-    private void setLoading(boolean isLoading) {
-        mIsLoading = isLoading;
+    private void refreshLibraryDelayed() {
+        if (!mIsRefreshPlanned) {
+            final Runnable updateRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    getComics();
+                    ((BaseAdapter)mGridView.getAdapter()).notifyDataSetChanged();
+                    mIsRefreshPlanned = false;
+                }
+            };
+            mIsRefreshPlanned = true;
+            mGridView.postDelayed(updateRunnable, 100);
+        }
+    }
 
+    private void setLoading(boolean isLoading) {
         if (isLoading) {
             mRefreshLayout.setRefreshing(true);
-            mGridView.requestLayout();
+            mGridView.setOnItemClickListener(null);
         }
         else {
             mRefreshLayout.setRefreshing(false);
-            getComics();
             showEmptyMessage(mComicsListManager.getCount() == 0);
-            mGridView.requestLayout();
+            mGridView.setOnItemClickListener(this);
         }
     }
 
@@ -208,10 +207,35 @@ public class LibraryFragment extends Fragment
         }
     }
 
+    private static class UpdateHandler extends Handler {
+        private WeakReference<LibraryFragment> mOwner;
+
+        public UpdateHandler(LibraryFragment fragment) {
+            mOwner = new WeakReference<>(fragment);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            LibraryFragment fragment = mOwner.get();
+            if (fragment == null) {
+                return;
+            }
+
+            if (msg.what == Constants.MESSAGE_MEDIA_UPDATED) {
+                fragment.refreshLibraryDelayed();
+            }
+            else if (msg.what == Constants.MESSAGE_MEDIA_UPDATE_FINISHED) {
+                fragment.getComics();
+                ((BaseAdapter)fragment.mGridView.getAdapter()).notifyDataSetChanged();
+                fragment.setLoading(false);
+            }
+        }
+    }
+
     private final class GroupBrowserAdapter extends BaseAdapter {
         @Override
         public int getCount() {
-            return mIsLoading ? 0 : mComicsListManager.getCount();
+            return mComicsListManager.getCount();
         }
 
         @Override

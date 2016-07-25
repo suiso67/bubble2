@@ -1,89 +1,166 @@
 package com.nkanaev.comics.managers;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.*;
 
 import android.content.Context;
-import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Process;
+import android.util.Log;
+import com.nkanaev.comics.Constants;
+import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.model.*;
 import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
 
-public class Scanner extends AsyncTask<Void, Void, Void> {
-    private Storage mStorage;
-    private Context mContext;
-    private DirectoryIterator mDirIterator;
+public class Scanner {
+    private Thread mUpdateThread;
+    private List<Handler> mUpdateHandler;
 
-    public Scanner(Context context, Storage storage, File rootDir) {
-        mContext = context;
-        mStorage = storage;
-        mDirIterator = new DirectoryIterator(rootDir);
-    }
+    private boolean mIsStopped;
+    private boolean mIsRestarted;
 
-    @Override
-    protected Void doInBackground(Void... params) {
-        ArrayList<Comic> allComics = mStorage.listComics();
-        HashMap<File, Comic> dirComics = new HashMap<>();
-        for (Comic c : allComics) {
-            dirComics.put(c.getFile(), c);
+    private Handler mRestartHandler = new RestartHandler(this);
+    private static class RestartHandler extends Handler {
+        private WeakReference<Scanner> mScannerRef;
+
+        public RestartHandler(Scanner scanner) {
+            mScannerRef = new WeakReference<>(scanner);
         }
 
-        for (File file : mDirIterator) {
-            if (isCancelled()) return null;
-
-            if (dirComics.containsKey(file)) {
-                dirComics.remove(file);
-                continue;
-            }
-
-            Parser parser = ParserFactory.create(file);
-            if (parser == null) continue;
-            if (parser.numPages() > 0) {
-                mStorage.addBook(file, parser.getType(), parser.numPages());
+        @Override
+        public void handleMessage(Message msg) {
+            Scanner scanner = mScannerRef.get();
+            if (scanner != null) {
+                scanner.scanLibrary();
             }
         }
-
-        for (Comic missing : dirComics.values()) {
-            File coverCache = Utils.getCacheFile(mContext, missing.getFile().getAbsolutePath());
-            coverCache.delete();
-            mStorage.removeComic(missing.getId());
-        }
-
-        return null;
     }
 
-    private class DirectoryIterator implements Iterable<File>, Iterator<File> {
-        Deque<File> mFiles = new ArrayDeque<>();
-
-        public DirectoryIterator(File root) {
-            mFiles.push(root);
+    private static Scanner mInstance;
+    public synchronized static Scanner getInstance() {
+        if (mInstance == null) {
+            mInstance = new Scanner();
         }
+        return mInstance;
+    }
 
-        @Override
-        public Iterator<File> iterator() {
-            return this;
+    private Scanner() {
+        mInstance = this;
+        mUpdateHandler = new ArrayList<>();
+    }
+
+    public boolean isRunning() {
+        return mUpdateThread != null &&
+                mUpdateThread.isAlive() &&
+                mUpdateThread.getState() != Thread.State.TERMINATED &&
+                mUpdateThread.getState() != Thread.State.NEW;
+    }
+
+    public void stop() {
+        mIsStopped = true;
+    }
+
+    public void forceScanLibrary() {
+        if (isRunning()) {
+            mIsStopped = true;
+            mIsRestarted = true;
         }
-
-        @Override
-        public boolean hasNext() {
-            return !mFiles.isEmpty();
+        else {
+            scanLibrary();
         }
+    }
 
+    public void scanLibrary() {
+        if (mUpdateThread == null || mUpdateThread.getState() == Thread.State.TERMINATED) {
+            LibraryUpdateRunnable runnable = new LibraryUpdateRunnable();
+            mUpdateThread = new Thread(runnable);
+            mUpdateThread.setPriority(Process.THREAD_PRIORITY_DEFAULT+Process.THREAD_PRIORITY_LESS_FAVORABLE);
+            mUpdateThread.start();
+        }
+    }
+
+    public void addUpdateHandler(Handler handler) {
+        mUpdateHandler.add(handler);
+    }
+
+    public void removeUpdateHandler(Handler handler) {
+        mUpdateHandler.remove(handler);
+    }
+
+    private void notifyMediaUpdated() {
+        for (Handler h : mUpdateHandler) {
+            h.sendEmptyMessage(Constants.MESSAGE_MEDIA_UPDATED);
+        }
+    }
+
+    private void notifyLibraryUpdateFinished() {
+        for (Handler h : mUpdateHandler) {
+            h.sendEmptyMessage(Constants.MESSAGE_MEDIA_UPDATE_FINISHED);
+        }
+    }
+
+    private class LibraryUpdateRunnable implements Runnable {
         @Override
-        public File next() {
-            File f = mFiles.pop();
-            if (f.isDirectory()) {
-                File[] files = f.listFiles();
-                if (files != null) {
-                    mFiles.addAll(Arrays.asList(files));
+        public void run() {
+            try {
+                Context ctx = MainApplication.getAppContext();
+                String libDir = MainApplication.getPreferences()
+                        .getString(Constants.SETTINGS_LIBRARY_DIR, "");
+                if (libDir.equals("")) return;
+                Storage storage = Storage.getStorage(ctx);
+                Map<File, Comic> storageFiles = new HashMap<>();
+
+                // create list of files available in storage
+                for (Comic c : storage.listComics()) {
+                    storageFiles.put(c.getFile(), c);
+                }
+
+                // search and add comics if necessary
+                Deque<File> directories = new ArrayDeque<>();
+                directories.add(new File(libDir));
+                while (!directories.isEmpty()) {
+                    File dir = directories.pop();
+                    File[] files = dir.listFiles();
+                    Arrays.sort(files);
+                    for (File file : files) {
+                        if (mIsStopped) return;
+                        if (file.isDirectory()) {
+                            directories.add(file);
+                        }
+                        if (storageFiles.containsKey(file)) {
+                            storageFiles.remove(file);
+                            continue;
+                        }
+                        Parser parser = ParserFactory.create(file);
+                        if (parser == null) continue;
+                        if (parser.numPages() > 0) {
+                            storage.addBook(file, parser.getType(), parser.numPages());
+                            notifyMediaUpdated();
+                        }
+                    }
+                }
+
+                // delete missing comics
+                for (Comic missing : storageFiles.values()) {
+                    File coverCache = Utils.getCacheFile(ctx, missing.getFile().getAbsolutePath());
+                    coverCache.delete();
+                    storage.removeComic(missing.getId());
                 }
             }
-            return f;
-        }
+            finally {
+                mIsStopped = false;
 
-        @Override
-        public void remove() {
-
+                if (mIsRestarted) {
+                    mIsRestarted = false;
+                    mRestartHandler.sendEmptyMessageDelayed(1, 200);
+                }
+                else {
+                    notifyLibraryUpdateFinished();
+                }
+            }
         }
     }
 }

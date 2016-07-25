@@ -15,6 +15,9 @@ public class Constants {
     public static final String SETTINGS_PAGE_VIEW_MODE = "SETTINGS_PAGE_VIEW_MODE";
     public static final String SETTINGS_READING_LEFT_TO_RIGHT = "SETTINGS_READING_LEFT_TO_RIGHT";
 
+    public static final int MESSAGE_MEDIA_UPDATE_FINISHED = 0;
+    public static final int MESSAGE_MEDIA_UPDATED = 1;
+
     public enum PageViewMode {
         ASPECT_FILL(0),
         ASPECT_FIT(1),
