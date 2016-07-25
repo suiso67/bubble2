@@ -194,17 +194,8 @@ public class LibraryFragment extends Fragment
     }
 
     private void showEmptyMessage(boolean show) {
-        mRefreshLayout.setVisibility(!show ? View.VISIBLE : View.GONE);
         mEmptyView.setVisibility(show ? View.VISIBLE : View.GONE);
-
-        if (!show) {
-            // workaround: indicator does not show on view first appearance
-            // https://code.google.com/p/android/issues/detail?id=77712
-            mRefreshLayout.setProgressViewOffset(false, 0,
-                    (int) TypedValue.applyDimension(
-                            TypedValue.COMPLEX_UNIT_DIP, 24,
-                            getResources().getDisplayMetrics()));
-        }
+        mRefreshLayout.setEnabled(!show);
     }
 
     private static class UpdateHandler extends Handler {
