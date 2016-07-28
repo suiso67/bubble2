@@ -72,7 +72,7 @@ public class DirectorySelectDialog
         mSubdirs = subDirs.toArray(new File[subDirs.size()]);
 
         mTitleTextView.setText(mCurrentDir.getPath());
-        mListView.requestLayout();
+        ((BaseAdapter)mListView.getAdapter()).notifyDataSetChanged();
     }
 
     public void setOnDirectorySelectListener(OnDirectorySelectListener l) {
