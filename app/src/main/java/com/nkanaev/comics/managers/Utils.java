@@ -3,20 +3,15 @@ package com.nkanaev.comics.managers;
 import android.app.ActivityManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Build;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
-import android.os.Environment;
 import android.util.DisplayMetrics;
 
 import java.io.*;
 import java.security.MessageDigest;
 
 import static android.content.Context.ACTIVITY_SERVICE;
-import static android.content.pm.ApplicationInfo.FLAG_LARGE_HEAP;
-import static android.os.Build.VERSION.SDK_INT;
-import static android.os.Build.VERSION_CODES.HONEYCOMB;
 
 
 public final class Utils {

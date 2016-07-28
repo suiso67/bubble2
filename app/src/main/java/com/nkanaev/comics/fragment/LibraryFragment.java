@@ -7,7 +7,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.TypedValue;
 import android.view.*;
 import android.widget.*;
 import com.nkanaev.comics.Constants;

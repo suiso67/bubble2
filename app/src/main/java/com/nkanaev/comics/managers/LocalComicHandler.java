@@ -1,8 +1,6 @@
 package com.nkanaev.comics.managers;
 
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.graphics.Bitmap;
 import com.nkanaev.comics.parsers.*;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Request;

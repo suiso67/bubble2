@@ -8,7 +8,6 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Process;
-import android.util.Log;
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.model.*;
