@@ -21,6 +21,11 @@ Android comic book reader.
   <img height="44" width="auto" src='https://upload.wikimedia.org/wikipedia/commons/c/cd/Get_it_on_Google_play.svg'></img>
 </a>
 
+## Contributors
+
+* Nicola Spanti (french translation)
+* Alez Boom (spanish translation)
+
 ## License
 
 Source code is available under the MIT license. See the LICENSE for more info.
