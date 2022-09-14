@@ -1,8 +1,7 @@
-# Bubble
+# Bubble2
 
-![promo](https://raw.githubusercontent.com/nkanaev/bubble/master/art/promo.jpg)
-
-Android comic book reader.
+Android comic book reader. Based on Bubble v1.6.0 by Nazar Kanaev.<br>
+Upgraded dependencies, enhancements as felt needed. **Feel free to open an [issue](https://github.com/edeso/bubble2/issues) or even better contribute with a pull request.**
 
 ## Features
 
@@ -14,18 +13,12 @@ Android comic book reader.
 * Simple file browser
 * Free, open-source, no ads, gluten-free
 
-<a href="https://f-droid.org/repository/browse/?fdid=com.nkanaev.comics">
-  <img height="44" width="auto" src='https://upload.wikimedia.org/wikipedia/commons/0/0d/Get_it_on_F-Droid.svg'></img>
-</a>
-<a href="https://play.google.com/store/apps/details?id=com.nkanaev.comics">
-  <img height="44" width="auto" src='https://upload.wikimedia.org/wikipedia/commons/c/cd/Get_it_on_Google_play.svg'></img>
-</a>
-
 ## Contributors
 
+* [Nazar Kanaev](https://github.com/nkanaev) (original author)
 * Nicola Spanti (french translation)
 * Alez Boom (spanish translation)
 
 ## License
 
-Source code is available under the MIT license. See the LICENSE for more info.
+Source code is available under GPL-3. See the [LICENSE.md](https://github.com/edeso/bubble2/blob/master/LICENSE.md)  for more info.
