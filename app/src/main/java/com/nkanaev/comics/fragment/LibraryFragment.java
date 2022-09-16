@@ -1,12 +1,17 @@
 package com.nkanaev.comics.fragment;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
+import android.provider.Settings;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.view.*;
 import android.widget.*;
 import com.nkanaev.comics.Constants;
@@ -48,6 +53,20 @@ public class LibraryFragment extends Fragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // If you have access to the external storage, do whatever you need
+        if (false && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()){
+                // If you don't have access, launch a new activity to show the user the system's dialog
+                // to allow access to the external storage
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                Uri uri = Uri.fromParts("package", MainActivity.PACKAGE_NAME, null);
+                intent.setData(uri);
+                startActivity(intent);
+            }
+        }
+
         mDirectorySelectDialog = new DirectorySelectDialog(getActivity());
         mDirectorySelectDialog.setCurrentDirectory(Environment.getExternalStorageDirectory());
         mDirectorySelectDialog.setOnDirectorySelectListener(this);
