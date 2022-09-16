@@ -21,9 +21,9 @@
         <TextView
                 android:id="@+id/comic_group_folder"
                 android:layout_width="match_parent"
-                android:layout_height="95dp"
+                android:layout_height="110dp"
                 android:padding="@dimen/card_padding"
-                android:maxLines="4"
+                android:maxLines="5"
                 android:layout_weight="1"
                 android:textSize="@dimen/card_text"/>
     </LinearLayout>
