@@ -38,7 +38,7 @@ public class DirectoryListingManager {
             else {
                 List<String> intermediateDirs = new ArrayList<>();
                 File current = comicDir;
-
+                /*
                 while (current != null && !current.equals(mLibraryDir)) {
                     intermediateDirs.add(0, current.getName());
                     current = current.getParentFile();
@@ -50,6 +50,11 @@ public class DirectoryListingManager {
                 else {
                     directoryDisplays.add(TextUtils.join(" | ", intermediateDirs));
                 }
+                */
+                String dirText = mLibraryDir.toURI().relativize(current.toURI()).getPath();
+                // strip trailing slash(es)
+                dirText = dirText.replaceFirst("/*$", "");
+                directoryDisplays.add(dirText);
             }
         }
 
