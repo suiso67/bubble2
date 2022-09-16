@@ -9,15 +9,15 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.content.Context;
 import android.os.Handler;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.SparseArray;
 import android.view.*;
 import android.widget.*;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
-import android.support.v4.view.PagerAdapter;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager.widget.PagerAdapter;
 
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.R;
@@ -489,8 +489,34 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     }
 
     private class MyTouchListener extends GestureDetector.SimpleOnGestureListener {
+        /**
+         * switch menus and pageseekbar on/off on long press anywhere
+         * @param e The initial on down motion event that started the longpress.
+         */
+        @Override
+        public void onLongPress(MotionEvent e) {
+            float x = e.getX();
+            float y = e.getY();
+            float width = (float)mViewPager.getWidth();
+            float height = (float)mViewPager.getHeight();
+
+            // hotspot only 30% centered
+            if (x < width / 9 * 3 || x > width / 9 * 6
+                || y < height / 9 * 3 || y > height / 9 * 6 )
+                return;
+
+            boolean fullScreen = !isFullscreen();
+            setFullscreen(fullScreen, true);
+        }
+
+        /**
+         * single taps on left/ride side switch to prev/next page
+         * @param e The down motion event of the single-tap.
+         * @return boolean true if the event is consumed, else false
+         */
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
+            // always switch of menus first
             if (!isFullscreen()) {
                 setFullscreen(true, true);
                 return true;
@@ -498,8 +524,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
             float x = e.getX();
 
-            // tap left edge
-            if (x < (float) mViewPager.getWidth() / 3) {
+            // tap left side
+            if (x < (float) mViewPager.getWidth() / 10 * 4) {
                 if (mIsLeftToRight) {
                     if (getCurrentPage() == 1)
                         hitBeginning();
@@ -512,9 +538,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                     else
                         setCurrentPage(getCurrentPage() + 1);
                 }
+                return true;
             }
-            // tap right edge
-            else if (x > (float) mViewPager.getWidth() / 3 * 2) {
+            // tap right side
+            else if (x > (float) mViewPager.getWidth() / 10 * 6) {
                 if (mIsLeftToRight) {
                     if (getCurrentPage() == mViewPager.getAdapter().getCount())
                         hitEnding();
@@ -527,11 +554,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                     else
                         setCurrentPage(getCurrentPage() - 1);
                 }
+                return true;
             }
-            else
-                setFullscreen(false, true);
 
-            return true;
+            return false;
         }
     }
 
