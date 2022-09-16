@@ -2,17 +2,18 @@ package com.nkanaev.comics.activity;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.design.widget.NavigationView;
-import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.navigation.NavigationView.OnNavigationItemSelectedListener;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.view.MenuItem;
+
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.fragment.AboutFragment;
 import com.nkanaev.comics.fragment.BrowserFragment;
@@ -26,6 +27,7 @@ import com.squareup.picasso.Picasso;
 
 public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
     private final static String STATE_CURRENT_MENU_ITEM = "STATE_CURRENT_MENU_ITEM";
+    public static String PACKAGE_NAME;
 
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
@@ -34,8 +36,10 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        super.setContentView(R.layout.layout_main);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.layout_main);
+
+        PACKAGE_NAME = getApplicationContext().getPackageName();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -102,9 +106,13 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
     }
 
     private void setNavBar() {
+        // TODO: disabled for now, throws a view not found
+        if (true)
+            return;
+
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.header, new HeaderFragment())
+                .add(R.id.navigation_view_header, new HeaderFragment())
                 .commit();
     }
 
