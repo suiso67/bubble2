@@ -1,9 +1,7 @@
 package com.nkanaev.comics.fragment;
 
-import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,8 +9,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -59,7 +55,7 @@ public class LibraryFragment extends Fragment
         super.onCreate(savedInstanceState);
 
         // If you have access to the external storage, do whatever you need
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        if (false && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()){
                 // If you don't have access, launch a new activity to show the user the system's dialog
                 // to allow access to the external storage
@@ -68,14 +64,6 @@ public class LibraryFragment extends Fragment
                 Uri uri = Uri.fromParts("package", MainActivity.PACKAGE_NAME, null);
                 intent.setData(uri);
                 startActivity(intent);
-            }
-        } else {
-            String permission = Manifest.permission.READ_EXTERNAL_STORAGE;
-            if (ContextCompat.checkSelfPermission(getActivity(), permission)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(getActivity(),
-                        new String[]{permission},
-                        1);
             }
         }
 
