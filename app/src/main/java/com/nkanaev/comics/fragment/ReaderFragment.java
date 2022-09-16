@@ -495,6 +495,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
          */
         @Override
         public void onLongPress(MotionEvent e) {
+            // always switch of menus first
+            if (!isFullscreen()) {
+                setFullscreen(true, true);
+                return;
+            }
+
             float x = e.getX();
             float y = e.getY();
             float width = (float)mViewPager.getWidth();
