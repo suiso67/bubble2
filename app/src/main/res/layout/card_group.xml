@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:cardview="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        cardview:cardCornerRadius="2dp"
-        cardview:cardElevation="2dp"
-        cardview:cardBackgroundColor="@color/lightest">
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:cardview="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    cardview:cardCornerRadius="2dp"
+    cardview:cardElevation="2dp"
+    cardview:cardBackgroundColor="@color/lightest">
     <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -15,14 +15,16 @@
         <com.nkanaev.comics.view.GroupImageView
                 android:id="@+id/card_group_imageview"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"/>
+                android:layout_height="wrap_content"
+                android:visibility="visible"/>
+
         <TextView
                 android:id="@+id/comic_group_folder"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
+                android:layout_height="95dp"
                 android:padding="@dimen/card_padding"
-                android:singleLine="true"
+                android:maxLines="4"
                 android:layout_weight="1"
                 android:textSize="@dimen/card_text"/>
     </LinearLayout>
-</android.support.v7.widget.CardView>
+</androidx.cardview.widget.CardView>
