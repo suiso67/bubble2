@@ -6,7 +6,7 @@ import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.v4.view.ViewCompat;
+import androidx.core.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.*;
 import android.view.GestureDetector.SimpleOnGestureListener;
@@ -16,7 +16,7 @@ import android.widget.ImageView;
 import android.widget.OverScroller;
 import com.nkanaev.comics.Constants;
 
-public class PageImageView extends ImageView {
+public class PageImageView extends androidx.appcompat.widget.AppCompatImageView {
     private Constants.PageViewMode mViewMode;
     private boolean mHaveFrame = false;
     private boolean mSkipScaling = false;
@@ -25,7 +25,7 @@ public class PageImageView extends ImageView {
     private ScaleGestureDetector mScaleGestureDetector;
     private GestureDetector mDragGestureDetector;
     private OverScroller mScroller;
-    private float mMinScale, mMaxScale;
+    private float mMinScale, mMaxScale, mDblTapScale;
     private float mOriginalScale;
     private float[] m = new float[9];
     private Matrix mMatrix;
@@ -135,11 +135,13 @@ public class PageImageView extends ImageView {
         float w = dwidth * heightRatio;
         if (w < vwidth) {
             mMinScale = vheight * 0.75f / dheight;
-            mMaxScale = Math.max(dwidth, vwidth) * 1.5f / dwidth;
+            mMaxScale = Math.max(dwidth, vwidth) * 10f / dwidth;
+            mDblTapScale = Math.max(dwidth, vwidth) * 1.5f / dwidth;
         }
         else {
             mMinScale = vwidth * 0.75f / dwidth;
-            mMaxScale = Math.max(dheight, vheight) * 1.5f / dheight;
+            mMaxScale = Math.max(dheight, vheight) * 10f / dheight;
+            mDblTapScale = Math.max(dheight, vheight) * 1.5f / dheight;
         }
         setImageMatrix(mMatrix);
         mOriginalScale = getCurrentScale();
@@ -218,7 +220,7 @@ public class PageImageView extends ImageView {
         @Override
         public boolean onDoubleTapEvent(MotionEvent e) {
             if (e.getAction() == MotionEvent.ACTION_UP) {
-                float scale = (mOriginalScale == getCurrentScale()) ? mMaxScale : mOriginalScale;
+                float scale = (mOriginalScale == getCurrentScale()) ? mDblTapScale : mOriginalScale;
                 zoomAnimated(e, scale);
             }
             return true;
