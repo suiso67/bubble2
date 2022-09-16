@@ -13,7 +13,7 @@ def getVersionCode = { ->
 def getVersionName = { ->
     def stdout = new ByteArrayOutputStream()
     exec {
-        commandLine "git", "describe", "--tags"
+        commandLine "git", "describe", "--tags", "--long"
         standardOutput = stdout
     }
     return stdout.toString().trim()
@@ -36,6 +36,7 @@ android {
 
         versionName getVersionName()
         versionCode getVersionCode()
+        setProperty("archivesBaseName", applicationId + "-v" + versionCode + "(" + versionName + ")")
     }
 
     buildTypes {
