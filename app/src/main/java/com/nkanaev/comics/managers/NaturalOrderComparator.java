@@ -77,8 +77,8 @@ public abstract class NaturalOrderComparator implements Comparator
 
     public int compare(Object o1, Object o2)
     {
-        String a = stringValue(o1);
-        String b = stringValue(o2);
+        String a = stringValue(o1).toLowerCase();
+        String b = stringValue(o2).toLowerCase();
 
         int ia = 0, ib = 0;
         int nza = 0, nzb = 0;

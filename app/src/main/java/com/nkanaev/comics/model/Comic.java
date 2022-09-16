@@ -49,7 +49,7 @@ public class Comic implements Comparable {
     }
 
     public int compareTo(Object another) {
-        return mFile.compareTo(((Comic) another).getFile());
+        return mFile.getAbsolutePath().toLowerCase().compareTo(((Comic) another).getFile().getAbsolutePath().toLowerCase());
     }
 
     @Override
