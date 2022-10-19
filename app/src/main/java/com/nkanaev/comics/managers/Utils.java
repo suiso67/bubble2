@@ -14,6 +14,7 @@ import com.nkanaev.comics.MainApplication;
 import java.io.*;
 import java.security.MessageDigest;
 import java.util.UUID;
+import java.util.zip.ZipFile;
 
 import static android.content.Context.ACTIVITY_SERVICE;
 
@@ -223,6 +224,16 @@ public final class Utils {
         }
         Utils.close(inStream);
         Utils.close(outStream);
+    }
+
+    public static void close(ZipFile z) {
+        if (z == null) return;
+        try {
+            //  java.util.zip.ZipFile does not implement Closeable on API 18--
+            z.close();
+        } catch (final Throwable ignored) {
+            // do nothing;
+        }
     }
 
     public static void close(final Closeable c) {
