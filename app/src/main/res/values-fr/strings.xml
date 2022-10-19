@@ -36,6 +36,7 @@
     <string name="menu_library">Bibliothèque</string>
     <string name="menu_browser">Parcourir</string>
     <string name="menu_about">À propos</string>
+    <string name="menu_set_library_folder"></string>
 
     <string name="directory_picker_header">Définissez le répertoire de vos BDs</string>
     <string name="directory_picker_confirm">Selectionner</string>

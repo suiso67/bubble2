@@ -27,6 +27,7 @@
     <string name="menu_library">Biblioteca</string>
     <string name="menu_browser">Buscador</string>
     <string name="menu_about">Acerca de</string>
+    <string name="menu_set_library_folder"></string>
 
     <string name="library_header_recent">Reciente</string>
     <string name="library_header_all">Todos</string>
