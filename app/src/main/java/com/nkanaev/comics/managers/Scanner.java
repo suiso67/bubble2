@@ -1,18 +1,21 @@
 package com.nkanaev.comics.managers;
 
-import java.io.File;
-import java.lang.ref.WeakReference;
-import java.util.*;
-
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Process;
+import android.util.Log;
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.MainApplication;
-import com.nkanaev.comics.model.*;
+import com.nkanaev.comics.model.Comic;
+import com.nkanaev.comics.model.Storage;
+import com.nkanaev.comics.parsers.DirectoryParser;
 import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
+
+import java.io.File;
+import java.lang.ref.WeakReference;
+import java.util.*;
 
 public class Scanner {
     private Thread mUpdateThread;
@@ -22,6 +25,7 @@ public class Scanner {
     private boolean mIsRestarted;
 
     private Handler mRestartHandler = new RestartHandler(this);
+
     private static class RestartHandler extends Handler {
         private WeakReference<Scanner> mScannerRef;
 
@@ -39,6 +43,7 @@ public class Scanner {
     }
 
     private static Scanner mInstance;
+
     public synchronized static Scanner getInstance() {
         if (mInstance == null) {
             mInstance = new Scanner();
@@ -66,8 +71,7 @@ public class Scanner {
         if (isRunning()) {
             mIsStopped = true;
             mIsRestarted = true;
-        }
-        else {
+        } else {
             scanLibrary();
         }
     }
@@ -76,7 +80,7 @@ public class Scanner {
         if (mUpdateThread == null || mUpdateThread.getState() == Thread.State.TERMINATED) {
             LibraryUpdateRunnable runnable = new LibraryUpdateRunnable();
             mUpdateThread = new Thread(runnable);
-            mUpdateThread.setPriority(Process.THREAD_PRIORITY_DEFAULT+Process.THREAD_PRIORITY_LESS_FAVORABLE);
+            mUpdateThread.setPriority(Process.THREAD_PRIORITY_DEFAULT + Process.THREAD_PRIORITY_LESS_FAVORABLE);
             mUpdateThread.start();
         }
     }
@@ -112,12 +116,12 @@ public class Scanner {
                 Storage storage = Storage.getStorage(ctx);
                 Map<File, Comic> storageFiles = new HashMap<>();
 
-                // create list of files available in storage
+                // create list of "known" files available in storage database
                 for (Comic c : storage.listComics()) {
                     storageFiles.put(c.getFile(), c);
                 }
 
-                // search and add comics if necessary
+                // search and add "unknown" comics
                 Deque<File> directories = new ArrayDeque<>();
                 directories.add(new File(libDir));
                 while (!directories.isEmpty()) {
@@ -126,18 +130,44 @@ public class Scanner {
                     Arrays.sort(files);
                     for (File file : files) {
                         if (mIsStopped) return;
+
+                        // add folder to search list, but continue (might be a dir-comic)
                         if (file.isDirectory()) {
                             directories.add(file);
                         }
+                        // skip known comics to keep startup fast
                         if (storageFiles.containsKey(file)) {
                             storageFiles.remove(file);
                             continue;
                         }
-                        Parser parser = ParserFactory.create(file);
-                        if (parser == null) continue;
-                        if (parser.numPages() > 0) {
-                            storage.addBook(file, parser.getType(), parser.numPages());
+
+                        Log.i("Scanner#142", file.getPath().toString());
+                        Parser parser = null;
+                        try {
+                            parser = ParserFactory.create(file);
+                            Log.i("Scanner#148",file.toString());
+                            // no parser? check log
+                            if (parser == null)
+                                continue;
+
+                            int count = 0;
+                            try {
+                                parser.parse();
+                                count = parser.numPages();
+                            } catch (Exception e) {
+                                Log.e("Scanner", "parse", e);
+                            }
+
+                            // ignore empty folders
+                            if (parser.getType().equals(DirectoryParser.TYPE) && count < 1)
+                                continue;
+
+                            // memorize comic meta data for next run
+                            // keep empty comic files, might point to bugs
+                            storage.addBook(file, parser.getType(), count);
                             notifyMediaUpdated();
+                        } catch (Exception e) {
+                            Log.e("Scanner", "update", e);
                         }
                     }
                 }
@@ -148,15 +178,13 @@ public class Scanner {
                     coverCache.delete();
                     storage.removeComic(missing.getId());
                 }
-            }
-            finally {
+            } finally {
                 mIsStopped = false;
 
                 if (mIsRestarted) {
                     mIsRestarted = false;
                     mRestartHandler.sendEmptyMessageDelayed(1, 200);
-                }
-                else {
+                } else {
                     notifyLibraryUpdateFinished();
                 }
             }
