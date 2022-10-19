@@ -1,15 +1,17 @@
 package com.nkanaev.comics.view;
 
 import android.content.Context;
-import androidx.appcompat.app.AppCompatDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
+import androidx.appcompat.app.AppCompatDialog;
 import com.nkanaev.comics.R;
+import com.nkanaev.comics.managers.Utils;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,6 +26,8 @@ public class DirectorySelectDialog
     private ListView mListView;
     private TextView mTitleTextView;
     private File mRootDir = new File("/");
+
+    private File[] mValidFolders = new File[0];
     private File mCurrentDir;
     private File[] mSubdirs;
     private FileFilter mDirectoryFilter;
@@ -32,8 +36,9 @@ public class DirectorySelectDialog
         void onDirectorySelect(File file);
     }
 
-    public DirectorySelectDialog(Context context) {
+    public DirectorySelectDialog(Context context, File[] validStorages) {
         super(context);
+        if (validStorages != null) mValidFolders = validStorages;
         setContentView(R.layout.dialog_directorypicker);
         mSetButton = (Button) findViewById(R.id.directory_picker_confirm);
         mCancelButton = (Button) findViewById(R.id.directory_picker_cancel);
@@ -60,19 +65,36 @@ public class DirectorySelectDialog
         ArrayList<File> subDirs = null;
         if (subs != null) {
             subDirs = new ArrayList<>(Arrays.asList(subs));
-        }
-        else {
+        } else {
             subDirs = new ArrayList<>();
         }
 
         if (!mCurrentDir.getAbsolutePath().equals(mRootDir.getAbsolutePath())) {
             subDirs.add(0, mCurrentDir.getParentFile());
         }
+
+        // ensure paths to storages are listed, even if not browsable
+        if (Utils.isOreoOrLater()) {
+            Path parent = mCurrentDir.toPath();
+            for (File validPath : mValidFolders) {
+                if (!validPath.toPath().startsWith(parent))
+                    continue;
+
+                Path relPath = parent.relativize(validPath.toPath());
+                if (relPath.getNameCount() < 1)
+                    continue;
+
+                File entry = new File(mCurrentDir, relPath.getName(0).toString());
+                if (!subDirs.contains(entry))
+                    subDirs.add(entry);
+            }
+        }
+
         Collections.sort(subDirs);
         mSubdirs = subDirs.toArray(new File[subDirs.size()]);
 
         mTitleTextView.setText(mCurrentDir.getPath());
-        ((BaseAdapter)mListView.getAdapter()).notifyDataSetChanged();
+        ((BaseAdapter) mListView.getAdapter()).notifyDataSetChanged();
     }
 
     public void setOnDirectorySelectListener(OnDirectorySelectListener l) {
@@ -123,8 +145,7 @@ public class DirectorySelectDialog
 
             if (position == 0 && !mRootDir.getPath().equals(mCurrentDir.getPath())) {
                 textView.setText("..");
-            }
-            else {
+            } else {
                 textView.setText(dir.getName());
             }
 

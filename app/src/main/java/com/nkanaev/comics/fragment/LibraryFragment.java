@@ -5,19 +5,18 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
+import android.util.Log;
+import android.view.*;
+import android.widget.*;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import android.view.*;
-import android.widget.*;
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.R;
@@ -52,15 +51,16 @@ public class LibraryFragment extends Fragment
     private boolean mIsRefreshPlanned = false;
     private Handler mUpdateHandler = new UpdateHandler(this);
 
-    public LibraryFragment() {}
+    public LibraryFragment() {
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // If you have access to the external storage, do whatever you need
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()){
+        if (Utils.isROrLater()) {
+            if (!Environment.isExternalStorageManager()) {
                 // If you don't have access, launch a new activity to show the user the system's dialog
                 // to allow access to the external storage
                 Intent intent = new Intent();
@@ -79,7 +79,27 @@ public class LibraryFragment extends Fragment
             }
         }
 
-        mDirectorySelectDialog = new DirectorySelectDialog(getActivity());
+        /*
+        // ways to get sdcard mount points
+        // this is API R 30, N 24 only
+        final StorageManager storageManager = (StorageManager) getContext()
+                .getSystemService(MainActivity.STORAGE_SERVICE);
+        List<StorageVolume> volumes = storageManager.getStorageVolumes();
+        for (StorageVolume v : volumes) {
+            Log.i("Volumes", v.getDirectory().toString());
+        }
+        // this is Q 29
+        Set<String> names = MediaStore.getExternalVolumeNames(getContext());
+        for (String n : names) {
+            Log.i("MS-Names", n);
+        }
+        */
+        File[] externalStorageFiles = ContextCompat.getExternalFilesDirs(getActivity(), null);
+        for (File f : externalStorageFiles) {
+            Log.i("CtxCompat", f.toString());
+        }
+
+        mDirectorySelectDialog = new DirectorySelectDialog(getActivity(), externalStorageFiles);
         mDirectorySelectDialog.setCurrentDirectory(Environment.getExternalStorageDirectory());
         mDirectorySelectDialog.setOnDirectorySelectListener(this);
 
@@ -110,7 +130,8 @@ public class LibraryFragment extends Fragment
         mPicasso = ((MainActivity) getActivity()).getPicasso();
 
         mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.fragmentLibraryLayout);
-        mRefreshLayout.setColorSchemeColors(R.color.primary);
+        mRefreshLayout.setColorSchemeResources(R.color.primary);
+        //mRefreshLayout.setProgressBackgroundColorSchemeColor(Color.BLACK);
         mRefreshLayout.setOnRefreshListener(this);
         mRefreshLayout.setEnabled(true);
 
@@ -174,7 +195,7 @@ public class LibraryFragment extends Fragment
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         String path = mComicsListManager.getDirectoryAtIndex(position);
         LibraryBrowserFragment fragment = LibraryBrowserFragment.create(path);
-        ((MainActivity)getActivity()).pushFragment(fragment);
+        ((MainActivity) getActivity()).pushFragment(fragment);
     }
 
     @Override
@@ -196,7 +217,7 @@ public class LibraryFragment extends Fragment
                 @Override
                 public void run() {
                     getComics();
-                    ((BaseAdapter)mGridView.getAdapter()).notifyDataSetChanged();
+                    ((BaseAdapter) mGridView.getAdapter()).notifyDataSetChanged();
                     mIsRefreshPlanned = false;
                 }
             };
@@ -209,8 +230,7 @@ public class LibraryFragment extends Fragment
         if (isLoading) {
             mRefreshLayout.setRefreshing(true);
             mGridView.setOnItemClickListener(null);
-        }
-        else {
+        } else {
             mRefreshLayout.setRefreshing(false);
             showEmptyMessage(mComicsListManager.getCount() == 0);
             mGridView.setOnItemClickListener(this);
@@ -244,10 +264,9 @@ public class LibraryFragment extends Fragment
 
             if (msg.what == Constants.MESSAGE_MEDIA_UPDATED) {
                 fragment.refreshLibraryDelayed();
-            }
-            else if (msg.what == Constants.MESSAGE_MEDIA_UPDATE_FINISHED) {
+            } else if (msg.what == Constants.MESSAGE_MEDIA_UPDATE_FINISHED) {
                 fragment.getComics();
-                ((BaseAdapter)fragment.mGridView.getAdapter()).notifyDataSetChanged();
+                ((BaseAdapter) fragment.mGridView.getAdapter()).notifyDataSetChanged();
                 fragment.setLoading(false);
             }
         }
@@ -278,7 +297,7 @@ public class LibraryFragment extends Fragment
                 convertView = getActivity().getLayoutInflater().inflate(R.layout.card_group, parent, false);
             }
 
-            ImageView groupImageView = (ImageView)convertView.findViewById(R.id.card_group_imageview);
+            ImageView groupImageView = (ImageView) convertView.findViewById(R.id.card_group_imageview);
 
             mPicasso.load(LocalCoverHandler.getComicCoverUri(comic))
                     .into(groupImageView);
