@@ -1,23 +1,19 @@
 package com.nkanaev.comics.managers;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-
+import android.util.Log;
 import com.nkanaev.comics.Constants;
+import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Request;
 import com.squareup.picasso.RequestHandler;
 
-import com.nkanaev.comics.model.Comic;
+import java.io.*;
 
 
 public class LocalCoverHandler extends RequestHandler {
@@ -47,27 +43,55 @@ public class LocalCoverHandler extends RequestHandler {
         File coverFile = Utils.getCacheFile(mContext, comicUri.getPath());
 
         if (!coverFile.isFile()) {
-            Parser parser = ParserFactory.create(comicUri.getPath());
-            InputStream stream = parser.getPage(0);
 
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(stream, null, options);
-            options.inSampleSize = Utils.calculateInSampleSize(options,
-                    Constants.COVER_THUMBNAIL_WIDTH, Constants.COVER_THUMBNAIL_HEIGHT);
-            options.inJustDecodeBounds = false;
-            stream.close();
-            stream = parser.getPage(0);
-            Bitmap result = BitmapFactory.decodeStream(stream, null, options);
+            byte[] data = new byte[0];
+            Parser parser = null;
+            BufferedInputStream bis = null;
+            FileOutputStream outputStream = null;
+            try {
+                parser = ParserFactory.create(comicUri.getPath());
 
-            FileOutputStream outputStream = new FileOutputStream(coverFile);
-            result.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
-            outputStream.close();
+                if (parser.numPages() < 1)
+                    throw new IOException("comic '" + comicUri + "' has no pages.");
+
+                InputStream stream = parser.getPage(0);
+                bis = new BufferedInputStream(stream);
+                data = Utils.toByteArray(bis);
+
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeByteArray(data, 0, data.length, options);
+                options.inSampleSize = Utils.calculateInSampleSize(options,
+                        Constants.COVER_THUMBNAIL_WIDTH, Constants.COVER_THUMBNAIL_HEIGHT);
+                options.inJustDecodeBounds = false;
+
+                Bitmap result = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+
+                // corner case, cache folder might be missing
+                File folder = coverFile.getParentFile();
+                if (!folder.exists())
+                    folder.mkdirs();
+
+                outputStream = new FileOutputStream(coverFile);
+                result.compress(Bitmap.CompressFormat.JPEG, 95, outputStream);
+
+            } catch (Exception e) {
+                Log.e("LocalCoverHandler", "getCoverPath", e);
+                if (!(e instanceof IOException))
+                    e = new IOException(e);
+                throw (IOException) e;
+            } finally {
+                data = null;
+                if (parser != null)
+                    parser.destroy();
+                Utils.close(bis);
+                Utils.close(outputStream);
+            }
+
         }
 
         return coverFile.getAbsolutePath();
     }
-
 
     public static Uri getComicCoverUri(Comic comic) {
         return new Uri.Builder()
