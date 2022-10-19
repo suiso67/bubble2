@@ -23,6 +23,8 @@ repositories {
     mavenCentral()
     mavenLocal()
     google()
+    // jp2-android repo
+    jcenter()
 }
 
 android {
@@ -31,12 +33,21 @@ android {
 
     defaultConfig {
         applicationId "com.github.edeso.bubble2"
-        minSdkVersion 17
+        //namespace 'com.nkanaev.comics'
+        //applicationId "com.nkanaev.comics"
+        minSdkVersion 16
         targetSdkVersion 33
+        multiDexEnabled true
 
         versionName getVersionName()
         versionCode getVersionCode()
         setProperty("archivesBaseName", applicationId + "-v" + versionCode + "(" + versionName + ")")
+
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     buildTypes {
@@ -58,12 +69,19 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'androidx.startup:startup-runtime:1.1.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
+    implementation 'androidx.fragment:fragment:1.5.3'
     implementation 'com.google.android.material:material:1.6.1'
-    implementation ('com.github.junrar:junrar:7.5.3')
+    implementation 'com.github.junrar:junrar:7.5.3'
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'org.apache.commons:commons-compress:1.21'
+    //implementation fileTree(dir: 'lib', include: ['*.jar'])
     implementation 'org.tukaani:xz:1.9'
+    implementation 'com.github.luben:zstd-jni:1.5.2-4@aar'
+    implementation 'org.brotli:dec:0.1.2'
+    implementation 'com.gemalto.jp2:jp2-android:1.0.3'
 }
