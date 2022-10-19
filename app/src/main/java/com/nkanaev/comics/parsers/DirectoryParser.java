@@ -11,22 +11,29 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class DirectoryParser implements Parser {
-    private ArrayList<File> mFiles = new ArrayList<>();
+public class DirectoryParser extends AbstractParser {
+    private ArrayList<File> mFiles = null;
+    public static final String TYPE = "folder";
+
+    public DirectoryParser() {
+        super(new Class[]{File.class});
+    }
 
     @Override
-    public void parse(File dir) throws IOException {
+    public void parse() throws IOException {
+        if (mFiles != null) return;
+
+        File dir = (File) getSource();
+
         if (!dir.isDirectory()) {
             throw new IOException("Not a directory: " + dir.getAbsolutePath());
         }
 
         File[] files = dir.listFiles();
+        mFiles = new ArrayList<>();
         if (files != null) {
             for (File f : dir.listFiles()) {
-                if (f.isDirectory()) {
-                    throw new IOException("Probably not a comic directory");
-                }
-                if (Utils.isImage(f.getAbsolutePath())) {
+                if (f.isFile() && Utils.isImage(f.getName())) {
                     mFiles.add(f);
                 }
             }
@@ -41,21 +48,19 @@ public class DirectoryParser implements Parser {
     }
 
     @Override
-    public int numPages() {
+    public int numPages() throws IOException {
+        parse();
         return mFiles.size();
     }
 
     @Override
     public InputStream getPage(int num) throws IOException {
+        parse();
         return new FileInputStream(mFiles.get(num));
     }
 
     @Override
     public String getType() {
-        return "dir";
-    }
-
-    @Override
-    public void destroy() throws IOException {
+        return TYPE;
     }
 }
