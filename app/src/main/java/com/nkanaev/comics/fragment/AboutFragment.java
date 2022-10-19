@@ -2,19 +2,19 @@ package com.nkanaev.comics.fragment;
 
 import android.content.Intent;
 import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.fragment.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import androidx.fragment.app.Fragment;
 import com.nkanaev.comics.R;
 
 public class AboutFragment extends Fragment implements View.OnClickListener {
-    private class LibraryDescription {
+    static private class LibraryDescription {
         public final String name;
         public final String description;
         public final String license;
@@ -31,34 +31,55 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
     }
 
     private LibraryDescription[] mDescriptions = new LibraryDescription[]{
-        new LibraryDescription(
-                "Picasso",
-                "A powerful image downloading and caching library for Android",
-                "Apache Version 2.0",
-                "Square",
-                "https://github.com/square/picasso"
-        ),
-        new LibraryDescription(
-                "Junrar",
-                "Plain java unrar util",
-                "Unrar License",
-                "Edmund Wagner",
-                "https://github.com/edmund-wagner/junrar"
-        ),
-        new LibraryDescription(
-                "Apache Commons Compress",
-                "Defines an API for working with tar, zip and bzip2 files",
-                "Apache Version 2.0",
-                "Apache Software Foundation",
-                "https://commons.apache.org/proper/commons-compress/"
-        ),
-        new LibraryDescription(
-                "XZ Utils",
-                "XZ Utils is free general-purpose data compression software with a high compression ratio",
-                "Public Domain",
-                "Tukaani Developers",
-                "http://tukaani.org/xz/java.html"
-        ),
+            new LibraryDescription(
+                    "Picasso",
+                    "A powerful image downloading and caching library for Android",
+                    "Apache Version 2.0",
+                    "Square",
+                    "https://github.com/square/picasso"
+            ),
+            new LibraryDescription(
+                    "Junrar",
+                    "Plain java unrar util",
+                    "Unrar License",
+                    "Edmund Wagner",
+                    "https://github.com/edmund-wagner/junrar"
+            ),
+            new LibraryDescription(
+                    "Apache Commons Compress",
+                    "Defines an API for working with tar, zip and bzip2 files",
+                    "Apache Version 2.0",
+                    "Apache Software Foundation",
+                    "https://commons.apache.org/proper/commons-compress/"
+            ),
+            new LibraryDescription(
+                    "XZ Utils",
+                    "XZ Utils is free general-purpose data compression software with a high compression ratio",
+                    "Public Domain",
+                    "Tukaani Developers",
+                    "http://tukaani.org/xz/java.html"
+            ),
+            new LibraryDescription(
+                    "Zstd-jni",
+                    "JNI bindings to Zstd Library",
+                    "BSD License",
+                    "Luben Karavelov",
+                    "https://github.com/luben/zstd-jni"
+            ),
+            new LibraryDescription(
+                    "Brotli",
+                    "Generic-purpose lossless compression algorithm",
+                    "MIT License",
+                    "Google",
+                    "https://github.com/google/brotli"
+            ),
+            new LibraryDescription(
+                    "JP2 for Android",
+                    "Open-source JPEG-2000 image encoder/decoder for Android based on OpenJPEG",
+                    "BSD (2-clause) License",
+                    "ThalesGroup",
+                    "https://github.com/ThalesGroup/JP2ForAndroid"
+            ),
     };
 
     @Override
@@ -91,8 +112,8 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
                     .getPackageManager()
                     .getPackageInfo(getActivity().getPackageName(), 0);
             return "Version " + pi.versionName + " (" + Integer.toString(pi.versionCode) + ")";
-        }
-        catch (PackageManager.NameNotFoundException e) {
+        } catch (Exception e) {
+            Log.e("AboutFragment#117","getVersionString()",e);
             return "";
         }
     }
