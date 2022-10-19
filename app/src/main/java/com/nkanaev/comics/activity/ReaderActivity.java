@@ -26,7 +26,7 @@ public class ReaderActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             if (Intent.ACTION_VIEW.equals(getIntent().getAction())) {
-                ReaderFragment fragment = ReaderFragment.create(new File(getIntent().getData().getPath()));
+                ReaderFragment fragment = ReaderFragment.create( getIntent() );
                 setFragment(fragment);
             }
             else {
