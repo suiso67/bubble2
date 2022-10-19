@@ -10,11 +10,11 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import androidx.fragment.app.Fragment;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.MainActivity;
 import com.nkanaev.comics.managers.LocalCoverHandler;
@@ -36,6 +36,19 @@ public class HeaderFragment extends Fragment
     private Picasso mPicasso;
     private Drawable mDrawable;
     private boolean mIsRunning = false;
+
+    public HeaderFragment() {
+        super();
+    }
+
+    /*
+    @Nullable
+    @org.jetbrains.annotations.Nullable
+    @Override
+    public Context getContext() {
+        return ((MainActivity) getActivity()).getApplicationContext();
+    }
+    */
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
