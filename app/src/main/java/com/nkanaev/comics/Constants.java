@@ -1,11 +1,8 @@
 package com.nkanaev.comics;
 
 public class Constants {
-    public static final int COVER_THUMBNAIL_HEIGHT = 300;
-    public static final int COVER_THUMBNAIL_WIDTH = 200;
-
-    public static final int MAX_PAGE_HEIGHT = 1600;
-    public static final int MAX_PAGE_WIDTH = 2000;
+    public static final int COVER_THUMBNAIL_HEIGHT = 500;
+    public static final int COVER_THUMBNAIL_WIDTH = 250;
 
     public static final int MAX_RECENT_COUNT = 5;
 
@@ -23,7 +20,7 @@ public class Constants {
         ASPECT_FIT(1),
         FIT_WIDTH(2);
 
-        private PageViewMode(int n) {
+        PageViewMode(int n) {
             native_int = n;
         }
         public final int native_int;
