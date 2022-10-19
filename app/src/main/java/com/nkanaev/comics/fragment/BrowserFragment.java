@@ -4,11 +4,12 @@ import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Environment;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.ReaderActivity;
 import com.nkanaev.comics.managers.Utils;
@@ -16,6 +17,7 @@ import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -36,8 +38,7 @@ public class BrowserFragment extends Fragment
 
         if (savedInstanceState != null) {
             mCurrentDir = (File) savedInstanceState.getSerializable(STATE_CURRENT_DIR);
-        }
-        else {
+        } else {
             mCurrentDir = Environment.getExternalStorageDirectory();
         }
 
@@ -78,20 +79,39 @@ public class BrowserFragment extends Fragment
 
     private void setCurrentDir(File dir) {
         mCurrentDir = dir;
-        ArrayList<File> subdirs = new ArrayList<>();
+        ArrayList<File> subDirs = new ArrayList<>();
         if (!mCurrentDir.getAbsolutePath().equals(mRootDir.getAbsolutePath())) {
-            subdirs.add(mCurrentDir.getParentFile());
+            subDirs.add(mCurrentDir.getParentFile());
         }
         File[] files = mCurrentDir.listFiles();
         if (files != null) {
             for (File f : files) {
                 if (f.isDirectory() || Utils.isArchive(f.getName())) {
-                    subdirs.add(f);
+                    subDirs.add(f);
                 }
             }
         }
-        Collections.sort(subdirs);
-        mSubdirs = subdirs.toArray(new File[subdirs.size()]);
+
+        File[] validFolders = ContextCompat.getExternalFilesDirs(getContext(), null);
+        // ensure paths to storages are listed, even if not browsable
+        if (Utils.isOreoOrLater()) {
+            Path parent = mCurrentDir.toPath();
+            for (File validPath : validFolders) {
+                if (!validPath.toPath().startsWith(parent))
+                    continue;
+
+                Path relPath = parent.relativize(validPath.toPath());
+                if (relPath.getNameCount() < 1)
+                    continue;
+
+                File entry = new File(mCurrentDir, relPath.getName(0).toString());
+                if (!subDirs.contains(entry))
+                    subDirs.add(entry);
+            }
+        }
+
+        Collections.sort(subDirs);
+        mSubdirs = subDirs.toArray(new File[subDirs.size()]);
 
         if (mListView != null) {
             mListView.invalidateViews();
@@ -103,10 +123,11 @@ public class BrowserFragment extends Fragment
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         File file = mSubdirs[position];
+
         if (file.isDirectory()) {
             // check if directory is folder-based comic
             Parser p = ParserFactory.create(file);
-            if (p == null) {
+            if (true || p == null) {
                 setCurrentDir(file);
                 return;
             }
@@ -123,15 +144,13 @@ public class BrowserFragment extends Fragment
         int colorRes = R.color.circle_grey;
         if (file.isDirectory()) {
             view.setImageResource(R.drawable.ic_folder_white_24dp);
-        }
-        else {
+        } else {
             view.setImageResource(R.drawable.ic_file_document_box_white_24dp);
 
             String name = file.getName();
             if (Utils.isZip(name)) {
                 colorRes = R.color.circle_green;
-            }
-            else if (Utils.isRar(name)) {
+            } else if (Utils.isRar(name)) {
                 colorRes = R.color.circle_red;
             }
         }
@@ -167,8 +186,7 @@ public class BrowserFragment extends Fragment
 
             if (position == 0 && !mCurrentDir.getAbsolutePath().equals(mRootDir.getAbsolutePath())) {
                 textView.setText("..");
-            }
-            else {
+            } else {
                 textView.setText(file.getName());
             }
 
