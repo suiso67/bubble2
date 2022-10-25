@@ -8,7 +8,9 @@ Upgraded dependencies, enhancements as felt needed.
 ## Features
 
 * Optimized for tablets
-* Supports CBZ/ZIP, CBR/RAR and folder based comics
+* Supports CBZ/ZIP, CBR/RAR, 7Z/CB7 and FOLDER based comics
+* TAR/CBT and Brotli/Gzip/BZ2/Zstd compressed TAR files are supported too
+* Reads PNG, JPG, WebP and JP2 image files in archives/from folders
 * Advanced zoom and scaling modes
 * Comics/manga reading mode
 * Library management with automatic bookmarks
@@ -18,6 +20,7 @@ Upgraded dependencies, enhancements as felt needed.
 ## Contributors
 
 * [Nazar Kanaev](https://github.com/nkanaev) (original author)
+* Edgar Soldin (current maintainer)
 * Nicola Spanti (french translation)
 * Alez Boom (spanish translation)
 
