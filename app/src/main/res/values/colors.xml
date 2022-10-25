@@ -12,6 +12,17 @@
     <color name="lighter">#dddddd</color>
 
     <color name="circle_grey">#9d9d9d</color>
+<!--
     <color name="circle_red">#F44336</color>
     <color name="circle_green">#4CAF50</color>
+    <color name="circle_blue">#0bbcc9</color>
+    <color name="circle_orange">#F56D0C</color>
+    <color name="circle_yellow">#E2F54E</color>
+-->
+    <color name="circle_red">#F94144</color>
+    <color name="circle_orange">#F8961E</color>
+    <color name="circle_yellow">#F9C74F</color>
+    <color name="circle_green">#90BE6D</color>
+    <color name="circle_teal">#4D908E</color>
+    <color name="circle_blue">#277DA1</color>
 </resources>
