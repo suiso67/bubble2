@@ -69,6 +69,7 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.5.1'
+    // for multiple dex files on pre-Android 5 devices
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.startup:startup-runtime:1.1.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
