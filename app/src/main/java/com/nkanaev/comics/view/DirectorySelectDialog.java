@@ -1,6 +1,7 @@
 package com.nkanaev.comics.view;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -149,7 +150,38 @@ public class DirectorySelectDialog
                 textView.setText(dir.getName());
             }
 
+            setIcon(convertView, dir);
+
             return convertView;
         }
+
+        private void setIcon(View convertView, File file) {
+            ImageView view = (ImageView) convertView.findViewById(R.id.directory_row_icon);
+            GradientDrawable shape = (GradientDrawable) view.getBackground();
+            ImageView rainbow = (ImageView) convertView.findViewById(R.id.directory_row_rainbow);
+            rainbow.setVisibility(View.INVISIBLE);
+
+            // default bg color is grey
+            int colorRes = R.color.circle_grey;
+
+            if (file.isDirectory()) {
+                view.setImageResource(R.drawable.ic_folder_white_24dp);
+
+                File[] listing = file.listFiles();
+                if (listing == null) listing = new File[0];
+                for (File listFile : listing) {
+                    if (listFile.isFile() && Utils.isArchive(listFile.getName())) {
+                        colorRes = android.R.color.transparent;
+                        rainbow.setVisibility(View.VISIBLE);
+                        break;
+                    }
+                }
+            } else {
+                view.setImageResource(R.drawable.ic_file_document_box_white_24dp);
+            }
+
+            shape.setColor(getContext().getResources().getColor(colorRes));
+        }
+
     }
 }
