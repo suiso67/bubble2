@@ -17,13 +17,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class SevenZParser extends AbstractParser {
-    private SevenZFile mSevenZFile = null;
+public class SevenZStreamParser extends AbstractParser {
     private List<SevenZArchiveEntry> mEntries = null;
     private File mCacheDir = null;
     private boolean mCachePopulated = false;
 
-    public SevenZParser() {
+    public SevenZStreamParser() {
         super(new Class[]{File.class});
     }
 
@@ -37,15 +36,15 @@ public class SevenZParser extends AbstractParser {
     }
 
     protected void parse(File file) throws IOException {
-        mSevenZFile = new SevenZFile(file);
-        parse(mSevenZFile);
+        SevenZFile sevenZFile = new SevenZFile(file);
+        parse(sevenZFile);
     }
 
     protected void parse(SevenZFile sevenZFile) throws IOException {
-        if (mSevenZFile != null && mEntries != null)
+        if (sevenZFile != null && mEntries != null)
             return;
 
-        mSevenZFile = sevenZFile;
+        sevenZFile = sevenZFile;
         mEntries = new ArrayList<>();
 
         for (SevenZArchiveEntry entry : sevenZFile.getEntries()) {
@@ -78,13 +77,13 @@ public class SevenZParser extends AbstractParser {
     }
 
     private SevenZFile from(SeekableByteChannel channel) throws IOException {
-        mSevenZFile = new SevenZFile(channel);
-        return mSevenZFile;
+        SevenZFile sevenZFile = new SevenZFile(channel);
+        return sevenZFile;
     }
 
     private SevenZFile from(File file) throws IOException {
-        mSevenZFile = new SevenZFile(file);
-        return mSevenZFile;
+        SevenZFile sevenZFile = new SevenZFile(file);
+        return sevenZFile;
     }
 
     @Override
@@ -100,9 +99,9 @@ public class SevenZParser extends AbstractParser {
             //return getInputStream(entry);
             // or not, too slow by far, so extract'n'cache
 
-            // populate cache (cover excluded)
+            // populate cache (unless cover is requested, as in first parsing run)
             synchronized (this) {
-                if (true && !mCachePopulated && num != 0) {
+                if (!mCachePopulated && num != 0) {
                     SevenZFile sevenZFile;
                     Object source = getSource();
                     if (source instanceof Uri)
@@ -116,10 +115,10 @@ public class SevenZParser extends AbstractParser {
                     while ((entry = sevenZFile.getNextEntry()) != null) {
                         if (Utils.isImage(entry.getName())) {
                             File cacheFile = new File(mCacheDir, Utils.MD5(entry.getName()));
-                            //byte[] content = new byte[(int) entry.getSize()];
-                            //sevenZFile.read(content);
-                            //Utils.copyToFile(new ByteArrayInputStream(content), cacheFile);
-                            Utils.copyToFile(sevenZFile.getInputStream(entry),cacheFile);
+                            byte[] content = new byte[(int) entry.getSize()];
+                            sevenZFile.read(content);
+                            Utils.copyToFile(new ByteArrayInputStream(content), cacheFile);
+                            //Utils.copyToFile(sevenZFile.getInputStream(entry),cacheFile);
                         }
                     }
                     mCachePopulated = true;
@@ -178,15 +177,9 @@ public class SevenZParser extends AbstractParser {
 
     @Override
     public void destroy() {
-        Utils.close(mSevenZFile);
-        mSevenZFile = null;
         mEntries = null;
-        if (mCacheDir != null) {
-            for (File f : mCacheDir.listFiles()) {
-                f.delete();
-            }
-            mCacheDir.delete();
-        }
+        Utils.rmDir(mCacheDir);
+        mCacheDir = null;
         mCachePopulated = false;
         mCacheDir = null;
     }

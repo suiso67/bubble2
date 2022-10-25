@@ -26,13 +26,13 @@ public class ParserFactory {
            context = ctx;
        }
    */
-    public static Parser create(Object o) {
-        Parser p = null;
+    public static Parser create(Object o) throws Exception {
         try {
             String key = o.toString();
             // use cache
             if (mParserCache.containsKey(key)) return mParserCache.get(key);
 
+            Parser p;
             if (o instanceof String)
                 p = create(new File((String) o));
             else if (o instanceof File)
@@ -43,8 +43,8 @@ public class ParserFactory {
                 throw new IllegalArgumentException("Parser.create() call with unimplemented parameter");
 
             if (p != null) {
-                // wrap in retry parser
-                if (p instanceof AbstractParser)
+                // wrap in retry parser, unless pre-Oreo
+                if (false && p instanceof AbstractParser && Utils.isOreoOrLater())
                     p = new LenientTryAnotherParserWrapper((AbstractParser) p);
                 // wrap in JP2 recoder
                 p = new CachingDecodeJP2ParserWrapper(p);
@@ -53,10 +53,8 @@ public class ParserFactory {
             return p;
         } catch (Exception e) {
             Log.e("ParserFactory", "create", e);
-        } finally {
-            //IOUtils.closeQuietly(is)
         }
-        return p;
+        return null;
     }
 
     private static Parser create(File file) throws Exception {
@@ -133,6 +131,7 @@ public class ParserFactory {
         } else if (Utils.isZip(file.getName())) {
             if (Utils.isOreoOrLater())
                 return CommonsZipParser.class;
+            // pretty much the only parser for pre-Oreo devices now
             return ZipParser.class;
         } else if (Utils.isRar(file.getName())) {
             if (!Utils.isOreoOrLater()) {
@@ -143,12 +142,13 @@ public class ParserFactory {
             if (!Utils.isOreoOrLater()) {
                 throw new UnsupportedOperationException("Tar only available on Oreo (API26) or later");
             }
-            return TarParser.class;
+            return TarFileParser.class;
         } else if (Utils.isSevenZ(file.getName())) {
             if (!Utils.isOreoOrLater()) {
-                throw new UnsupportedOperationException("7zip only available on Kitkat (API19) or later");
+                throw new UnsupportedOperationException("7zip only available on Oreo (API26) or later");
             }
-            return SevenZParser.class;
+            // TODO: random access SevenZFileParser throws CRC errors
+            return SevenZStreamParser.class;
         }
 
         // no parser, no fun ;(
@@ -242,9 +242,9 @@ public class ParserFactory {
                             // nice try
                         }
                     // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(SevenZParser.class))
+                    if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
                         try {
-                            SevenZParser candidate = new SevenZParser();
+                            SevenZStreamParser candidate = new SevenZStreamParser();
                             candidate.setSource(mParser.getSource());
                             candidate.parse();
                             mParser = candidate;
@@ -291,9 +291,9 @@ public class ParserFactory {
                             // nice try
                         }
                     // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(SevenZParser.class))
+                    if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
                         try {
-                            SevenZParser candidate = new SevenZParser();
+                            SevenZStreamParser candidate = new SevenZStreamParser();
                             candidate.setSource(mParser.getSource());
                             int count = candidate.numPages();
                             mParser = candidate;
@@ -349,9 +349,9 @@ public class ParserFactory {
                             // nice try
                         }
                     // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(SevenZParser.class))
+                    if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
                         try {
-                            SevenZParser candidate = new SevenZParser();
+                            SevenZStreamParser candidate = new SevenZStreamParser();
                             candidate.setSource(mParser.getSource());
                             InputStream is = candidate.getPage(num);
                             mParser = candidate;
