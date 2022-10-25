@@ -134,18 +134,22 @@ public class Scanner {
                         // add folder to search list, but continue (might be a dir-comic)
                         if (file.isDirectory()) {
                             directories.add(file);
+                        } else if (!Utils.isArchive(file.getName())) {
+                            // ignore unknown files
+                            continue;
                         }
+
                         // skip known comics to keep startup fast
                         if (storageFiles.containsKey(file)) {
                             storageFiles.remove(file);
                             continue;
                         }
 
-                        Log.i("Scanner#142", file.getPath().toString());
+                        Log.d("Scanner#142", file.getPath().toString());
                         Parser parser = null;
                         try {
                             parser = ParserFactory.create(file);
-                            Log.i("Scanner#148",file.toString());
+                            Log.d("Scanner#148",file.toString());
                             // no parser? check log
                             if (parser == null)
                                 continue;
