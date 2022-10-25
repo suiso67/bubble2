@@ -94,7 +94,7 @@ public class LibraryFragment extends Fragment
             Log.i("MS-Names", n);
         }
         */
-        File[] externalStorageFiles = ContextCompat.getExternalFilesDirs(getActivity(), null);
+        File[] externalStorageFiles = Utils.listExternalStorageDirs();
         for (File f : externalStorageFiles) {
             Log.i("CtxCompat", f.toString());
         }

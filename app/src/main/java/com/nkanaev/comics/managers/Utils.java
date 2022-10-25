@@ -1,18 +1,24 @@
 package com.nkanaev.comics.managers;
 
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import com.gemalto.jp2.JP2Decoder;
 import com.nkanaev.comics.MainApplication;
+import com.nkanaev.comics.R;
 
 import java.io.*;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.zip.ZipFile;
 
@@ -105,7 +111,11 @@ public final class Utils {
     }
 
     public static boolean isTarball(String filename) {
-        return filename.matches("(?i).*\\.(cbt|tar)$") || isTGZ(filename) || isTBZ(filename) || isTXZ(filename) || isTZST(filename) || isTBR(filename);
+        return filename.matches("(?i).*\\.(cbt|tar)$") || isCompressedTarball(filename);
+    }
+
+    public static boolean isCompressedTarball(String filename) {
+        return isTGZ(filename) || isTBZ(filename) || isTXZ(filename) || isTZST(filename) || isTBR(filename);
     }
 
     public static boolean isTGZ(String filename) {
@@ -222,8 +232,8 @@ public final class Utils {
         while ((bytesRead = inStream.read(buffer)) != -1) {
             outStream.write(buffer, 0, bytesRead);
         }
-        Utils.close(inStream);
-        Utils.close(outStream);
+        close(inStream);
+        close(outStream);
     }
 
     public static void close(ZipFile z) {
@@ -276,4 +286,29 @@ public final class Utils {
         dir.delete();
     }
 
+    public static File[] listExternalStorageDirs() {
+        File[] externalFilesDirs = ContextCompat.getExternalFilesDirs(MainApplication.getAppContext(), null);
+        // strip null entries (at least API16)
+        ArrayList<File> entries = new ArrayList();
+        for (int i = 0; externalFilesDirs != null && i < externalFilesDirs.length; i++) {
+            File entry = externalFilesDirs[i];
+            if (entry!=null)
+                entries.add(entry);
+        }
+        return entries.toArray(new File[0]);
+    }
+
+    public static void showOKDialog(Activity activity, String title, String message) {
+        AlertDialog dialog = new AlertDialog.Builder(activity, R.style.AppCompatAlertDialogStyle)
+                .setTitle(title)
+                .setMessage(message)
+                .setNeutralButton(R.string.alert_action_neutral, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // nothing to do
+                    }
+                })
+                .create();
+        dialog.show();
+    }
 }
