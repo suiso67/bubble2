@@ -112,7 +112,7 @@
                     android:background="#CCC"/>
 
             <TextView
-                    android:id="@+id/aboutLicense"
+                    android:id="@+id/aboutLibraries"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
@@ -122,7 +122,7 @@
                     android:textColor="#666"
                     android:text="@string/about_libraries"/>
             <TextView
-                    android:id="@+id/aboutLicense"
+                    android:id="@+id/aboutThanks"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
