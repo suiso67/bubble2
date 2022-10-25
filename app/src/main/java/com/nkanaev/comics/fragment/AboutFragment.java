@@ -80,16 +80,34 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
                     "ThalesGroup",
                     "https://github.com/ThalesGroup/JP2ForAndroid"
             ),
+            new LibraryDescription(
+                    "CircleImageView",
+                    "A fast circular ImageView perfect for profile images.",
+                    "Apache Version 2.0",
+                    "Henning Dodenhof",
+                    "https://github.com/hdodenhof/CircleImageView"
+            ),
+            new LibraryDescription(
+                    "Android Jetpack",
+                    "Androidx suite of tools and libraries",
+                    "Apache Version 2.0",
+                    "Google",
+                    "https://developer.android.com/jetpack"
+            ),
     };
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_about, container, false);
 
-        LinearLayout libsLayout = (LinearLayout) view.findViewById(R.id.about_libraries);
-
         ((TextView) view.findViewById(R.id.aboutVersion)).setText(getVersionString());
+        View appLayout = view.findViewById(R.id.about_application);
+        appLayout.setTag(getString(R.string.app_link));
+        TextView descView = view.findViewById(R.id.aboutDescription);
+        descView.setText("- "+getString(R.string.app_description));
+        appLayout.setOnClickListener(this);
 
+        LinearLayout libsLayout = (LinearLayout) view.findViewById(R.id.about_libraries);
         for (int i = 0; i < mDescriptions.length; i++) {
             View cardView = inflater.inflate(R.layout.card_deps, libsLayout, false);
 
