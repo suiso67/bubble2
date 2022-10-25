@@ -2,6 +2,9 @@
 <resources>
     <string name="app_description">Lector de cómics para android</string>
 
+    <string name="about_libraries"></string>
+    <string name="about_thanks"></string>
+
     <string name="action_refresh">Actualizar</string>
     <string name="action_settings">Configuración</string>
 
@@ -27,7 +30,6 @@
     <string name="menu_library">Biblioteca</string>
     <string name="menu_browser">Buscador</string>
     <string name="menu_about">Acerca de</string>
-    <string name="menu_set_library_folder"></string>
 
     <string name="library_header_recent">Reciente</string>
     <string name="library_header_all">Todos</string>
@@ -42,8 +44,9 @@
 
     <string name="reload">Recargar</string>
 
-    <string name="switch_action_positive">Si</string>
-    <string name="switch_action_negative">No</string>
+    <string name="alert_action_positive">Si</string>
+    <string name="alert_action_negative">No</string>
+    <string name="alert_action_neutral">Ok</string>
     <string name="switch_next_comic">¿Le gustaría pasar al siguiente cómic?</string>
     <string name="switch_prev_comic">¿Le gustaría cambiar al cómic anterior?</string>
 

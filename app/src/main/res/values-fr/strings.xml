@@ -11,6 +11,9 @@
 	
     <string name="app_description">Lecteur de BDs pour Android</string>
 
+    <string name="about_libraries"></string>
+    <string name="about_thanks"></string>
+
     <string name="action_refresh">Rafraichir</string>
     <string name="action_settings">Paramètres</string>
 
@@ -36,7 +39,6 @@
     <string name="menu_library">Bibliothèque</string>
     <string name="menu_browser">Parcourir</string>
     <string name="menu_about">À propos</string>
-    <string name="menu_set_library_folder"></string>
 
     <string name="directory_picker_header">Définissez le répertoire de vos BDs</string>
     <string name="directory_picker_confirm">Selectionner</string>
@@ -48,8 +50,9 @@
 
     <string name="reload">Recharger</string>
 
-    <string name="switch_action_negative"></string>
-    <string name="switch_action_positive"></string>
+    <string name="alert_action_negative"></string>
+    <string name="alert_action_positive"></string>
+    <string name="alert_action_neutral"></string>
     <string name="switch_next_comic"></string>
     <string name="switch_prev_comic"></string>
     
