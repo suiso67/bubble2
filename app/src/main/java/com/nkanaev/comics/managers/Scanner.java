@@ -118,7 +118,12 @@ public class Scanner {
 
                 // create list of "known" files available in storage database
                 for (Comic c : storage.listComics()) {
-                    storageFiles.put(c.getFile(), c);
+                    // memorize known
+                    if (c.getTotalPages()>1)
+                        storageFiles.put(c.getFile(), c);
+                    // rescan empties
+                    else
+                        storage.removeComic(c.getId());
                 }
 
                 // search and add "unknown" comics
