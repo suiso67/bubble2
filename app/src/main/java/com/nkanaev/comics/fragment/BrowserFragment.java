@@ -1,9 +1,11 @@
 package com.nkanaev.comics.fragment;
 
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +25,7 @@ import java.util.Collections;
 
 
 public class BrowserFragment extends Fragment
-        implements AdapterView.OnItemClickListener {
+        implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
     private final static String STATE_CURRENT_DIR = "stateCurrentDir";
 
     private ListView mListView;
@@ -59,6 +61,7 @@ public class BrowserFragment extends Fragment
         mListView = (ListView) view.findViewById(R.id.listview_browser);
         mListView.setAdapter(new DirectoryAdapter());
         mListView.setOnItemClickListener(this);
+        mListView.setOnItemLongClickListener(this);
 
         return view;
     }
@@ -92,7 +95,7 @@ public class BrowserFragment extends Fragment
             }
         }
 
-        File[] validFolders = ContextCompat.getExternalFilesDirs(getContext(), null);
+        File[] validFolders = Utils.listExternalStorageDirs();
         // ensure paths to storages are listed, even if not browsable
         if (Utils.isOreoOrLater()) {
             Path parent = mCurrentDir.toPath();
@@ -124,13 +127,10 @@ public class BrowserFragment extends Fragment
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         File file = mSubdirs[position];
 
+        // folders can be opened via long click below
         if (file.isDirectory()) {
-            // check if directory is folder-based comic
-            Parser p = ParserFactory.create(file);
-            if (true || p == null) {
-                setCurrentDir(file);
-                return;
-            }
+            setCurrentDir(file);
+            return;
         }
 
         Intent intent = new Intent(getActivity(), ReaderActivity.class);
@@ -139,11 +139,51 @@ public class BrowserFragment extends Fragment
         startActivity(intent);
     }
 
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        File file = mSubdirs[position];
+
+        if (!file.isDirectory())
+            return true;
+
+        // check if directory is folder-based comic
+        try {
+            Parser p = ParserFactory.create(file);
+            if (p.numPages() < 1)
+                return true;
+        } catch (Exception e) {
+            // TODO: not rly expecting an exception here
+            Log.e("BrowserFragment","onItemLongClick",e);
+            return true;
+        }
+
+        Intent intent = new Intent(getActivity(), ReaderActivity.class);
+        intent.putExtra(ReaderFragment.PARAM_HANDLER, file);
+        intent.putExtra(ReaderFragment.PARAM_MODE, ReaderFragment.Mode.MODE_BROWSER);
+        startActivity(intent);
+        return true;
+    }
+
     private void setIcon(View convertView, File file) {
         ImageView view = (ImageView) convertView.findViewById(R.id.directory_row_icon);
+        GradientDrawable shape = (GradientDrawable) view.getBackground();
+        ImageView rainbow = (ImageView) convertView.findViewById(R.id.directory_row_rainbow);
+        rainbow.setVisibility(View.INVISIBLE);
+
+        // default bg color is grey
         int colorRes = R.color.circle_grey;
+
         if (file.isDirectory()) {
             view.setImageResource(R.drawable.ic_folder_white_24dp);
+
+            try {
+                Parser p = ParserFactory.create(file);
+                if (p.numPages()>0) {
+                    colorRes = android.R.color.transparent;
+                    rainbow.setVisibility(View.VISIBLE);
+                }
+            } catch (Exception ignored) {
+            }
         } else {
             view.setImageResource(R.drawable.ic_file_document_box_white_24dp);
 
@@ -152,10 +192,13 @@ public class BrowserFragment extends Fragment
                 colorRes = R.color.circle_green;
             } else if (Utils.isRar(name)) {
                 colorRes = R.color.circle_red;
+            } else if (Utils.isSevenZ(name)) {
+                colorRes = R.color.circle_yellow;
+            } else if (Utils.isTarball(name)){
+                colorRes = R.color.circle_orange;
             }
         }
 
-        GradientDrawable shape = (GradientDrawable) view.getBackground();
         shape.setColor(getResources().getColor(colorRes));
     }
 
