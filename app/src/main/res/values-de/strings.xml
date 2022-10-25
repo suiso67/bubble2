@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_description">Comic-Reader für Android</string>
+    <string name="about_libraries">Diese App nutzt die folgenden Bibliotheken zu den angegebenen Lizenzbedingungen. Ohne
+        diese gäbe es diese App nicht!
+    </string>
+    <string name="about_thanks">Danke!</string>
+    <string name="action_refresh">Erneut laden</string>
+    <string name="action_settings">Einstellungen</string>
+    <string name="action_view_mode">Ansichtsmodus</string>
+    <string name="action_view_mode_aspect_fill">Voll</string>
+    <string name="action_view_mode_aspect_fit">Angepasst</string>
+    <string name="action_view_mode_fit_width">Angepasste Breite</string>
+    <string name="action_reading_mode">Lesemodus</string>
+    <string name="action_reading_mode_left_to_right">Normal</string>
+    <string name="action_reading_mode_right_to_left">Rückwärts (Manga)</string>
+    <string name="menu_browser_filter_all">Alle</string>
+    <string name="menu_browser_filter_read">Gelesen</string>
+    <string name="menu_browser_filter_reading">Mittendrin</string>
+    <string name="menu_browser_filter_unread">Ungelesen</string>
+    <string name="menu_browser_filter_unfinished">Nicht beendet</string>
+    <string name="drawer_open">Menü öffnen</string>
+    <string name="drawer_close">Menü schliessen</string>
+    <string name="menu_library">Bibliothek</string>
+    <string name="menu_browser">Datei-Browser</string>
+    <string name="menu_about">Über</string>
+    <string name="library_header_recent">in letzter Zeit</string>
+    <string name="library_header_all">Alle</string>
+    <string name="directory_picker_header">Bibliotheksordner festlegen</string>
+    <string name="directory_picker_confirm">Festlegen</string>
+    <string name="directory_picker_cancel">Abbrechen</string>
+    <string name="search">Suchen</string>
+    <string name="browser_search_hint">Suchbegriff eingeben</string>
+    <string name="reload">Erneut Laden</string>
+    <string name="alert_action_positive">Ja</string>
+    <string name="alert_action_negative">Nein</string>
+    <string name="switch_next_comic">Zum nächsten Comic springen?</string>
+    <string name="switch_prev_comic">Zum vorherigen Comic springen?</string>
+    <string name="library_empty">Die Bibliothek schein leer zu sein. Ordner-Symbol nutzen um Bibliotheksordner festzulgen.</string>
+    <string name="warning_missing_file">Datei fehlt. Bitte Bibliothek aktualisieren.</string>
+</resources>
