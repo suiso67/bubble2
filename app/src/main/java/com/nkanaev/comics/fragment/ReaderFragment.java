@@ -131,30 +131,64 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         Mode mode = (Mode) bundle.getSerializable(PARAM_MODE);
 
         File file = null;
-        if (mode == Mode.MODE_INTENT) {
-            Intent intent = (Intent) bundle.getParcelable(PARAM_HANDLER);
-            Uri uri = intent.getData();
-            Log.i("URI", uri.toString());
-            file = new File(uri.getPath());
-            Log.i("FILE", file.getName());
-            InputStream is;
+        String error = "";
+        try {
+            if (mode == Mode.MODE_INTENT) {
+                Intent intent = (Intent) bundle.getParcelable(PARAM_HANDLER);
+                Uri uri = intent.getData();
+                Log.i("URI", uri.toString());
+                file = new File(uri.getPath());
+                Log.i("FILE", file.getName());
+                InputStream is;
 //            try {
-            //is = getActivity().getContentResolver().openInputStream(uri);
-            //mParser = new CommonsStreamParser(is);
-            mParser = ParserFactory.create(intent);
+                //is = getActivity().getContentResolver().openInputStream(uri);
+                //mParser = new CommonsStreamParser(is);
+                mParser = ParserFactory.create(intent);
 //            } catch (FileNotFoundException e) {
 //                throw new RuntimeException(e);
 //            }
 //            Log.i("IS",is.toString());
-        } else if (mode == Mode.MODE_LIBRARY) {
-            int comicId = bundle.getInt(PARAM_HANDLER);
-            mComic = Storage.getStorage(getActivity()).getComic(comicId);
-            file = mComic.getFile();
-            mCurrentPage = mComic.getCurrentPage();
-            mParser = ParserFactory.create(file);
-        } else if (mode == Mode.MODE_BROWSER) {
-            file = (File) bundle.getSerializable(PARAM_HANDLER);
-            mParser = ParserFactory.create(file);
+            } else if (mode == Mode.MODE_LIBRARY) {
+                int comicId = bundle.getInt(PARAM_HANDLER);
+                mComic = Storage.getStorage(getActivity()).getComic(comicId);
+                file = mComic.getFile();
+                mCurrentPage = mComic.getCurrentPage();
+                mParser = ParserFactory.create(file);
+            } else if (mode == Mode.MODE_BROWSER) {
+                file = (File) bundle.getSerializable(PARAM_HANDLER);
+                mParser = ParserFactory.create(file);
+            }
+        } catch (Exception e) {
+            error = e.getMessage();
+        }
+
+        if (mParser == null) {
+            Utils.showOKDialog(getActivity(), "No Parser", error);
+            mParser = new Parser() {
+                @Override
+                public void parse() throws IOException {
+
+                }
+
+                @Override
+                public int numPages() throws IOException {
+                    return 0;
+                }
+
+                @Override
+                public InputStream getPage(int num) throws IOException {
+                    return null;
+                }
+
+                @Override
+                public String getType() {
+                    return "dummy";
+                }
+
+                @Override
+                public void destroy() {
+                }
+            };
         }
 
         mFilename = file.getName();
@@ -284,7 +318,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         } else {
             setFullscreen(true);
         }
-        getActivity().setTitle(mFilename+" ["+mParser.getType()+"]");
+        getActivity().setTitle(mFilename + " [" + mParser.getType() + "]");
         updateSeekBar();
 
         return view;
@@ -473,7 +507,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
         DisplayMetrics displayMetrics = getContext().getResources().getDisplayMetrics();
         // mDblTapScale in PageImageView is 1.5 currently, so set this as our limit
-        int max = Math.round( 1.5f * Math.max(displayMetrics.widthPixels,displayMetrics.heightPixels) );
+        int max = Math.round(1.5f * Math.max(displayMetrics.widthPixels, displayMetrics.heightPixels));
 
         mPicasso.load(mComicHandler.getPageUri(pos))
                 .memoryPolicy(MemoryPolicy.NO_STORE)
@@ -560,7 +594,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
             // hotspot only 30% centered
             if (x < width / 9 * 3 || x > width / 9 * 6
-                || y < height / 9 * 3 || y > height / 9 * 6)
+                    || y < height / 9 * 3 || y > height / 9 * 6)
                 return;
 
             boolean fullScreen = !isFullscreen();
@@ -715,14 +749,14 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.AppCompatAlertDialogStyle)
                 .setTitle(titleRes)
                 .setMessage(newComic.getFile().getName())
-                .setPositiveButton(R.string.switch_action_positive, new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.alert_action_positive, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         ReaderActivity activity = (ReaderActivity) getActivity();
                         activity.setFragment(ReaderFragment.create(mNewComic.getId()));
                     }
                 })
-                .setNegativeButton(R.string.switch_action_negative, new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.alert_action_negative, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         mNewComic = null;
