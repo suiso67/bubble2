@@ -3,6 +3,11 @@
     <!-- do NOT translate app_name ;) -->
     <string name="app_name" translatable="false">Bubble2</string>
     <string name="app_description">Android comic reader</string>
+    <string name="app_link" translatable="false">https://github.com/edeso/bubble2</string>
+    <string name="app_license" translatable="false">GPL-3.0</string>
+
+    <string name="about_libraries">This application integrates the following libraries under the licenses mentioned. It wouldn\'t exist without them!</string>
+    <string name="about_thanks">Thank you!</string>
 
     <string name="action_refresh">Refresh</string>
     <string name="action_settings">Settings</string>
@@ -29,12 +34,11 @@
     <string name="menu_library">Library</string>
     <string name="menu_browser">Browser</string>
     <string name="menu_about">About</string>
-    <string name="menu_set_library_folder">Set library folder</string>
 
     <string name="library_header_recent">Recent</string>
     <string name="library_header_all">All</string>
 
-    <string name="directory_picker_header">Set a library directory</string>
+    <string name="directory_picker_header">Select library folder</string>
     <string name="directory_picker_confirm">Select</string>
     <string name="directory_picker_cancel">Cancel</string>
 
@@ -44,11 +48,12 @@
 
     <string name="reload">Reload</string>
 
-    <string name="switch_action_positive">Yes</string>
-    <string name="switch_action_negative">No</string>
+    <string name="alert_action_positive">Yes</string>
+    <string name="alert_action_negative">No</string>
+    <string name="alert_action_neutral">Ok</string>
     <string name="switch_next_comic">Would you like to switch to the next comic?</string>
     <string name="switch_prev_comic">Would you like to switch to the previous comic?</string>
 
-    <string name="library_empty">Your collection seems empty. Click \"folder\" icon to select library directory</string>
+    <string name="library_empty">Your collection seems empty. Click \"folder\" icon to select library directory.</string>
     <string name="warning_missing_file">Missing file. Please update the library</string>
 </resources>
