@@ -5,15 +5,30 @@
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:padding="4dp">
-    <ImageView
-            android:id="@+id/directory_row_icon"
-            android:layout_marginLeft="16dp"
-            android:layout_marginStart="16dp"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:background="@drawable/circle"
-            android:scaleType="center"
-            android:src="@drawable/ic_folder_white_24dp"/>
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_width="46dp"
+                    android:layout_height="30dp">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/directory_row_rainbow"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/rainbow"
+                app:civ_border_width="0dp"
+                app:civ_border_color="#FF000000"
+                android:visibility="invisible"/>
+        <ImageView
+                android:id="@+id/directory_row_icon"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/circle"
+                android:scaleType="center"
+                android:src="@drawable/ic_folder_white_24dp"
+                android:visibility="visible"/>
+    </RelativeLayout>
     <TextView
             android:id="@+id/directory_row_text"
             android:layout_width="wrap_content"
