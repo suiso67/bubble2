@@ -44,7 +44,7 @@ public class ParserFactory {
 
             if (p != null) {
                 // wrap in retry parser, unless pre-Oreo
-                if (false && p instanceof AbstractParser && Utils.isOreoOrLater())
+                if (p instanceof AbstractParser && Utils.isOreoOrLater())
                     p = new LenientTryAnotherParserWrapper((AbstractParser) p);
                 // wrap in JP2 recoder
                 p = new CachingDecodeJP2ParserWrapper(p);
