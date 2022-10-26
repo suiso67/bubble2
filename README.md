@@ -7,6 +7,8 @@ Upgraded dependencies, enhancements as felt needed.
 
 ## Features
 
+* Best served on Android 8.0(Oreo) or later
+* Still runs on Android 4.1(JB)+ though displaying ZIP and FOLDERs only
 * Optimized for tablets
 * Supports CBZ/ZIP, CBR/RAR, 7Z/CB7 and FOLDER based comics
 * TAR/CBT and Brotli/Gzip/BZ2/Zstd compressed TAR files are supported too
