@@ -5,6 +5,10 @@ Upgraded dependencies, enhancements as felt needed.
 
 **Feel free to open an [issue](https://github.com/edeso/bubble2/issues) or even better contribute with a pull request.**
 
+## Download
+
+APKs avail on sf.net https://sourceforge.net/projects/bubble2/files/
+
 ## Features
 
 * Best served on Android 8.0(Oreo) or later
