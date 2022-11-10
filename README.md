@@ -1,6 +1,6 @@
 # Bubble2        ![Bubble2 logo](https://raw.githubusercontent.com/edeso/bubble2/master/app/src/main/res/drawable-hdpi/ic_launcher.png)
 
-Android comic book reader. Based on Bubble v1.6.0 by Nazar Kanaev.<br>
+Simple yet comfy android comic book reader. Based on Bubble v1.6.0 by Nazar Kanaev.<br>
 Upgraded dependencies, enhancements as felt needed. 
 
 **Feel free to open an [issue](https://github.com/edeso/bubble2/issues) or even better contribute with a pull request.**
