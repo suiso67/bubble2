@@ -33,3 +33,7 @@ APKs avail on sf.net https://sourceforge.net/projects/bubble2/files/
 ## License
 
 Source code is available under GPL-3. See the [LICENSE.md](https://github.com/edeso/bubble2/blob/master/LICENSE.md)  for more info.
+
+## Screenshots
+
+![Bubble2 screenshots](https://github.com/edeso/bubble2/blob/master/art/promo.jpg?raw=true)
