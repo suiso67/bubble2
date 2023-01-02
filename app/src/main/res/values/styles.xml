@@ -7,12 +7,16 @@
         <!--<item name="colorControlNormal">@color/lighter</item>-->
         <item name="colorControlHighlight">@color/ripple_material_light</item>
 
+        <item name="android:textColorPrimary">@color/lightest</item>
+        <item name="android:textColorSecondary">@color/lightest</item>
         <item name="android:textColor">@color/darkest</item>
+
         <item name="android:background">@android:color/transparent</item>
     </style>
 
-    <style name="MyToolbarTheme" parent="Widget.AppCompat.ActionBar">
+    <style name="MyToolbarTheme" parent="AppTheme">
         <item name="android:textColorPrimary">@color/lightest</item>
-        <item name="colorControlNormal">@color/lightest</item>
+        <item name="android:textColorSecondary">@color/lightest</item>
+        <item name="android:textColor">@color/lightest</item>
     </style>
 </resources>

@@ -15,6 +15,7 @@
 
     <style name="MyDarkToolbarTheme" parent="Widget.AppCompat.ActionBar">
         <item name="android:textColorPrimary">@color/lightest</item>
+        <item name="android:textColorSecondary">@color/lightest</item>
         <item name="android:colorBackground">@color/darkest</item>
         <item name="colorControlNormal">@color/lightest</item>
         <item name="colorControlHighlight">@color/darker</item>
