@@ -8,9 +8,9 @@
     <string name="action_refresh">Erneut laden</string>
     <string name="action_settings">Einstellungen</string>
     <string name="action_view_mode">Ansichtsmodus</string>
-    <string name="action_view_mode_aspect_fill">Voll</string>
-    <string name="action_view_mode_aspect_fit">Angepasst</string>
-    <string name="action_view_mode_fit_width">Angepasste Breite</string>
+    <string name="action_view_mode_aspect_fill">Vollbild</string>
+    <string name="action_view_mode_aspect_fit">ganze Seite</string>
+    <string name="action_view_mode_fit_width">volle Breite</string>
     <string name="action_reading_mode">Lesemodus</string>
     <string name="action_reading_mode_left_to_right">Normal</string>
     <string name="action_reading_mode_right_to_left">Rückwärts (Manga)</string>
@@ -24,7 +24,7 @@
     <string name="menu_library">Bibliothek</string>
     <string name="menu_browser">Datei-Browser</string>
     <string name="menu_about">Über</string>
-    <string name="library_header_recent">in letzter Zeit</string>
+    <string name="library_header_recent">Zuletzt gelesen</string>
     <string name="library_header_all">Alle</string>
     <string name="directory_picker_header">Bibliotheksordner festlegen</string>
     <string name="directory_picker_confirm">Festlegen</string>
@@ -34,8 +34,8 @@
     <string name="reload">Erneut Laden</string>
     <string name="alert_action_positive">Ja</string>
     <string name="alert_action_negative">Nein</string>
-    <string name="switch_next_comic">Zum nächsten Comic springen?</string>
-    <string name="switch_prev_comic">Zum vorherigen Comic springen?</string>
+    <string name="switch_next_comic">Nächsten Comic anzeigen?</string>
+    <string name="switch_prev_comic">Vorherigen Comic anzeigen?</string>
     <string name="library_empty">Die Bibliothek schein leer zu sein. Ordner-Symbol nutzen um Bibliotheksordner festzulgen.</string>
     <string name="warning_missing_file">Datei fehlt. Bitte Bibliothek aktualisieren.</string>
 </resources>
