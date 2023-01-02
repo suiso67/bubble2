@@ -81,11 +81,11 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
                     "https://github.com/ThalesGroup/JP2ForAndroid"
             ),
             new LibraryDescription(
-                    "CircleImageView",
-                    "A fast circular ImageView perfect for profile images.",
+                    "Material Design Icons",
+                    "Official icon sets from Google designed under the material design guidelines.",
                     "Apache Version 2.0",
-                    "Henning Dodenhof",
-                    "https://github.com/hdodenhof/CircleImageView"
+                    "Google",
+                    "https://github.com/google/material-design-icons"
             ),
             new LibraryDescription(
                     "Android Jetpack",
