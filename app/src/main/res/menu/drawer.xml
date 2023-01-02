@@ -3,13 +3,13 @@
     <group android:id="@+id/drawer_group_mode"
            android:checkableBehavior="single">
         <item android:id="@+id/drawer_menu_library"
-              android:icon="@drawable/ic_my_library_books_grey600_24dp"
+              android:icon="@drawable/ic_library_books_24"
               android:title="@string/menu_library"/>
         <item android:id="@+id/drawer_menu_browser"
-              android:icon="@drawable/ic_folder_grey600_24dp"
+              android:icon="@drawable/ic_folder_24"
               android:title="@string/menu_browser"/>
         <item android:id="@+id/drawer_menu_about"
-              android:icon="@drawable/ic_info_grey600_24dp"
+              android:icon="@drawable/ic_info_24"
               android:title="@string/menu_about"/>
     </group>
 </menu>

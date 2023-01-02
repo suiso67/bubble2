@@ -174,7 +174,7 @@ public class BrowserFragment extends Fragment
         int colorRes = R.color.circle_grey;
 
         if (file.isDirectory()) {
-            view.setImageResource(R.drawable.ic_folder_white_24dp);
+            view.setImageResource(R.drawable.ic_folder_24);
 
             try {
                 Parser p = ParserFactory.create(file);
