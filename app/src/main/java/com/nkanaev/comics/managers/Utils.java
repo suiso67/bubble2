@@ -90,7 +90,7 @@ public final class Utils {
     }
 
     public static boolean isImage(String filename) {
-        return filename.matches("(?i).*\\.(jpg|jpeg|bmp|gif|png|webp|jp2|j2k)$");
+        return filename.matches("(?i).*\\.(jpe?g|bmp|gif|png|webp|jp2|j2k)$");
     }
 
     public static boolean isJP2Stream(BufferedInputStream bis) throws IOException {
@@ -102,36 +102,43 @@ public final class Utils {
         return JP2Decoder.isJPEG2000(b);
     }
 
+    public static boolean isPdf(String filename) {
+        return filename.matches("(?i).*\\.(pdf)$" );
+    }
+
     public static boolean isZip(String filename) {
-        return filename.toLowerCase().matches(".*\\.(zip|cbz)$");
+        return filename.matches("(?i).*\\.(zip|cbz)$");
     }
 
     public static boolean isRar(String filename) {
-        return filename.toLowerCase().matches(".*\\.(rar|cbr)$");
+        return filename.matches("(?i).*\\.(rar|cbr)$");
     }
 
     public static boolean isTarball(String filename) {
-        return filename.matches("(?i).*\\.(cbt|tar)$") || isCompressedTarball(filename);
+        return filename.matches("(?i).*\\.(cbt|tar)$") ||
+                isCompressedTarball(filename);
     }
 
     public static boolean isCompressedTarball(String filename) {
-        return isTGZ(filename) || isTBZ(filename) || isTXZ(filename) || isTZST(filename) || isTBR(filename);
+        return isTGZ(filename) || isTBZ(filename) ||
+                isTXZ(filename) || isTZST(filename) ||
+                isTBR(filename);
     }
 
     public static boolean isTGZ(String filename) {
-        return filename.toLowerCase().matches("(?i).*\\.(tar\\.gz|tgz)$");
+        return filename.matches("(?i).*\\.(tar\\.gz|tgz)$");
     }
 
     public static boolean isTBZ(String filename) {
-        return filename.toLowerCase().matches("(?i).*\\.(tar\\.bz2?|tbz2?)$");
+        return filename.matches("(?i).*\\.(tar\\.bz2?|tbz2?)$");
     }
 
     public static boolean isTXZ(String filename) {
-        return filename.toLowerCase().matches("(?i).*\\.(tar\\.xz|txz)$");
+        return filename.matches("(?i).*\\.(tar\\.xz|txz)$");
     }
 
     public static boolean isTZST(String filename) {
-        return filename.toLowerCase().matches("(?i).*\\.(tar\\.zstd?|tzs(|t|td))$");
+        return filename.matches("(?i).*\\.(tar\\.zstd?|tzs(|t|td))$");
     }
 
     public static boolean isTBR(String filename) {
@@ -139,11 +146,13 @@ public final class Utils {
     }
 
     public static boolean isSevenZ(String filename) {
-        return filename.toLowerCase().matches(".*\\.(cb7|7z)$");
+        return filename.matches("(?i).*\\.(cb7|7z)$");
     }
 
     public static boolean isArchive(String filename) {
-        return isZip(filename) || isRar(filename) || isTarball(filename) || isSevenZ(filename);
+        return isZip(filename) || isRar(filename) ||
+                isTarball(filename) || isSevenZ(filename) ||
+                isPdf(filename);
     }
 
     public static int getDeviceWidth(Context context) {
