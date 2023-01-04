@@ -149,6 +149,11 @@ public class ParserFactory {
             }
             // TODO: random access SevenZFileParser throws CRC errors
             return SevenZStreamParser.class;
+        } else if (Utils.isPdf(file.getName())) {
+            if (!Utils.isKitKatOrLater()) {
+                throw new UnsupportedOperationException("Pdf only available on KitKat (API19) or later");
+            }
+            return PdfParser.class;
         }
 
         // no parser, no fun ;(

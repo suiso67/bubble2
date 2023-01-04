@@ -60,6 +60,13 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
                     "http://tukaani.org/xz/java.html"
             ),
             new LibraryDescription(
+                    "PdfBox-Android",
+                    "A port of Apache's PdfBox library to be usable on Android.",
+                    "Apache Version 2.0",
+                    "Tom Roush/Apache Software Foundation",
+                    "https://github.com/TomRoush/PdfBox-Android"
+            ),
+            new LibraryDescription(
                     "Zstd-jni",
                     "JNI bindings to Zstd Library",
                     "BSD License",
