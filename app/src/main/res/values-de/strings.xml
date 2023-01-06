@@ -14,13 +14,14 @@
     <string name="action_reading_mode">Lesemodus</string>
     <string name="action_reading_mode_left_to_right">Normal</string>
     <string name="action_reading_mode_right_to_left">Rückwärts (Manga)</string>
+    <string name="menu_browser_filter">Filter</string>
     <string name="menu_browser_filter_all">Alle</string>
     <string name="menu_browser_filter_read">Gelesen</string>
     <string name="menu_browser_filter_reading">Mittendrin</string>
     <string name="menu_browser_filter_unread">Ungelesen</string>
     <string name="menu_browser_filter_unfinished">Nicht beendet</string>
     <string name="drawer_open">Menü öffnen</string>
-    <string name="drawer_close">Menü schliessen</string>
+    <string name="drawer_close">Menü schließen</string>
     <string name="menu_library">Bibliothek</string>
     <string name="menu_browser">Datei-Browser</string>
     <string name="menu_about">Über</string>
@@ -34,6 +35,7 @@
     <string name="reload">Erneut Laden</string>
     <string name="alert_action_positive">Ja</string>
     <string name="alert_action_negative">Nein</string>
+    <string name="alert_action_neutral">Ok</string>
     <string name="switch_next_comic">Nächsten Comic anzeigen?</string>
     <string name="switch_prev_comic">Vorherigen Comic anzeigen?</string>
     <string name="library_empty">Die Bibliothek schein leer zu sein. Ordner-Symbol nutzen um Bibliotheksordner festzulgen.</string>

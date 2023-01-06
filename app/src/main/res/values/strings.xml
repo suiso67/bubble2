@@ -2,7 +2,7 @@
 <resources>
     <!-- do NOT translate app_name ;) -->
     <string name="app_name" translatable="false">Bubble2</string>
-    <string name="app_description">Android comic reader</string>
+    <string name="app_description">Android comic book reader</string>
     <string name="app_link" translatable="false">https://github.com/edeso/bubble2</string>
     <string name="app_license" translatable="false">GPL-3.0</string>
 
@@ -50,7 +50,7 @@
 
     <string name="alert_action_positive">Yes</string>
     <string name="alert_action_negative">No</string>
-    <string name="alert_action_neutral">Ok</string>
+    <string name="alert_action_neutral">OK</string>
     <string name="switch_next_comic">Would you like to switch to the next comic?</string>
     <string name="switch_prev_comic">Would you like to switch to the previous comic?</string>
 
