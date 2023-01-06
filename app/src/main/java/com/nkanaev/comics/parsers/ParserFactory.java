@@ -14,6 +14,7 @@ import com.nkanaev.comics.managers.Utils;
 
 import java.io.*;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
@@ -43,8 +44,9 @@ public class ParserFactory {
                 throw new IllegalArgumentException("Parser.create() call with unimplemented parameter");
 
             if (p != null) {
-                // wrap in retry parser, unless pre-Oreo
-                if (p instanceof AbstractParser && Utils.isOreoOrLater())
+                // wrap 7z,rar,zip in retry parser, unless pre-Oreo
+                if (p instanceof AbstractParser && Utils.isOreoOrLater() &&
+                        Arrays.asList(new String[]{"7z","rar","zip"}).contains(p.getType()))
                     p = new LenientTryAnotherParserWrapper((AbstractParser) p);
                 // wrap in JP2 recoder
                 p = new CachingDecodeJP2ParserWrapper(p);
@@ -150,10 +152,10 @@ public class ParserFactory {
             // TODO: random access SevenZFileParser throws CRC errors
             return SevenZStreamParser.class;
         } else if (Utils.isPdf(file.getName())) {
-            if (!Utils.isKitKatOrLater()) {
+            if (!Utils.isLollipopOrLater()/*!Utils.isKitKatOrLater()*/) {
                 throw new UnsupportedOperationException("Pdf only available on KitKat (API19) or later");
             }
-            return PdfParser.class;
+            return PdfRendererParser.class;
         }
 
         // no parser, no fun ;(
