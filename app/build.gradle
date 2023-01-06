@@ -80,5 +80,4 @@ dependencies {
     implementation 'com.github.luben:zstd-jni:1.5.2-5@aar'
     implementation 'org.brotli:dec:0.1.2'
     implementation 'com.gemalto.jp2:jp2-android:1.0.3'
-    implementation 'com.tom-roush:pdfbox-android:2.0.27.0'
 }
