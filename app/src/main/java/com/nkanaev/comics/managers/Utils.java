@@ -17,6 +17,7 @@ import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.R;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -167,6 +168,13 @@ public final class Utils {
         return value;
     }
 
+    public static int getMaxPageSize(){
+        DisplayMetrics displayMetrics = MainApplication.getAppContext().getResources().getDisplayMetrics();
+        int w = displayMetrics.widthPixels;
+        int h = displayMetrics.heightPixels;
+        return Math.round(1.5f * Math.max(w, h));
+    }
+
     public static String MD5(String string) {
         try {
             byte[] strBytes = string.getBytes();
@@ -259,8 +267,19 @@ public final class Utils {
         if (c == null) return;
         try {
             c.close();
-        } catch (final Throwable ignored) {
-            // do nothing;
+        } catch (final Throwable t) {
+            Log.e("Bubble2","Utils.close(Closeable)",t);
+        }
+    }
+
+    public static void close(final Object o) {
+        if (o == null) return;
+        try {
+            Class c = o.getClass();
+            Method m = c.getMethod("close");
+            m.invoke(o);
+        } catch (final Throwable t) {
+            Log.e("Bubble2","Utils.close(Object)",t);
         }
     }
 
@@ -286,12 +305,14 @@ public final class Utils {
         if (dir == null || !dir.isDirectory())
             return;
 
-        for (File f : dir.listFiles()) {
-            if (recursive && f.isDirectory())
-                rmDir(f, true);
-            else if (f.isFile())
-                f.delete();
-        }
+        File[] files = dir.listFiles();
+        if (files != null)
+            for (File f : files) {
+                if (recursive && f.isDirectory())
+                    rmDir(f, true);
+                else if (f.isFile())
+                    f.delete();
+            }
         dir.delete();
     }
 
