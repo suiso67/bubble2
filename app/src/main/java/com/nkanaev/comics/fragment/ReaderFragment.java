@@ -505,9 +505,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             pos = mViewPager.getAdapter().getCount() - t.position - 1;
         }
 
-        DisplayMetrics displayMetrics = getContext().getResources().getDisplayMetrics();
         // mDblTapScale in PageImageView is 1.5 currently, so set this as our limit
-        int max = Math.round(1.5f * Math.max(displayMetrics.widthPixels, displayMetrics.heightPixels));
+        int max = Utils.getMaxPageSize();
 
         mPicasso.load(mComicHandler.getPageUri(pos))
                 .memoryPolicy(MemoryPolicy.NO_STORE)
