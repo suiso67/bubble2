@@ -57,6 +57,7 @@ public class PdfParser extends AbstractParser{
     @Override
     public void destroy() {
         Utils.close(document);
+        document = null;
         super.destroy();
     }
 }
