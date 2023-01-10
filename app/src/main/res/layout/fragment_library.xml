@@ -25,23 +25,25 @@
                 android:scrollbarStyle="insideOverlay"
                 android:drawSelectorOnTop="true"/>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-    <LinearLayout
+    <RelativeLayout
             android:id="@+id/library_empty"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:orientation="vertical">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
         <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_hops_grey600_48dp"
-                android:scaleType="center"/>
+                android:layout_height="match_parent"
+                android:src="@drawable/icon"
+                android:scaleType="centerCrop"
+                android:padding="12dp"
+                android:layout_centerInParent="true"
+                android:alpha=".1"/>
         <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/library_empty"
-                android:textSize="@dimen/card_text"
+                android:textSize="24sp"
                 android:gravity="center"
-                android:padding="@dimen/button_horizontal_padding"/>
-    </LinearLayout>
+                android:padding="18dp"
+                android:layout_centerInParent="true"/>
+    </RelativeLayout>
 </RelativeLayout>
