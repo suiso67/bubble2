@@ -3,10 +3,10 @@
     <group android:id="@+id/drawer_group_mode"
            android:checkableBehavior="single">
         <item android:id="@+id/drawer_menu_library"
-              android:icon="@drawable/ic_library_books_24"
+              android:icon="@drawable/ic_collections_image_24"
               android:title="@string/menu_library"/>
         <item android:id="@+id/drawer_menu_browser"
-              android:icon="@drawable/ic_folder_24"
+              android:icon="@drawable/ic_folder_open_24"
               android:title="@string/menu_browser"/>
         <item android:id="@+id/drawer_menu_about"
               android:icon="@drawable/ic_info_24"
