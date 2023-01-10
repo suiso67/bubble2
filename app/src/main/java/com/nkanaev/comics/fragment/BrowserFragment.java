@@ -218,7 +218,7 @@ public class BrowserFragment extends Fragment
             return;
         }
 
-        view.setImageResource(R.drawable.ic_file_document_box_white_24dp);
+        view.setImageResource(R.drawable.ic_article_24);
         String name = file.getName();
         if (!Utils.isArchive(name))
             return;
