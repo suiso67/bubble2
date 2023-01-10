@@ -1,0 +1,9 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/rainbow_circle"
+          android:height="30dp"
+          android:width="30dp"/>
+    <item android:drawable="@drawable/ic_folder_24"
+          android:gravity="center"
+          android:height="20dp"
+          android:width="20dp"/>
+</layer-list>
