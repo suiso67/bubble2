@@ -5,7 +5,7 @@ import android.content.res.AssetFileDescriptor;
 import android.net.Uri;
 import android.util.Log;
 import com.nkanaev.comics.MainApplication;
-import com.nkanaev.comics.managers.NaturalOrderComparator;
+import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry;
 import org.apache.commons.compress.archivers.sevenz.SevenZFile;
@@ -56,7 +56,7 @@ public class SevenZStreamParser extends AbstractParser {
             }
         }
 
-        Collections.sort(mEntries, new NaturalOrderComparator() {
+        Collections.sort(mEntries, new IgnoreCaseComparator() {
             @Override
             public String stringValue(Object o) {
                 return ((SevenZArchiveEntry) o).getName();

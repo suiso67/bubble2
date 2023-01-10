@@ -1,7 +1,7 @@
 package com.nkanaev.comics.parsers;
 
 
-import com.nkanaev.comics.managers.NaturalOrderComparator;
+import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 
 import java.io.File;
@@ -39,7 +39,7 @@ public class DirectoryParser extends AbstractParser {
             }
         }
 
-        Collections.sort(mFiles, new NaturalOrderComparator() {
+        Collections.sort(mFiles, new IgnoreCaseComparator() {
             @Override
             public String stringValue(Object o) {
                 return ((File) o).getName();

@@ -2,17 +2,15 @@ package com.nkanaev.comics.parsers;
 
 import android.net.Uri;
 import com.nkanaev.comics.MainApplication;
-import com.nkanaev.comics.managers.NaturalOrderComparator;
+import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
-import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -44,7 +42,7 @@ public class CommonsUriParser extends AbstractParser {
                 }
             }
 
-            Collections.sort(mEntries, new NaturalOrderComparator() {
+            Collections.sort(mEntries, new IgnoreCaseComparator() {
                 @Override
                 public String stringValue(Object o) {
                     return ((ArchiveEntry) o).getName();

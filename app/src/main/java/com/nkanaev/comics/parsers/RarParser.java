@@ -4,7 +4,7 @@ import com.github.junrar.Archive;
 import com.github.junrar.exception.RarException;
 import com.github.junrar.rarfile.FileHeader;
 import com.nkanaev.comics.MainApplication;
-import com.nkanaev.comics.managers.NaturalOrderComparator;
+import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 
 import java.io.*;
@@ -56,7 +56,7 @@ public class RarParser extends AbstractParser {
             header = mArchive.nextFileHeader();
         }
 
-        Collections.sort(mHeaders, new NaturalOrderComparator() {
+        Collections.sort(mHeaders, new IgnoreCaseComparator() {
             @Override
             public String stringValue(Object o) {
                 return getName((FileHeader) o);

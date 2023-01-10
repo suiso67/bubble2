@@ -1,7 +1,7 @@
 package com.nkanaev.comics.parsers;
 
 
-import com.nkanaev.comics.managers.NaturalOrderComparator;
+import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarFile;
@@ -50,7 +50,7 @@ public class TarFileParser extends AbstractParser {
             }
         }
 
-        Collections.sort(entries, new NaturalOrderComparator() {
+        Collections.sort(entries, new IgnoreCaseComparator() {
             @Override
             public String stringValue(Object o) {
                 return ((TarArchiveEntry) o).getName();

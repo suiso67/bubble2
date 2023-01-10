@@ -1,6 +1,6 @@
 package com.nkanaev.comics.parsers;
 
-import com.nkanaev.comics.managers.NaturalOrderComparator;
+import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -41,7 +41,7 @@ public class CommonsZipParser extends AbstractParser {
 
         //noinspection unchecked
         Collections.sort(mEntries,
-                new NaturalOrderComparator() {
+                new IgnoreCaseComparator() {
                     @Override
                     public String stringValue(Object o) {
                         return ((ZipArchiveEntry) o).getName();
