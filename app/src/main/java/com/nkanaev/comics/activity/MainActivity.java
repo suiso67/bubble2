@@ -2,6 +2,7 @@ package com.nkanaev.comics.activity;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.widget.TextView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.navigation.NavigationView.OnNavigationItemSelectedListener;
 import androidx.fragment.app.Fragment;
@@ -53,6 +54,9 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         if (actionBar != null) {
             actionBar.setHomeButtonEnabled(true);
             actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowCustomEnabled(true);
+            actionBar.setCustomView(R.layout.action_bar_title_layout);
+            actionBar.setTitle("");
         }
 
         mPicasso = new Picasso.Builder(this)
@@ -81,6 +85,12 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
             mCurrentNavItem = savedInstanceState.getInt(STATE_CURRENT_MENU_ITEM);
             navigationView.getMenu().findItem(mCurrentNavItem).setChecked(true);
         }
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        super.setTitle(title);
+        ((TextView) findViewById(R.id.action_bar_title)).setText(title);
     }
 
     @Override

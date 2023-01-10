@@ -318,7 +318,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         } else {
             setFullscreen(true);
         }
-        getActivity().setTitle(mFilename + " [" + mParser.getType() + "]");
+        //getActivity().setTitle(mFilename + " [" + mParser.getType() + "]");
+        ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText(mFilename + " [" + mParser.getType() + "]");
         updateSeekBar();
 
         return view;

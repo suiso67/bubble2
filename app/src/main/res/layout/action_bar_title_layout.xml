@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+<!--
+    <HorizontalScrollView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+-->
+        <!-- scrolling horizontally works, but decided to wrap text for now -->
+        <!-- wrapping is always done by word boundaries, ellipsize, lineBreak attribs don't do sh*t, dunno why -->
+        <TextView
+                android:id="@+id/action_bar_title"
+                style="@style/TextAppearance.AppCompat.Title"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:gravity="fill_horizontal"
+                android:singleLine="false"
+                android:scrollHorizontally="false"
+
+                android:ellipsize="none"
+                android:lineBreakStyle="none"
+                android:lineBreakWordStyle="none"/>
+<!--
+    </HorizontalScrollView>
+-->
+</LinearLayout>
