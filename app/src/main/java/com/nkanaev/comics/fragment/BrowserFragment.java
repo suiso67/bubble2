@@ -1,7 +1,6 @@
 package com.nkanaev.comics.fragment;
 
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Environment;
@@ -10,10 +9,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.ReaderActivity;
+import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
@@ -83,9 +82,8 @@ public class BrowserFragment extends Fragment
     private void setCurrentDir(File dir) {
         mCurrentDir = dir;
         ArrayList<File> subDirs = new ArrayList<>();
-        if (!mCurrentDir.getAbsolutePath().equals(mRootDir.getAbsolutePath())) {
-            subDirs.add(mCurrentDir.getParentFile());
-        }
+
+        // list only folders and known archive types
         File[] files = mCurrentDir.listFiles();
         if (files != null) {
             for (File f : files) {
@@ -96,7 +94,7 @@ public class BrowserFragment extends Fragment
         }
 
         File[] validFolders = Utils.listExternalStorageDirs();
-        // ensure paths to storages are listed, even if not browsable
+        // ensure paths to known storages are listed, even if not browsable
         if (Utils.isOreoOrLater()) {
             Path parent = mCurrentDir.toPath();
             for (File validPath : validFolders) {
@@ -113,7 +111,19 @@ public class BrowserFragment extends Fragment
             }
         }
 
-        Collections.sort(subDirs);
+        // sort alphabetically ignore-case
+        Collections.sort(subDirs, new IgnoreCaseComparator() {
+            @Override
+            public String stringValue(Object o) {
+                return ((File) o).getName();
+            }
+        });
+
+        // add '..' to top
+        if (!mCurrentDir.getAbsolutePath().equals(mRootDir.getAbsolutePath())) {
+            subDirs.add(0,mCurrentDir.getParentFile());
+        }
+
         mSubdirs = subDirs.toArray(new File[subDirs.size()]);
 
         if (mListView != null) {
@@ -164,42 +174,70 @@ public class BrowserFragment extends Fragment
         return true;
     }
 
-    private void setIcon(View convertView, File file) {
+    private void setIcon(int position, View convertView, File file) {
         ImageView view = (ImageView) convertView.findViewById(R.id.directory_row_icon);
-        GradientDrawable shape = (GradientDrawable) view.getBackground();
-        ImageView rainbow = (ImageView) convertView.findViewById(R.id.directory_row_rainbow);
-        rainbow.setVisibility(View.INVISIBLE);
+        ImageView circle = (ImageView) convertView.findViewById(R.id.directory_row_circle);
+        GradientDrawable circleDrawable = (GradientDrawable) circle.getDrawable();
+        //GradientDrawable shape = (GradientDrawable) view.getBackground();
+        //ImageView rainbow = (ImageView) convertView.findViewById(R.id.directory_row_rainbow);
+        //rainbow.setVisibility(View.INVISIBLE);
 
-        // default bg color is grey
+        // default is folder icon on grey circle
+        view.setImageResource(R.drawable.ic_folder_24);
         int colorRes = R.color.circle_grey;
+        circleDrawable.setColor(getResources().getColor(colorRes));
+        circle.setVisibility(View.VISIBLE);
+
+        // ignore top parent dir entry
+        if (position == 0)
+            return;
 
         if (file.isDirectory()) {
-            view.setImageResource(R.drawable.ic_folder_24);
-
+            // is it a dir comic?
             try {
                 Parser p = ParserFactory.create(file);
                 if (p.numPages()>0) {
-                    colorRes = android.R.color.transparent;
-                    rainbow.setVisibility(View.VISIBLE);
+                    view.setImageResource(R.drawable.ic_image_folder_24);
+                    colorRes = R.color.circle_teal;
                 }
             } catch (Exception ignored) {
             }
-        } else {
-            view.setImageResource(R.drawable.ic_file_document_box_white_24dp);
 
-            String name = file.getName();
-            if (Utils.isZip(name)) {
-                colorRes = R.color.circle_green;
-            } else if (Utils.isRar(name)) {
-                colorRes = R.color.circle_red;
-            } else if (Utils.isSevenZ(name)) {
-                colorRes = R.color.circle_yellow;
-            } else if (Utils.isTarball(name)){
-                colorRes = R.color.circle_orange;
-            }
+            // TODO: file listing on folders with many files slows down scrolling
+            File[] files = file.listFiles();
+            if (files != null)
+                for (File f : files) {
+                    if (Utils.isArchive(f.getName())) {
+                        // show rainbow
+                        circle.setVisibility(View.INVISIBLE);
+                        break;
+                    }
+                }
+
+            circleDrawable.setColor(getResources().getColor(colorRes));
+            return;
         }
 
-        shape.setColor(getResources().getColor(colorRes));
+        view.setImageResource(R.drawable.ic_file_document_box_white_24dp);
+        String name = file.getName();
+        if (!Utils.isArchive(name))
+            return;
+
+        view.setImageResource(R.drawable.ic_text_image_document_24);
+        if (Utils.isPdf(name)) {
+            colorRes = R.color.circle_blue;
+        } else if (Utils.isZip(name)) {
+            colorRes = R.color.circle_green;
+        } else if (Utils.isRar(name)) {
+            colorRes = R.color.circle_red;
+        } else if (Utils.isSevenZ(name)) {
+            colorRes = R.color.circle_yellow;
+        } else if (Utils.isTarball(name)){
+            colorRes = R.color.circle_orange;
+        }
+
+        //shape.setColor(getResources().getColor(colorRes));
+        circleDrawable.setColor(getResources().getColor(colorRes));
     }
 
     private final class DirectoryAdapter extends BaseAdapter {
@@ -233,7 +271,7 @@ public class BrowserFragment extends Fragment
                 textView.setText(file.getName());
             }
 
-            setIcon(convertView, file);
+            setIcon(position, convertView, file);
 
             return convertView;
         }

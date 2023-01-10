@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatDialog;
 import com.nkanaev.comics.R;
+import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 
 import java.io.File;
@@ -70,10 +71,6 @@ public class DirectorySelectDialog
             subDirs = new ArrayList<>();
         }
 
-        if (!mCurrentDir.getAbsolutePath().equals(mRootDir.getAbsolutePath())) {
-            subDirs.add(0, mCurrentDir.getParentFile());
-        }
-
         // ensure paths to storages are listed, even if not browsable
         if (Utils.isOreoOrLater()) {
             Path parent = mCurrentDir.toPath();
@@ -91,7 +88,19 @@ public class DirectorySelectDialog
             }
         }
 
-        Collections.sort(subDirs);
+        // sort alphabetically ignore-case
+        Collections.sort(subDirs, new IgnoreCaseComparator() {
+            @Override
+            public String stringValue(Object o) {
+                return ((File) o).getName();
+            }
+        });
+
+        // add '..' to top
+        if (!mCurrentDir.getAbsolutePath().equals(mRootDir.getAbsolutePath())) {
+            subDirs.add(0, mCurrentDir.getParentFile());
+        }
+
         mSubdirs = subDirs.toArray(new File[subDirs.size()]);
 
         mTitleTextView.setText(mCurrentDir.getPath());
@@ -150,38 +159,35 @@ public class DirectorySelectDialog
                 textView.setText(dir.getName());
             }
 
-            setIcon(convertView, dir);
+            setIcon(position, convertView, dir);
 
             return convertView;
         }
 
-        private void setIcon(View convertView, File file) {
+        private void setIcon(int position, View convertView, File file) {
             ImageView view = (ImageView) convertView.findViewById(R.id.directory_row_icon);
-            GradientDrawable shape = (GradientDrawable) view.getBackground();
-            ImageView rainbow = (ImageView) convertView.findViewById(R.id.directory_row_rainbow);
-            rainbow.setVisibility(View.INVISIBLE);
+            ImageView circle = (ImageView) convertView.findViewById(R.id.directory_row_circle);
 
             // default bg color is grey
             int colorRes = R.color.circle_grey;
+            GradientDrawable circleDrawable = (GradientDrawable) circle.getDrawable();
+            circleDrawable.setColor(getContext().getResources().getColor(colorRes));
+            circle.setVisibility(View.VISIBLE);
+            view.setImageResource(R.drawable.ic_folder_24);
 
-            if (file.isDirectory()) {
-                view.setImageResource(R.drawable.ic_folder_24);
+            // top '..' is always grey
+            if (position==0)
+                return;
 
-                File[] listing = file.listFiles();
-                if (listing == null) listing = new File[0];
+            File[] listing = file.listFiles();
+            if (listing != null)
                 for (File listFile : listing) {
                     if (listFile.isFile() && Utils.isArchive(listFile.getName())) {
-                        colorRes = android.R.color.transparent;
-                        rainbow.setVisibility(View.VISIBLE);
+                        circle.setVisibility(View.INVISIBLE);
                         break;
                     }
                 }
-            } else {
-                view.setImageResource(R.drawable.ic_file_document_box_white_24dp);
-            }
 
-            shape.setColor(getContext().getResources().getColor(colorRes));
         }
-
     }
 }
