@@ -25,7 +25,7 @@ public class RarParser extends AbstractParser {
     }
 
     @Override
-    public void parse() throws IOException {
+    public synchronized void parse() throws IOException {
         if (mParsedAlready)
             return;
 
