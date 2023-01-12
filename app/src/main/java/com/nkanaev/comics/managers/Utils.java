@@ -218,11 +218,12 @@ public final class Utils {
         return 1024 * 1024 * memoryClass / percentage;
     }
 
-    public static File getCacheFile(Context context, String identifier) {
+    public static File getCoverCacheFile(String identifier, String extension) {
+        Context context = MainApplication.getAppContext();
         File dir = context.getExternalCacheDir();
         if (dir == null)
             dir = context.getCacheDir();
-        return new File(dir, Utils.MD5(identifier));
+        return new File(dir, "cover-"+Utils.MD5(identifier)+(extension!=null?"."+extension:""));
     }
 
     public static byte[] toByteArray(InputStream is) throws IOException {

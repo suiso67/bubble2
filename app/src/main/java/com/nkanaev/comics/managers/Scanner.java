@@ -119,11 +119,13 @@ public class Scanner {
                 // create list of "known" files available in storage database
                 for (Comic c : storage.listComics()) {
                     // memorize known
-                    if (c.getTotalPages()>1)
+                    if (c.getTotalPages() > 1) {
                         storageFiles.put(c.getFile(), c);
+                    }
                     // rescan empties
-                    else
+                    else {
                         storage.removeComic(c.getId());
+                    }
                 }
 
                 // search and add "unknown" comics
@@ -132,8 +134,12 @@ public class Scanner {
                 while (!directories.isEmpty()) {
                     File dir = directories.pop();
                     File[] files = dir.listFiles();
-                    Arrays.sort(files);
+                    if (files == null)
+                        continue;
+                    //Arrays.sort(files);
+                    int i = 0;
                     for (File file : files) {
+                        i++;
                         if (mIsStopped) return;
 
                         // add folder to search list, but continue (might be a dir-comic)
@@ -154,7 +160,7 @@ public class Scanner {
                         Parser parser = null;
                         try {
                             parser = ParserFactory.create(file);
-                            Log.d("Scanner#148",file.toString());
+                            Log.d("Scanner#148", file.toString());
                             // no parser? check log
                             if (parser == null)
                                 continue;
@@ -174,19 +180,20 @@ public class Scanner {
                             // memorize comic meta data for next run
                             // keep empty comic files, might point to bugs
                             storage.addBook(file, parser.getType(), count);
-                            notifyMediaUpdated();
                         } catch (Exception e) {
                             Log.e("Scanner", "update", e);
                         }
                     }
+                    notifyMediaUpdated();
                 }
 
                 // delete missing comics
                 for (Comic missing : storageFiles.values()) {
-                    File coverCache = Utils.getCacheFile(ctx, missing.getFile().getAbsolutePath());
-                    coverCache.delete();
+                    File coverCacheFile = Utils.getCoverCacheFile( missing.getFile().getAbsolutePath(), "jpg");
+                    coverCacheFile.delete();
                     storage.removeComic(missing.getId());
                 }
+
             } finally {
                 mIsStopped = false;
 

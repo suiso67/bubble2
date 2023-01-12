@@ -32,65 +32,68 @@ public class LocalCoverHandler extends RequestHandler {
 
     @Override
     public Result load(Request data, int networkPolicy) throws IOException {
-        String path = getCoverPath(data.uri);
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inPreferredConfig = Bitmap.Config.RGB_565;
-        return new Result(BitmapFactory.decodeFile(path, options), Picasso.LoadedFrom.DISK);
+        Bitmap cover = getCover(data.uri);
+        return new Result(cover, Picasso.LoadedFrom.DISK);
     }
 
-    private String getCoverPath(Uri comicUri) throws IOException {
+    private Bitmap getCover(Uri comicUri) throws IOException {
 
-        File coverFile = Utils.getCacheFile(mContext, comicUri.getPath());
+        File coverFile = Utils.getCoverCacheFile( comicUri.getPath(), "jpg" );
 
-        if (!coverFile.isFile()) {
-
-            byte[] data = new byte[0];
-            Parser parser = null;
-            BufferedInputStream bis = null;
-            FileOutputStream outputStream = null;
-            try {
-                parser = ParserFactory.create(comicUri.getPath());
-
-                if (parser.numPages() < 1)
-                    throw new IOException("comic '" + comicUri + "' has no pages.");
-
-                InputStream stream = parser.getPage(0);
-                bis = new BufferedInputStream(stream);
-                data = Utils.toByteArray(bis);
-
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inJustDecodeBounds = true;
-                BitmapFactory.decodeByteArray(data, 0, data.length, options);
-                options.inSampleSize = Utils.calculateInSampleSize(options,
-                        Constants.COVER_THUMBNAIL_WIDTH, Constants.COVER_THUMBNAIL_HEIGHT);
-                options.inJustDecodeBounds = false;
-
-                Bitmap result = BitmapFactory.decodeByteArray(data, 0, data.length, options);
-
-                // corner case, cache folder might be missing
-                File folder = coverFile.getParentFile();
-                if (!folder.exists())
-                    folder.mkdirs();
-
-                outputStream = new FileOutputStream(coverFile);
-                result.compress(Bitmap.CompressFormat.JPEG, 95, outputStream);
-
-            } catch (Exception e) {
-                Log.e("LocalCoverHandler", "getCoverPath", e);
-                if (!(e instanceof IOException))
-                    e = new IOException(e);
-                throw (IOException) e;
-            } finally {
-                data = null;
-                if (parser != null)
-                    parser.destroy();
-                Utils.close(bis);
-                Utils.close(outputStream);
-            }
-
+        if (coverFile.isFile()) {
+            Bitmap bitmap = BitmapFactory.decodeFile(coverFile.getAbsolutePath(), null);
+            if (bitmap != null)
+                return bitmap;
         }
 
-        return coverFile.getAbsolutePath();
+        byte[] data = new byte[0];
+        Parser parser = null;
+        BufferedInputStream bis = null;
+        FileOutputStream outputStream = null;
+        try {
+            parser = ParserFactory.create(comicUri.getPath());
+
+            if (parser.numPages() < 1)
+                throw new IOException("comic '" + comicUri + "' has no pages.");
+
+            InputStream stream = parser.getPage(0);
+            bis = new BufferedInputStream(stream);
+            data = Utils.toByteArray(bis);
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeByteArray(data, 0, data.length, options);
+            options.inSampleSize = Utils.calculateInSampleSize(options,
+                    Constants.COVER_THUMBNAIL_WIDTH, Constants.COVER_THUMBNAIL_HEIGHT);
+            options.inJustDecodeBounds = false;
+            //options.inPreferredConfig = Bitmap.Config.RGB_565;
+
+            Bitmap result = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+
+            // corner case, cache folder might be missing
+            File folder = coverFile.getParentFile();
+            if (!folder.exists())
+                folder.mkdirs();
+
+            outputStream = new FileOutputStream(coverFile);
+            boolean success = result.compress(Bitmap.CompressFormat.JPEG, 95, outputStream);
+            if (!success)
+                coverFile.delete();
+
+            return result;
+        } catch (Exception e) {
+            Log.e("LocalCoverHandler", "getCover", e);
+            if (!(e instanceof IOException))
+                e = new IOException(e);
+            throw (IOException) e;
+        } finally {
+            data = null;
+            if (parser != null)
+                parser.destroy();
+            Utils.close(bis);
+            Utils.close(outputStream);
+        }
+
     }
 
     public static Uri getComicCoverUri(Comic comic) {
