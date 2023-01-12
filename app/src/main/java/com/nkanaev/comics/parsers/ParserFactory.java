@@ -217,8 +217,7 @@ public class ParserFactory {
         }
 
         @Override
-        public void parse() throws IOException {
-            synchronized (this) {
+        public synchronized void parse() throws IOException {
                 try {
                     mParser.parse();
                 } catch (Exception e) {
@@ -262,12 +261,10 @@ public class ParserFactory {
 
                     rethrow(e);
                 }
-            }
         }
 
         @Override
-        public int numPages() throws IOException {
-            synchronized (this) {
+        public synchronized int numPages() throws IOException {
                 try {
                     return mParser.numPages();
                 } catch (Exception e) {
@@ -313,7 +310,6 @@ public class ParserFactory {
                     rethrow(e);
                 }
                 return 0;
-            }
         }
 
         private void rethrow(Exception e) throws IOException {
@@ -324,8 +320,7 @@ public class ParserFactory {
         }
 
         @Override
-        public InputStream getPage(int num) throws IOException {
-            synchronized (this) {
+        public synchronized InputStream getPage(int num) throws IOException {
                 try {
                     return mParser.getPage(num);
                 } catch (Exception e) {
@@ -370,7 +365,6 @@ public class ParserFactory {
                     rethrow(e);
                     return null;
                 }
-            }
         }
 
         @Override
