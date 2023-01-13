@@ -342,4 +342,15 @@ public final class Utils {
                 .create();
         dialog.show();
     }
+
+    public static String appendSlashIfMissing(String path){
+        // don't treat empty strings
+        if (path==null || path.equals(""))
+            return path;
+
+        if (!path.endsWith("/"))
+            path += "/";
+
+        return path;
+    }
 }
