@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import com.nkanaev.comics.R;
+import com.nkanaev.comics.activity.MainActivity;
 
 public class AboutFragment extends Fragment implements View.OnClickListener {
     static private class LibraryDescription {
@@ -121,6 +122,8 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
             libsLayout.addView(cardView);
         }
 
+        getActivity().setTitle(R.string.menu_about);
+        ((MainActivity)getActivity()).setSubTitle("");
         return view;
     }
 

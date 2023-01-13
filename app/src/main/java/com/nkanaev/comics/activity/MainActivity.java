@@ -190,7 +190,6 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
                         setFragment(new BrowserFragment());
                         break;
                     case R.id.drawer_menu_about:
-                        setTitle(R.string.menu_about);
                         setFragment(new AboutFragment());
                         break;
                 }
