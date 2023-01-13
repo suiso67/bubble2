@@ -148,6 +148,8 @@ public class LibraryFragment extends Fragment
 
         showEmptyMessage(mComicsListManager.getCount() == 0);
         getActivity().setTitle(R.string.menu_library);
+        String folder = getLibraryDir();
+        ((MainActivity) getActivity()).setSubTitle(Utils.appendSlashIfMissing(folder));
 
         return view;
     }
@@ -240,7 +242,7 @@ public class LibraryFragment extends Fragment
     private String getLibraryDir() {
         return getActivity()
                 .getSharedPreferences(Constants.SETTINGS_NAME, 0)
-                .getString(Constants.SETTINGS_LIBRARY_DIR, null);
+                .getString(Constants.SETTINGS_LIBRARY_DIR, "");
     }
 
     private void showEmptyMessage(boolean show) {

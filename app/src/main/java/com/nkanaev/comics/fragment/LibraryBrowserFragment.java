@@ -84,7 +84,9 @@ public class LibraryBrowserFragment extends Fragment
         mComicListView.setAdapter(new ComicGridAdapter());
         mComicListView.addItemDecoration(new GridSpacingItemDecoration(numColumns, spacing));
 
-        getActivity().setTitle(new File(getArguments().getString(PARAM_PATH)).getName());
+        File path = new File(getArguments().getString(PARAM_PATH));
+        getActivity().setTitle(path.getName());
+        ((MainActivity) getActivity()).setSubTitle(Utils.appendSlashIfMissing(path.getPath()));
         mPicasso = ((MainActivity) getActivity()).getPicasso();
 
         return view;
