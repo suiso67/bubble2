@@ -156,7 +156,6 @@ public class Scanner {
                             continue;
                         }
 
-                        Log.d("Scanner#142", file.getPath().toString());
                         Parser parser = null;
                         try {
                             parser = ParserFactory.create(file);
