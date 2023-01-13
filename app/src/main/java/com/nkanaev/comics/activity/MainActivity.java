@@ -2,6 +2,7 @@ package com.nkanaev.comics.activity;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.navigation.NavigationView.OnNavigationItemSelectedListener;
@@ -34,6 +35,8 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
     private ActionBarDrawerToggle mDrawerToggle;
     private int mCurrentNavItem;
     private Picasso mPicasso;
+
+    private static boolean mInitialLibraryScanRanAlready = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -72,7 +75,11 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
                 R.string.drawer_open, R.string.drawer_close);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
 
-        Scanner.getInstance().scanLibrary();
+        // prevent rescan when view is rotated
+        if (!mInitialLibraryScanRanAlready) {
+            Scanner.getInstance().scanLibrary();
+            mInitialLibraryScanRanAlready = true;
+        }
 
         if (savedInstanceState == null) {
             setFragment(new LibraryFragment());
@@ -91,6 +98,17 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
     public void setTitle(CharSequence title) {
         super.setTitle(title);
         ((TextView) findViewById(R.id.action_bar_title)).setText(title);
+    }
+
+    public void setSubTitle(CharSequence title) {
+        TextView subtitle = (TextView) findViewById(R.id.action_bar_subtitle);
+        if (title==null||title.toString().isEmpty()) {
+            subtitle.setVisibility(View.GONE);
+            title="";
+        } else {
+            subtitle.setVisibility(View.VISIBLE);
+        }
+        subtitle.setText(title);
     }
 
     @Override

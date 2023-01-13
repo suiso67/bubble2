@@ -3,7 +3,8 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="8dp">
 <!--
     <HorizontalScrollView
             android:layout_width="fill_parent"
@@ -26,4 +27,14 @@
 <!--
     </HorizontalScrollView>
 -->
+        <TextView
+            android:id="@+id/action_bar_subtitle"
+            style="@style/TextAppearance.AppCompat.Title"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:gravity="fill_horizontal"
+            android:singleLine="false"
+            android:scrollHorizontally="false"
+            android:textSize="12sp"
+            android:visibility="gone"/>
 </LinearLayout>
