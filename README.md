@@ -12,11 +12,11 @@ APKs avail on sf.net https://sourceforge.net/projects/bubble2/files/
 ## Features
 
 * Optimized for tablets
-* Supports CBZ/ZIP, CBR/RAR, 7Z/CB7 and FOLDER based comics
-* TAR/CBT and Brotli/Gzip/BZ2/Zstd compressed TAR files are supported too
-* Displays PNG, JPG, WebP and JP2 image files in archives/from folders
+* Supports CBZ/ZIP, CBR/RAR, 7Z/CB7, PDF and FOLDER comics
+* TAR/CBT and Brotli/Gzip/BZ2*/LZMA*/Zstd compressed TAR files are supported too (*very slow)
+* Display BMP, JPG, GIF, PNG, WebP and JP2/J2K image files in archives/from folders
 * Advanced zoom and scaling modes
-* Comics/manga reading mode
+* Comics/Manga reading mode
 * Library with automatic bookmarks
 * Simple file browser
 * Best served on Android 8.0(Oreo) or later
