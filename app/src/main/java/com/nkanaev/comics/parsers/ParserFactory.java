@@ -153,7 +153,7 @@ public class ParserFactory {
             return SevenZStreamParser.class;
         } else if (Utils.isPdf(file.getName())) {
             if (!Utils.isLollipopOrLater()) {
-                throw new UnsupportedOperationException("Pdf only available on KitKat (API19) or later");
+                throw new UnsupportedOperationException("Pdf only available on Lollipop (API21) or later");
             }
             return PdfRendererParser.class;
         }
