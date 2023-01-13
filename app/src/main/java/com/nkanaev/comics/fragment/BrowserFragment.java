@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.*;
 import androidx.fragment.app.Fragment;
 import com.nkanaev.comics.R;
+import com.nkanaev.comics.activity.MainActivity;
 import com.nkanaev.comics.activity.ReaderActivity;
 import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
@@ -31,7 +32,7 @@ public class BrowserFragment extends Fragment
     private File mCurrentDir;
     private File mRootDir = new File("/");
     private File[] mSubdirs = new File[]{};
-    private TextView mDirTextView;
+    //private TextView mDirTextView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -50,11 +51,12 @@ public class BrowserFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_browser, container, false);
 
+        /*
         ViewGroup toolbar = (ViewGroup) getActivity().findViewById(R.id.toolbar);
         ViewGroup breadcrumbLayout = (ViewGroup) inflater.inflate(R.layout.breadcrumb, toolbar, false);
         toolbar.addView(breadcrumbLayout);
         mDirTextView = (TextView) breadcrumbLayout.findViewById(R.id.dir_textview);
-
+        */
         setCurrentDir(mCurrentDir);
 
         mListView = (ListView) view.findViewById(R.id.listview_browser);
@@ -73,9 +75,11 @@ public class BrowserFragment extends Fragment
 
     @Override
     public void onDestroyView() {
+        /*
         ViewGroup toolbar = (ViewGroup) getActivity().findViewById(R.id.toolbar);
         ViewGroup breadcrumb = (ViewGroup) toolbar.findViewById(R.id.breadcrumb_layout);
         toolbar.removeView(breadcrumb);
+        */
         super.onDestroyView();
     }
 
@@ -130,7 +134,8 @@ public class BrowserFragment extends Fragment
             mListView.invalidateViews();
         }
 
-        mDirTextView.setText(dir.getAbsolutePath());
+        //mDirTextView.setText(dir.getAbsolutePath());
+        ((MainActivity)getActivity()).setSubTitle(dir.getAbsolutePath());
     }
 
     @Override
