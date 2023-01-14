@@ -9,6 +9,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
@@ -682,8 +683,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         if (fullscreen) {
             if (actionBar != null) actionBar.hide();
 
-            int flag =
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            int flag = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                             | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                             | View.SYSTEM_UI_FLAG_FULLSCREEN;
             if (Utils.isKitKatOrLater()) {
@@ -693,12 +693,19 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
             mViewPager.setSystemUiVisibility(flag);
 
+            // allow full screen over display cutouts/holes (since Android 9)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                Window w = getActivity().getWindow();
+                WindowManager.LayoutParams layoutParams = w.getAttributes();
+                layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+                w.setAttributes(layoutParams);
+            }
+
             mPageNavLayout.setVisibility(View.INVISIBLE);
         } else {
             if (actionBar != null) actionBar.show();
 
-            int flag =
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            int flag = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                             | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
             if (Utils.isKitKatOrLater()) {
                 flag |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
