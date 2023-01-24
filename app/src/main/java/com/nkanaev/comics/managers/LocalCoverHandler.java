@@ -36,7 +36,7 @@ public class LocalCoverHandler extends RequestHandler {
         return new Result(cover, Picasso.LoadedFrom.DISK);
     }
 
-    private Bitmap getCover(Uri comicUri) throws IOException {
+    public static Bitmap getCover(Uri comicUri) throws IOException {
 
         File coverFile = Utils.getCoverCacheFile( comicUri.getPath(), "jpg" );
 
