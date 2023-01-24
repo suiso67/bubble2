@@ -4,7 +4,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:padding="4dp">
 <!--
     <HorizontalScrollView
             android:layout_width="fill_parent"
@@ -29,7 +29,7 @@
 -->
         <TextView
             android:id="@+id/action_bar_subtitle"
-            style="@style/TextAppearance.AppCompat.Title"
+            style="@style/TextAppearance.AppCompat.Subhead"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:gravity="fill_horizontal"
