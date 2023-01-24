@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_description">Comic-Reader für Android</string>
-    <string name="about_libraries">Diese App nutzt die folgenden Bibliotheken zu den angegebenen Lizenzbedingungen. Ohne
+    <string name="about_libraries">Diese App nutzt die folgenden Komponenten zu den angegebenen Lizenzbedingungen. Ohne
         diese gäbe es diese App nicht!
     </string>
     <string name="about_thanks">Danke!</string>
@@ -38,6 +38,6 @@
     <string name="alert_action_neutral">Ok</string>
     <string name="switch_next_comic">Nächsten Comic anzeigen?</string>
     <string name="switch_prev_comic">Vorherigen Comic anzeigen?</string>
-    <string name="library_empty">Die Bibliothek schein leer zu sein. Ordner-Symbol nutzen um Bibliotheksordner festzulgen.</string>
+    <string name="library_empty">Die Bibliothek scheint leer zu sein. Ordner-Symbol nutzen um Bibliotheksordner festzulgen.</string>
     <string name="warning_missing_file">Datei fehlt. Bitte Bibliothek aktualisieren.</string>
 </resources>
