@@ -3,8 +3,10 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primaryDark</item>
-        <item name="colorAccent">@color/accent</item>
-        <!--<item name="colorControlNormal">@color/lighter</item>-->
+        <!--
+        <item name="colorAccent">@color/darker</item>
+        <item name="colorControlNormal">@color/lightest</item>
+        -->
         <item name="colorControlHighlight">@color/ripple_material_light</item>
 
         <item name="android:textColorPrimary">@color/lightest</item>
@@ -18,5 +20,25 @@
         <item name="android:textColorPrimary">@color/lightest</item>
         <item name="android:textColorSecondary">@color/lightest</item>
         <item name="android:textColor">@color/lightest</item>
+    </style>
+
+    <style name="MyPopupMenu" parent="AppTheme">
+        <item name="android:textColor">@color/popup_text_selector</item>
+        <!--
+        <item name="android:itemBackground">@android:attr/</item>
+        -->
+        <item name="android:background">@color/primaryDark</item>
+        <item name="android:listPreferredItemHeightSmall">36dp</item>
+
+        <item name="android:textSize">20sp</item>
+        <item name="colorControlNormal">#ccffffff</item>
+        <item name="colorControlActivated">#fff</item>
+        <!--
+        <item name="android:itemTextAppearance">@style/itemTextStyle.AppTheme</item>
+        -->
+    </style>
+
+    <style name="MyDrawerMenu" parent="AppTheme">
+        <item name="android:textSize">20sp</item>
     </style>
 </resources>
