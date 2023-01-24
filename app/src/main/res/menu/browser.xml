@@ -6,11 +6,11 @@
           android:icon="@drawable/ic_search_white_24dp"
           app:showAsAction="always"
           app:actionViewClass="androidx.appcompat.widget.SearchView"/>
-    <item android:id="@+id/menuReaderAspectRatio"
+    <item android:id="@+id/filter"
           android:title="@string/menu_browser_filter"
           android:icon="@drawable/ic_filter_list_white_24dp"
           app:showAsAction="always">
-        <menu>
+        <menu android:id="@+id/menu_browser_filter">
             <group android:checkableBehavior="single">
                 <item android:id="@+id/menu_browser_filter_all"
                       android:title="@string/menu_browser_filter_all"

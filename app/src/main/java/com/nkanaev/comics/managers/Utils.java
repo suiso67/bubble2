@@ -5,12 +5,18 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ApplicationInfo;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
+import androidx.annotation.AttrRes;
+import androidx.annotation.ColorInt;
+import androidx.annotation.StyleRes;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.core.content.ContextCompat;
 import com.gemalto.jp2.JP2Decoder;
 import com.nkanaev.comics.MainApplication;
@@ -353,4 +359,15 @@ public final class Utils {
 
         return path;
     }
+
+    public static @ColorInt int getThemeColor(@AttrRes int resid, @StyleRes int themeid){
+        TypedValue typedValue = new TypedValue();
+        Resources.Theme theme = new ContextThemeWrapper(MainApplication.getAppContext(), themeid).getTheme();
+        if (theme.resolveAttribute(resid, typedValue, true)) {
+            @ColorInt int color = typedValue.data;
+            return color;
+        }
+        return 0;
+    }
+
 }
