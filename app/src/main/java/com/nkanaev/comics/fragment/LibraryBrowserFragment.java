@@ -3,16 +3,24 @@ package com.nkanaev.comics.fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Bundle;
-import androidx.fragment.app.Fragment;
-import androidx.core.view.MenuItemCompat;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.appcompat.widget.SearchView;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.view.*;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.ColorInt;
+import androidx.annotation.StyleRes;
+import androidx.appcompat.widget.SearchView;
+import androidx.core.view.MenuItemCompat;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.MainActivity;
@@ -30,7 +38,8 @@ import java.util.Comparator;
 import java.util.List;
 
 public class LibraryBrowserFragment extends Fragment
-        implements SearchView.OnQueryTextListener {
+        implements SearchView.OnQueryTextListener,
+        SwipeRefreshLayout.OnRefreshListener {
     public static final String PARAM_PATH = "browserCurrentPath";
 
     final int ITEM_VIEW_TYPE_COMIC = 1;
@@ -49,6 +58,7 @@ public class LibraryBrowserFragment extends Fragment
     private int mFilterRead = R.id.menu_browser_filter_all;
 
     private RecyclerView mComicListView;
+    private SwipeRefreshLayout mRefreshLayout;
 
     public static LibraryBrowserFragment create(String path) {
         LibraryBrowserFragment fragment = new LibraryBrowserFragment();
@@ -84,6 +94,11 @@ public class LibraryBrowserFragment extends Fragment
         mComicListView.setAdapter(new ComicGridAdapter());
         mComicListView.addItemDecoration(new GridSpacingItemDecoration(numColumns, spacing));
 
+        mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.fragmentLibraryBrowserRefreshLayout);
+        mRefreshLayout.setColorSchemeResources(R.color.primary);
+        mRefreshLayout.setOnRefreshListener(this);
+        mRefreshLayout.setEnabled(true);
+
         File path = new File(getArguments().getString(PARAM_PATH));
         getActivity().setTitle(path.getName());
         ((MainActivity) getActivity()).setSubTitle(Utils.appendSlashIfMissing(path.getPath()));
@@ -98,6 +113,8 @@ public class LibraryBrowserFragment extends Fragment
         super.onResume();
     }
 
+    private Menu mFilterMenu = null;
+
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
@@ -107,11 +124,18 @@ public class LibraryBrowserFragment extends Fragment
         SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         searchView.setOnQueryTextListener(this);
 
+        MenuItem filterItem = menu.findItem(R.id.filter);
+        mFilterMenu = (Menu) filterItem.getSubMenu();
+        updateColors();
+
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        if (item == null)
+            return false;
+
         switch (item.getItemId()) {
             case R.id.menu_browser_filter_all:
             case R.id.menu_browser_filter_read:
@@ -119,12 +143,45 @@ public class LibraryBrowserFragment extends Fragment
             case R.id.menu_browser_filter_unfinished:
             case R.id.menu_browser_filter_reading:
                 item.setChecked(true);
+                // TODO: workaround
+                //  should probably done with xml styles properly
+                //  couldn't find out how though
+                updateColors();
                 mFilterRead = item.getItemId();
                 filterContent();
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateColors(){
+        if (mFilterMenu==null) return;
+
+        @StyleRes int theme = ((MainActivity)getActivity()).getToolbar().getPopupTheme();
+        @ColorInt int normal = Utils.getThemeColor(R.attr.colorControlNormal, theme);
+        @ColorInt int active = Utils.getThemeColor(R.attr.colorControlActivated, theme);
+        for (int i = 0; i < mFilterMenu.size(); i++) {
+            MenuItem item = mFilterMenu.getItem(i);
+            if (item.isChecked())
+                styleItem(item,active,true);
+            else
+                styleItem(item,normal,false);
+        }
+    }
+
+    // this is a workaround, couldn't find a way to style popup menu item text color/type
+    // depending on selection state
+    private void styleItem(MenuItem item, @ColorInt int colorInt, boolean bold){
+        if (item==null) return;
+
+        // reset formatting
+        CharSequence text = item.getTitle().toString();
+        SpannableString s = new SpannableString(text);
+        // style away
+        s.setSpan(new ForegroundColorSpan(colorInt), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        s.setSpan(new StyleSpan(bold?Typeface.BOLD:Typeface.NORMAL), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        item.setTitle(s);
     }
 
     @Override
@@ -258,6 +315,11 @@ public class LibraryBrowserFragment extends Fragment
                 return numColumns;
             }
         };
+    }
+
+    @Override
+    public void onRefresh() {
+        mRefreshLayout.setRefreshing(false);
     }
 
     private final class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
