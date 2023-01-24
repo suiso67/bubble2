@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="primary">#DB5162</color>
-    <color name="primaryDark">#B35159</color>
+    <color name="primaryDark13">#c84a59</color>
+    <color name="primaryDark25">#b44350</color>
+    <color name="primaryDark37">#9e3b46</color>
+    <color name="primaryDark50">#88333b</color>
+    <color name="primaryDark">@color/primaryDark13</color>
     <color name="accent">#ff466e87</color>
 
     <color name="darkest">#222222</color>
@@ -10,6 +14,11 @@
 
     <color name="lightest">#ffffff</color>
     <color name="lighter">#dddddd</color>
+    <color name="light">#bbb</color>
+
+    <color name="white_trans25">#40ffffff</color>
+    <color name="white_trans50">#80ffffff</color>
+    <color name="white_trans75">#bfffffff</color>
 
     <color name="circle_grey">#9d9d9d</color>
 <!--
