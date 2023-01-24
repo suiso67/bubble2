@@ -24,6 +24,7 @@ import com.nkanaev.comics.fragment.LibraryFragment;
 import com.nkanaev.comics.managers.LocalCoverHandler;
 import com.nkanaev.comics.managers.Scanner;
 import com.nkanaev.comics.managers.Utils;
+import com.nkanaev.comics.view.NavBGImageView;
 import com.squareup.picasso.Picasso;
 
 
@@ -57,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         if (actionBar != null) {
             actionBar.setHomeButtonEnabled(true);
             actionBar.setDisplayHomeAsUpEnabled(true);
-            // add custom action bar titles
             actionBar.setDisplayShowCustomEnabled(true);
             actionBar.setCustomView(R.layout.action_bar_title_layout);
             actionBar.setTitle("");
@@ -71,9 +71,16 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         setupNavigationView(navigationView);
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        final NavBGImageView navBG = mDrawerLayout.findViewById(R.id.drawer_bg_image);
         mDrawerToggle = new ActionBarDrawerToggle(
                 this, mDrawerLayout,
-                R.string.drawer_open, R.string.drawer_close);
+                R.string.drawer_open, R.string.drawer_close){
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                if (navBG!=null) navBG.reset();
+                super.onDrawerClosed(drawerView);
+            }
+        };
         mDrawerLayout.setDrawerListener(mDrawerToggle);
 
         // prevent rescan when view is rotated
@@ -84,7 +91,6 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
 
         if (savedInstanceState == null) {
             setFragment(new LibraryFragment());
-            setNavBar();
             mCurrentNavItem = R.id.drawer_menu_library;
             navigationView.getMenu().findItem(mCurrentNavItem).setChecked(true);
         }
@@ -95,18 +101,18 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
         }
     }
 
+    public Toolbar getToolbar(){
+        return (Toolbar) findViewById(R.id.toolbar);
+    }
+
     @Override
     public void setTitle(CharSequence title) {
         super.setTitle(title);
-        TextView titleTextView = (TextView) findViewById(R.id.action_bar_title);
-        if (titleTextView!=null)
-            titleTextView.setText(title);
+        ((TextView) findViewById(R.id.action_bar_title)).setText(title);
     }
 
     public void setSubTitle(CharSequence title) {
         TextView subtitle = (TextView) findViewById(R.id.action_bar_subtitle);
-        if (subtitle==null) return;
-
         if (title==null||title.toString().isEmpty()) {
             subtitle.setVisibility(View.GONE);
             title="";
@@ -136,17 +142,6 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
 
     public Picasso getPicasso() {
         return mPicasso;
-    }
-
-    private void setNavBar() {
-        // TODO: disabled for now, throws a view not found
-        if (true)
-            return;
-
-        getSupportFragmentManager()
-                .beginTransaction()
-                .add(R.id.navigation_view_header, new HeaderFragment())
-                .commit();
     }
 
     private void setFragment(Fragment fragment) {
