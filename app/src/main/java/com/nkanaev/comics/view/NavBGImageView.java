@@ -4,9 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -21,21 +19,21 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.nkanaev.comics.R;
-import com.nkanaev.comics.activity.MainActivity;
-import com.nkanaev.comics.fragment.HeaderFragment;
 import com.nkanaev.comics.managers.LocalCoverHandler;
 import com.nkanaev.comics.managers.Utils;
 import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView {
+    private static Bitmap mLastBitmap = null;
+
     public NavBGImageView(Context context) {
         super(context);
         init();
@@ -46,7 +44,15 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
         init();
     }
 
+    public NavBGImageView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init();
+    }
+
     private void init(){
+        if (mLastBitmap!=null)
+            setImageBitmap(mLastBitmap);
+
         final GestureDetector gDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onDown(MotionEvent e) {
@@ -73,6 +79,12 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
         if (changed)
             reset();
         return changed;
+    }
+
+    @Override
+    public void setImageBitmap(Bitmap bm) {
+        mLastBitmap = bm;
+        super.setImageBitmap(bm);
     }
 
     private long lastRun = 0;
@@ -196,7 +208,13 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
                 }
                 setAlpha(0f);
                 setImageBitmap(bitmap);
-                animate().alpha(1).setDuration(2000).setListener(null);
+                animate().alpha(1).setDuration(2000).withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        // reset multiple run protection
+                        lastRun = 0;
+                    }
+                }).setListener(null);
             }
             catch (Exception e) {
                 Log.e("bubble2","error",e);

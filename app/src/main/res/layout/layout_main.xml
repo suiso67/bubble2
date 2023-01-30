@@ -49,6 +49,7 @@
                 android:layout_height="match_parent"
                 android:alpha="1"
                 android:visibility="visible"
+                android:scaleType="centerCrop"
                 android:background="@android:color/transparent"/>
 
         <com.nkanaev.comics.view.NavBGImageView
@@ -57,6 +58,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:alpha="1"
+                android:scaleType="centerCrop"
                 android:visibility="visible"
                 android:background="@android:color/transparent"
                 android:clickable="true"/>
