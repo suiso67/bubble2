@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
             actionBar.setHomeButtonEnabled(true);
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setDisplayShowCustomEnabled(true);
+            actionBar.setDisplayShowTitleEnabled(false);
             actionBar.setCustomView(R.layout.action_bar_title_layout);
             actionBar.setTitle("");
         }
@@ -108,11 +109,18 @@ public class MainActivity extends AppCompatActivity implements FragmentManager.O
     @Override
     public void setTitle(CharSequence title) {
         super.setTitle(title);
-        ((TextView) findViewById(R.id.action_bar_title)).setText(title);
+        TextView titleView = findViewById(R.id.action_bar_title);
+        if (titleView!=null)
+            titleView.setText(title);
+        else
+            getSupportActionBar().setTitle(title);
     }
 
     public void setSubTitle(CharSequence title) {
         TextView subtitle = (TextView) findViewById(R.id.action_bar_subtitle);
+        if (subtitle==null)
+            return;
+
         if (title==null||title.toString().isEmpty()) {
             subtitle.setVisibility(View.GONE);
             title="";
