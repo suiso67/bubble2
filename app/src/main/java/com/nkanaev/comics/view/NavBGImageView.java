@@ -63,6 +63,10 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
                 reset();
                 return true;
             }
+            @Override
+            public void onLongPress(@NonNull MotionEvent e) {
+                reset();
+            }
         });
         setOnTouchListener(new OnTouchListener() {
             @Override
