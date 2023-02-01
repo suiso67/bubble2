@@ -1,8 +1,6 @@
 package com.nkanaev.comics.managers;
 
-import java.util.Comparator;
-
-public abstract class IgnoreCaseComparator implements Comparator{
+public abstract class IgnoreCaseComparator extends NaturalOrderComparator{
     public abstract String stringValue(Object o);
 
     public int compare(Object a, Object b) {
@@ -14,6 +12,6 @@ public abstract class IgnoreCaseComparator implements Comparator{
         if (strB==null)
             strB = "";
 
-        return strA.compareToIgnoreCase(strB);
+        return super.compare(strA.toLowerCase(),strB.toLowerCase());
     }
 }

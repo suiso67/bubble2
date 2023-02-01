@@ -82,6 +82,13 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
                     "https://github.com/ThalesGroup/JP2ForAndroid"
             ),
             new LibraryDescription(
+                    "Java Natural Order comparator",
+                    "Perform 'natural order' comparisons of strings in Java.",
+                    "Restricted MIT-Style License",
+                    "Pierre-Luc Paour, Martin Pool",
+                    "https://github.com/paour/natorder"
+            ),
+            new LibraryDescription(
                     "Material Design Icons",
                     "Official icon sets from Google designed under the material design guidelines.",
                     "Apache Version 2.0",
