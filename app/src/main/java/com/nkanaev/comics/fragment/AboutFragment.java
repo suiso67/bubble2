@@ -84,7 +84,7 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
             new LibraryDescription(
                     "Java Natural Order comparator",
                     "Perform 'natural order' comparisons of strings in Java.",
-                    "Restricted MIT-Style License",
+                    "Zlib-Style License",
                     "Pierre-Luc Paour, Martin Pool",
                     "https://github.com/paour/natorder"
             ),
