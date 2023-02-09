@@ -28,13 +28,16 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
+                <!-- stupid, but true. only fitXY renders a non-blocky/smooth graphic
+                     needs the squared logo then though, when giving w=h dimensions -->
                 <ImageView
                         android:id="@+id/aboutIcon"
                         android:layout_width="80dp"
                         android:layout_height="80dp"
                         android:layout_margin="16dp"
-                        android:src="@drawable/icon"
-                        android:layout_gravity="center"/>
+                        android:src="@drawable/icon_squared"
+                        android:layout_gravity="center"
+                        android:scaleType="fitXY"/>
 
                 <LinearLayout
                         android:orientation="vertical"
