@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.*;
@@ -23,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
+import com.nkanaev.comics.BuildConfig;
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.ReaderActivity;
@@ -204,7 +204,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
         mComicHandler = new LocalComicHandler(mParser);
         mPicasso = new Picasso.Builder(getActivity())
-                .loggingEnabled(true)
+                .loggingEnabled(BuildConfig.DEBUG)
                 .addRequestHandler(mComicHandler)
                 .build();
         mPagerAdapter = new ComicPagerAdapter();
