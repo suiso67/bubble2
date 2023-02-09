@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatDialog;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
@@ -21,7 +22,7 @@ import java.util.Collections;
 
 public class DirectorySelectDialog
         extends AppCompatDialog
-        implements View.OnClickListener, AdapterView.OnItemClickListener {
+        implements View.OnClickListener, AdapterView.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener {
     private Button mSetButton;
     private Button mCancelButton;
     private OnDirectorySelectListener mListener;
@@ -33,6 +34,8 @@ public class DirectorySelectDialog
     private File mCurrentDir;
     private File[] mSubdirs;
     private FileFilter mDirectoryFilter;
+
+    private SwipeRefreshLayout mRefreshLayout;
 
     public interface OnDirectorySelectListener {
         void onDirectorySelect(File file);
@@ -58,6 +61,13 @@ public class DirectorySelectDialog
                 return file.isDirectory();
             }
         };
+
+        mRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.SwipeRefreshLayout);
+        if (mRefreshLayout!=null) {
+            mRefreshLayout.setColorSchemeResources(R.color.primary);
+            mRefreshLayout.setOnRefreshListener(this);
+            mRefreshLayout.setEnabled(true);
+        }
     }
 
     public void setCurrentDirectory(File path) {
@@ -109,6 +119,22 @@ public class DirectorySelectDialog
 
     public void setOnDirectorySelectListener(OnDirectorySelectListener l) {
         mListener = l;
+    }
+
+    @Override
+    public void show() {
+        // refresh on show
+        if (mCurrentDir!=null)
+            setCurrentDirectory(mCurrentDir);
+        super.show();
+    }
+
+    @Override
+    public void onRefresh() {
+        // refresh on show
+        if (mCurrentDir!=null)
+            setCurrentDirectory(mCurrentDir);
+        mRefreshLayout.setRefreshing(false);
     }
 
     @Override

@@ -22,13 +22,20 @@
                 android:layout_height="wrap_content"
                 android:lines="1"/>
     </LinearLayout>
-    <ListView
-            android:id="@+id/directory_listview"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:divider="@null"
-            android:drawSelectorOnTop="true"/>
+
+    <!-- needs android:layout_weight or the buttons on the bottom wil not be displayed -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/SwipeRefreshLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+        <ListView
+                android:id="@+id/directory_listview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@null"
+                android:drawSelectorOnTop="true"/>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <RelativeLayout
             android:orientation="horizontal"
