@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 import androidx.fragment.app.Fragment;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.MainActivity;
 import com.nkanaev.comics.activity.ReaderActivity;
@@ -25,14 +26,14 @@ import java.util.Collections;
 
 
 public class BrowserFragment extends Fragment
-        implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
+        implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener, SwipeRefreshLayout.OnRefreshListener {
     private final static String STATE_CURRENT_DIR = "stateCurrentDir";
 
     private ListView mListView;
     private File mCurrentDir;
-    private File mRootDir = new File("/");
+    private final File mRootDir = new File("/");
     private File[] mSubdirs = new File[]{};
-    //private TextView mDirTextView;
+    private SwipeRefreshLayout mRefreshLayout;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -57,12 +58,19 @@ public class BrowserFragment extends Fragment
         toolbar.addView(breadcrumbLayout);
         mDirTextView = (TextView) breadcrumbLayout.findViewById(R.id.dir_textview);
         */
-        setCurrentDir(mCurrentDir);
+        setCurrentDirectory(mCurrentDir);
 
         mListView = (ListView) view.findViewById(R.id.listview_browser);
         mListView.setAdapter(new DirectoryAdapter());
         mListView.setOnItemClickListener(this);
         mListView.setOnItemLongClickListener(this);
+
+        mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.SwipeRefreshLayout);
+        if (mRefreshLayout!=null) {
+            mRefreshLayout.setColorSchemeResources(R.color.primary);
+            mRefreshLayout.setOnRefreshListener(this);
+            mRefreshLayout.setEnabled(true);
+        }
 
         return view;
     }
@@ -83,7 +91,7 @@ public class BrowserFragment extends Fragment
         super.onDestroyView();
     }
 
-    private void setCurrentDir(File dir) {
+    private void setCurrentDirectory(File dir) {
         mCurrentDir = dir;
         ArrayList<File> subDirs = new ArrayList<>();
 
@@ -144,7 +152,7 @@ public class BrowserFragment extends Fragment
 
         // folders can be opened via long click below
         if (file.isDirectory()) {
-            setCurrentDir(file);
+            setCurrentDirectory(file);
             return;
         }
 
@@ -243,6 +251,14 @@ public class BrowserFragment extends Fragment
 
         //shape.setColor(getResources().getColor(colorRes));
         circleDrawable.setColor(getResources().getColor(colorRes));
+    }
+
+    @Override
+    public void onRefresh() {
+        // refresh on show
+        if (mCurrentDir!=null)
+            setCurrentDirectory(mCurrentDir);
+        mRefreshLayout.setRefreshing(false);
     }
 
     private final class DirectoryAdapter extends BaseAdapter {

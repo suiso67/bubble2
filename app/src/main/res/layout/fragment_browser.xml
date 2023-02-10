@@ -6,10 +6,15 @@
         android:layout_height="match_parent"
         android:background="@color/lightest"
         android:padding="32dp">
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/SwipeRefreshLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
     <ListView
             android:id="@+id/listview_browser"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:divider="@null"
             android:dividerHeight="0dp"/>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>
