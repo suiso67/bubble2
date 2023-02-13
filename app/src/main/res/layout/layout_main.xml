@@ -82,6 +82,7 @@
                     app:elevation="0dp"
                     app:menu="@menu/drawer"
                     android:theme="@style/MyDrawerMenu"
+                    app:itemTextAppearance="@style/NavigationViewTextStyle"
                     app:itemTextColor="@drawable/nav_item"
                     app:itemIconTint="@drawable/nav_item"
                     app:itemBackground="@drawable/nav_item_bg"
