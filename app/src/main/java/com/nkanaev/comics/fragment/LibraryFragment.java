@@ -28,6 +28,7 @@ import com.nkanaev.comics.managers.Utils;
 import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
 import com.nkanaev.comics.view.DirectorySelectDialog;
+import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -39,7 +40,8 @@ public class LibraryFragment extends Fragment
         implements
         DirectorySelectDialog.OnDirectorySelectListener,
         AdapterView.OnItemClickListener,
-        SwipeRefreshLayout.OnRefreshListener {
+        SwipeRefreshLayout.OnRefreshListener,
+        UpdateHandlerTarget {
     private final static String BUNDLE_DIRECTORY_DIALOG_SHOWN = "BUNDLE_DIRECTORY_DIALOG_SHOWN";
 
     private DirectoryListingManager mComicsListManager;
@@ -120,6 +122,7 @@ public class LibraryFragment extends Fragment
     @Override
     public void onPause() {
         Scanner.getInstance().removeUpdateHandler(mUpdateHandler);
+        setLoading(false);
         super.onPause();
     }
 
@@ -211,10 +214,11 @@ public class LibraryFragment extends Fragment
     private void getComics() {
         List<Comic> comics = Storage.getStorage(getActivity()).listDirectoryComics();
         mComicsListManager = new DirectoryListingManager(comics, getLibraryDir());
+        Log.d("","");
     }
 
-    private void refreshLibraryDelayed() {
-        if (!mIsRefreshPlanned) {
+    private void refreshLibrary( boolean finished ) {
+        if (!mIsRefreshPlanned || finished) {
             final Runnable updateRunnable = new Runnable() {
                 @Override
                 public void run() {
@@ -228,14 +232,23 @@ public class LibraryFragment extends Fragment
         }
     }
 
+    public void refreshLibraryDelayed(){
+        refreshLibrary(false);
+    }
+
+    public void refreshLibraryFinished() {
+        refreshLibrary(true);
+        setLoading(false);
+    }
+
     private void setLoading(boolean isLoading) {
         if (isLoading) {
             mRefreshLayout.setRefreshing(true);
-            mGridView.setOnItemClickListener(null);
+            //mGridView.setOnItemClickListener(null);
         } else {
             mRefreshLayout.setRefreshing(false);
-            showEmptyMessage(mComicsListManager.getCount() == 0);
-            mGridView.setOnItemClickListener(this);
+            showEmptyMessage(mComicsListManager.getCount() < 1);
+            //mGridView.setOnItemClickListener(this);
         }
     }
 
@@ -250,16 +263,16 @@ public class LibraryFragment extends Fragment
         mRefreshLayout.setEnabled(!show);
     }
 
-    private static class UpdateHandler extends Handler {
-        private WeakReference<LibraryFragment> mOwner;
+    public static class UpdateHandler extends Handler {
+        private WeakReference<UpdateHandlerTarget> mOwner;
 
-        public UpdateHandler(LibraryFragment fragment) {
+        public UpdateHandler(UpdateHandlerTarget fragment) {
             mOwner = new WeakReference<>(fragment);
         }
 
         @Override
         public void handleMessage(Message msg) {
-            LibraryFragment fragment = mOwner.get();
+            UpdateHandlerTarget fragment = mOwner.get();
             if (fragment == null) {
                 return;
             }
@@ -267,9 +280,7 @@ public class LibraryFragment extends Fragment
             if (msg.what == Constants.MESSAGE_MEDIA_UPDATED) {
                 fragment.refreshLibraryDelayed();
             } else if (msg.what == Constants.MESSAGE_MEDIA_UPDATE_FINISHED) {
-                fragment.getComics();
-                ((BaseAdapter) fragment.mGridView.getAdapter()).notifyDataSetChanged();
-                fragment.setLoading(false);
+                fragment.refreshLibraryFinished();
             }
         }
     }
@@ -301,7 +312,8 @@ public class LibraryFragment extends Fragment
 
             ImageView groupImageView = (ImageView) convertView.findViewById(R.id.card_group_imageview);
 
-            mPicasso.load(LocalCoverHandler.getComicCoverUri(comic))
+            Uri uri = LocalCoverHandler.getComicCoverUri(comic);
+            mPicasso.load(uri)
                     .into(groupImageView);
 
             TextView tv = (TextView) convertView.findViewById(R.id.comic_group_folder);

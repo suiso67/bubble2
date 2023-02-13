@@ -4,7 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
@@ -26,20 +28,19 @@ import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.MainActivity;
 import com.nkanaev.comics.activity.ReaderActivity;
 import com.nkanaev.comics.managers.LocalCoverHandler;
+import com.nkanaev.comics.managers.Scanner;
 import com.nkanaev.comics.managers.Utils;
 import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class LibraryBrowserFragment extends Fragment
         implements SearchView.OnQueryTextListener,
-        SwipeRefreshLayout.OnRefreshListener {
+        SwipeRefreshLayout.OnRefreshListener,
+        UpdateHandlerTarget {
     public static final String PARAM_PATH = "browserCurrentPath";
 
     final int ITEM_VIEW_TYPE_COMIC = 1;
@@ -59,6 +60,9 @@ public class LibraryBrowserFragment extends Fragment
 
     private RecyclerView mComicListView;
     private SwipeRefreshLayout mRefreshLayout;
+    private Handler mUpdateHandler = new LibraryFragment.UpdateHandler(this);
+    private Long mCacheStamp = Long.valueOf(System.currentTimeMillis());
+    private HashMap<Uri, Long> mCache = new HashMap();
 
     public static LibraryBrowserFragment create(String path) {
         LibraryBrowserFragment fragment = new LibraryBrowserFragment();
@@ -68,7 +72,8 @@ public class LibraryBrowserFragment extends Fragment
         return fragment;
     }
 
-    public LibraryBrowserFragment() {}
+    public LibraryBrowserFragment() {
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -110,7 +115,18 @@ public class LibraryBrowserFragment extends Fragment
     @Override
     public void onResume() {
         getComics();
+        Scanner.getInstance().addUpdateHandler(mUpdateHandler);
+        if (Scanner.getInstance().isRunning()) {
+            mRefreshLayout.setRefreshing(true);
+        }
         super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        Scanner.getInstance().removeUpdateHandler(mUpdateHandler);
+        mRefreshLayout.setRefreshing(false);
+        super.onPause();
     }
 
     private Menu mFilterMenu = null;
@@ -155,32 +171,32 @@ public class LibraryBrowserFragment extends Fragment
         return super.onOptionsItemSelected(item);
     }
 
-    private void updateColors(){
-        if (mFilterMenu==null) return;
+    private void updateColors() {
+        if (mFilterMenu == null) return;
 
-        @StyleRes int theme = ((MainActivity)getActivity()).getToolbar().getPopupTheme();
+        @StyleRes int theme = ((MainActivity) getActivity()).getToolbar().getPopupTheme();
         @ColorInt int normal = Utils.getThemeColor(R.attr.colorControlNormal, theme);
         @ColorInt int active = Utils.getThemeColor(R.attr.colorControlActivated, theme);
         for (int i = 0; i < mFilterMenu.size(); i++) {
             MenuItem item = mFilterMenu.getItem(i);
             if (item.isChecked())
-                styleItem(item,active,true);
+                styleItem(item, active, true);
             else
-                styleItem(item,normal,false);
+                styleItem(item, normal, false);
         }
     }
 
     // this is a workaround, couldn't find a way to style popup menu item text color/type
     // depending on selection state
-    private void styleItem(MenuItem item, @ColorInt int colorInt, boolean bold){
-        if (item==null) return;
+    private void styleItem(MenuItem item, @ColorInt int colorInt, boolean bold) {
+        if (item == null) return;
 
         // reset formatting
         CharSequence text = item.getTitle().toString();
         SpannableString s = new SpannableString(text);
         // style away
         s.setSpan(new ForegroundColorSpan(colorInt), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        s.setSpan(new StyleSpan(bold?Typeface.BOLD:Typeface.NORMAL), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        s.setSpan(new StyleSpan(bold ? Typeface.BOLD : Typeface.NORMAL), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         item.setTitle(s);
     }
 
@@ -212,9 +228,13 @@ public class LibraryBrowserFragment extends Fragment
     }
 
     private void getComics() {
+        mCacheStamp = Long.valueOf(System.currentTimeMillis());
         mComics = Storage.getStorage(getActivity()).listComics(mPath);
         findRecents();
         filterContent();
+        if (mComicListView != null) {
+            mComicListView.getAdapter().notifyDataSetChanged();
+        }
     }
 
     private void findRecents() {
@@ -261,10 +281,6 @@ public class LibraryBrowserFragment extends Fragment
             }
             mAllItems.add(c);
         }
-
-        if (mComicListView != null) {
-            mComicListView.getAdapter().notifyDataSetChanged();
-        }
     }
 
     private Comic getComicAtPosition(int position) {
@@ -274,8 +290,7 @@ public class LibraryBrowserFragment extends Fragment
                 comic = mRecentItems.get(position - 1);
             else
                 comic = mAllItems.get(position - mRecentItems.size() - NUM_HEADERS);
-        }
-        else {
+        } else {
             comic = mAllItems.get(position);
         }
         return comic;
@@ -319,6 +334,17 @@ public class LibraryBrowserFragment extends Fragment
 
     @Override
     public void onRefresh() {
+        if (!Scanner.getInstance().isRunning()) {
+            mRefreshLayout.setRefreshing(true);
+            Scanner.getInstance().scanLibrary(new File(mPath));
+        }
+    }
+
+    public void refreshLibraryDelayed() {
+    }
+
+    public void refreshLibraryFinished() {
+        getComics();
         mRefreshLayout.setRefreshing(false);
     }
 
@@ -342,8 +368,7 @@ public class LibraryBrowserFragment extends Fragment
 
                 if (position > 0 && position < mRecentItems.size() + 1) {
                     position -= 1;
-                }
-                else {
+                } else {
                     position -= (NUM_HEADERS + mRecentItems.size());
                 }
             }
@@ -389,8 +414,7 @@ public class LibraryBrowserFragment extends Fragment
                 lp.setMargins(0, spacing, 0, 0);
 
                 return new HeaderViewHolder(view);
-            }
-            else if (i == ITEM_VIEW_TYPE_HEADER_ALL) {
+            } else if (i == ITEM_VIEW_TYPE_HEADER_ALL) {
                 TextView view = (TextView) LayoutInflater.from(ctx)
                         .inflate(R.layout.header_library, viewGroup, false);
                 view.setText(R.string.library_header_all);
@@ -411,6 +435,7 @@ public class LibraryBrowserFragment extends Fragment
                 holder.setupComic(comic);
             }
         }
+
     }
 
     private class HeaderViewHolder extends RecyclerView.ViewHolder {
@@ -442,8 +467,13 @@ public class LibraryBrowserFragment extends Fragment
             mTitleTextView.setText(comic.getFile().getName());
             mPagesTextView.setText(Integer.toString(comic.getCurrentPage()) + '/' + Integer.toString(comic.getTotalPages()));
 
-            mPicasso.load(LocalCoverHandler.getComicCoverUri(comic))
+            Uri uri = LocalCoverHandler.getComicCoverUri(comic);
+            Long lastCacheStamp = mCache.get(uri);
+            if (lastCacheStamp != null && !lastCacheStamp.equals(mCacheStamp))
+                mPicasso.invalidate(uri);
+            mPicasso.load(uri)
                     .into(mCoverView);
+            mCache.put(uri, mCacheStamp);
         }
 
         @Override

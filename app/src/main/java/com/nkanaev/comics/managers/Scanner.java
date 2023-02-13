@@ -77,8 +77,14 @@ public class Scanner {
     }
 
     public void scanLibrary() {
+        scanLibrary(null);
+    }
+
+    public void scanLibrary(File subFolder) {
         if (mUpdateThread == null || mUpdateThread.getState() == Thread.State.TERMINATED) {
             LibraryUpdateRunnable runnable = new LibraryUpdateRunnable();
+            if (subFolder != null)
+                runnable.limitToSubFolder(subFolder);
             mUpdateThread = new Thread(runnable);
             mUpdateThread.setPriority(Process.THREAD_PRIORITY_DEFAULT + Process.THREAD_PRIORITY_LESS_FAVORABLE);
             mUpdateThread.start();
@@ -105,21 +111,62 @@ public class Scanner {
         }
     }
 
+    private static void deleteCoverCacheFile(Comic comic) {
+        File coverCacheFile = Utils.getCoverCacheFile(comic.getFile().getAbsolutePath(), "jpg");
+        coverCacheFile.delete();
+    }
+
+    private static Comic findComicInList(List<Comic> comics, File file) {
+        if (file != null && comics != null)
+            for (Comic comic : comics) {
+                if (comic.getFile().equals(file))
+                    return comic;
+            }
+        return null;
+    }
+
     private class LibraryUpdateRunnable implements Runnable {
+        private File mSubFolder = null;
+
+        public void limitToSubFolder(File subFolder) {
+            mSubFolder = subFolder;
+        }
+
         @Override
         public void run() {
             try {
                 Context ctx = MainApplication.getAppContext();
                 String libDir = MainApplication.getPreferences()
                         .getString(Constants.SETTINGS_LIBRARY_DIR, "");
-                if (libDir.equals("")) return;
+
+                if (libDir.equals(""))
+                    return;
+
+                File libDirFile = new File(libDir);
+                if (mSubFolder != null) {
+                    File folder = mSubFolder.getAbsoluteFile();
+                    File absLibDir = libDirFile.getAbsoluteFile();
+                    boolean isSubFolder = false;
+                    do {
+                        if (folder.equals(absLibDir)) {
+                            isSubFolder = true;
+                            break;
+                        }
+                    } while ((folder = folder.getParentFile()) != null);
+                    if (!isSubFolder)
+                        return;
+                }
+
                 Storage storage = Storage.getStorage(ctx);
-                Map<File, Comic> storageFiles = new HashMap<>();
+                //Map<File, Comic> storageFiles = new HashMap<>();
+                List<Comic> storedComics = storage.listComics(mSubFolder != null ? mSubFolder.toString() : null);
 
                 // create list of "known" files available in storage database
-                for (Comic c : storage.listComics()) {
+                // for defined subfolder scan all (forced)
+                // or null (libDir)
+    /*            for (Comic c : storage.listComics(mSubFolder != null ? mSubFolder.toString() : null)) {
                     // memorize known
-                    if (c.getTotalPages() > 1) {
+                    if (mSubFolder != null || c.getTotalPages() > 1) {
                         storageFiles.put(c.getFile(), c);
                     }
                     // rescan empties
@@ -127,10 +174,10 @@ public class Scanner {
                         storage.removeComic(c.getId());
                     }
                 }
-
+*/
                 // search and add "unknown" comics
                 Deque<File> directories = new ArrayDeque<>();
-                directories.add(new File(libDir));
+                directories.add(mSubFolder != null ? mSubFolder : libDirFile);
                 while (!directories.isEmpty()) {
                     File dir = directories.pop();
                     File[] files = dir.listFiles();
@@ -143,17 +190,20 @@ public class Scanner {
                         if (mIsStopped) return;
 
                         // add folder to search list, but continue (might be a dir-comic)
-                        if (file.isDirectory()) {
+                        if (mSubFolder == null && file.isDirectory()) {
                             directories.add(file);
-                        } else if (!Utils.isArchive(file.getName())) {
+                        } else if (file.isFile() && !Utils.isArchive(file.getName())) {
                             // ignore unknown files
                             continue;
                         }
 
-                        // skip known comics to keep startup fast
-                        if (storageFiles.containsKey(file)) {
-                            storageFiles.remove(file);
-                            continue;
+                        // skip known good comics (pages>0) to keep startup fast
+                        if (mSubFolder == null) {
+                            Comic storedComic = findComicInList(storedComics,file);
+                            if (storedComic!=null && storedComic.getTotalPages()>0) {
+                                storedComics.remove(storedComic);
+                                continue;
+                            }
                         }
 
                         Parser parser = null;
@@ -172,24 +222,31 @@ public class Scanner {
                                 Log.e("Scanner", "parse", e);
                             }
 
-                            // ignore empty folders
+                            // ignore non-comic folders
                             if (parser.getType().equals(DirectoryParser.TYPE) && count < 1)
                                 continue;
 
-                            // memorize comic meta data for next run
+                            // add/update comic meta data for next run
                             // keep empty comic files, might point to bugs
-                            storage.addBook(file, parser.getType(), count);
+                            Comic storedComic = findComicInList(storedComics,file);
+                            if (storedComic!=null) {
+                                storage.updateBook(storedComic.getId(), parser.getType(), count);
+                                storedComics.remove(storedComic);
+                                deleteCoverCacheFile(storedComic);
+                            } else {
+                                storage.addBook(file, parser.getType(), count);
+                            }
+                            // update only every 10th comic for performance reasons
+                            if (i % 10 == 0) notifyMediaUpdated();
                         } catch (Exception e) {
                             Log.e("Scanner", "update", e);
                         }
                     }
-                    notifyMediaUpdated();
                 }
 
-                // delete missing comics
-                for (Comic missing : storageFiles.values()) {
-                    File coverCacheFile = Utils.getCoverCacheFile( missing.getFile().getAbsolutePath(), "jpg");
-                    coverCacheFile.delete();
+                // delete removed comics/cleanup cover cache
+                for (Comic missing : storedComics) {
+                    deleteCoverCacheFile(missing);
                     storage.removeComic(missing.getId());
                 }
 
