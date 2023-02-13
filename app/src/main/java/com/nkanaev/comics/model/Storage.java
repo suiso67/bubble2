@@ -11,6 +11,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import static android.database.DatabaseUtils.sqlEscapeString;
+
 
 public class Storage {
     public static abstract class Book implements BaseColumns {
@@ -90,15 +92,28 @@ public class Storage {
         db.delete(Book.TABLE_NAME, null, null);
     }
 
-    public void addBook(File filepath, String type, int numPages) {
+    private ContentValues buildContentValues(File filepath, String type, int numPages){
         ContentValues cv = new ContentValues();
-        cv.put(Book.COLUMN_NAME_FILEPATH, filepath.getParentFile().getAbsolutePath());
-        cv.put(Book.COLUMN_NAME_FILENAME, filepath.getName());
-        cv.put(Book.COLUMN_NAME_NUM_PAGES, numPages);
+        if (filepath!=null) {
+            cv.put(Book.COLUMN_NAME_FILEPATH, filepath.getParentFile().getAbsolutePath());
+            cv.put(Book.COLUMN_NAME_FILENAME, filepath.getName());
+        }
+        cv.put(Book.COLUMN_NAME_NUM_PAGES, String.valueOf(numPages));
         cv.put(Book.COLUMN_NAME_TYPE, type);
+        return cv;
+    }
 
+    public void addBook(File filepath, String type, int numPages) {
+        ContentValues cv = buildContentValues(filepath,type,numPages);
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         db.insert(Book.TABLE_NAME, "null", cv);
+    }
+
+    public void updateBook(int comicId, String type, int numPages) {
+        ContentValues cv = buildContentValues(null,type,numPages);
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        String whereClause = Book.COLUMN_NAME_ID + '=' + sqlEscapeString(Integer.toString(comicId));
+        db.update(Book.TABLE_NAME,cv,whereClause,null);
     }
 
     public ArrayList<Comic> listDirectoryComics() {
@@ -128,15 +143,22 @@ public class Storage {
     }
 
     public ArrayList<Comic> listComics() {
-        return listComics(null);
+        return listComics(null,null);
     }
 
     public ArrayList<Comic> listComics(String path) {
+        return listComics(path,null);
+    }
+
+    public ArrayList<Comic> listComics(String path, String fileName) {
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
         String selection = "";
         if (path != null) {
             selection = Book.COLUMN_NAME_FILEPATH + "=\"" + path +  "\"";
+        }
+        if (fileName != null) {
+            selection += (!selection.isEmpty()?" AND ":"")+Book.COLUMN_NAME_FILENAME+ "=\"" + fileName +  "\"";
         }
 
         Cursor c = db.query(Book.TABLE_NAME, Book.columns, selection, null, null, null, SORT_ORDER);
@@ -195,7 +217,7 @@ public class Storage {
     public void removeComic(int comicId) {
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         String whereClause = Book.COLUMN_NAME_ID + '=' + Integer.toString(comicId);
-        db.delete(Book.TABLE_NAME, whereClause, null);
+        int i = db.delete(Book.TABLE_NAME, whereClause, null);
     }
 
     public Comic getPrevComic(Comic comic) {
