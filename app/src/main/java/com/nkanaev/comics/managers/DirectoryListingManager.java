@@ -1,12 +1,10 @@
 package com.nkanaev.comics.managers;
 
-import android.text.TextUtils;
 import com.nkanaev.comics.model.Comic;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class DirectoryListingManager {
@@ -15,20 +13,22 @@ public class DirectoryListingManager {
     private final File mLibraryDir;
 
     public DirectoryListingManager(List<Comic> comics, String libraryDir) {
-        Collections.sort(comics, new Comparator<Comic>() {
+        mLibraryDir = new File(libraryDir != null ? libraryDir : "/");
+
+        // sort naturally ignore-case
+        // library dir ends up first in any case
+        Collections.sort(comics, new IgnoreCaseComparator() {
             @Override
-            public int compare(Comic lhs, Comic rhs) {
-                String leftPath = lhs.getFile().getParentFile().getAbsolutePath().toLowerCase();
-                String rightPath = rhs.getFile().getParentFile().getAbsolutePath().toLowerCase();
-                return leftPath.compareTo(rightPath);
+            public String stringValue(Object o) {
+                return o==null?"":((Comic) o).getFile().getParentFile().getAbsolutePath();
             }
         });
         mComics = comics;
-        mLibraryDir = new File(libraryDir != null ? libraryDir : "/");
 
         List<String> directoryDisplays = new ArrayList<>();
         for (Comic comic : mComics) {
             File comicDir = comic.getFile().getParentFile();
+
             if (comicDir.equals(mLibraryDir)) {
                 directoryDisplays.add("~ (" + comicDir.getName() + ")");
             }
