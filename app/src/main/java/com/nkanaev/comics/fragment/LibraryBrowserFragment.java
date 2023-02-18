@@ -95,6 +95,9 @@ public class LibraryBrowserFragment extends Fragment
 
         mComicListView = (RecyclerView) view.findViewById(R.id.library_grid);
         mComicListView.setHasFixedSize(true);
+        // raise default cache values (number of cards) from a very low DEFAULT_CACHE_SIZE=2
+        mComicListView.setItemViewCacheSize(20);
+        mComicListView.getRecycledViewPool().setMaxRecycledViews(ITEM_VIEW_TYPE_COMIC,20);
         mComicListView.setLayoutManager(layoutManager);
         mComicListView.setAdapter(new ComicGridAdapter());
         mComicListView.addItemDecoration(new GridSpacingItemDecoration(numColumns, spacing));
