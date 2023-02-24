@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
@@ -15,7 +16,11 @@ import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.*;
-import android.widget.*;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -42,7 +47,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 
 public class ReaderFragment extends Fragment implements View.OnTouchListener {
@@ -56,19 +63,25 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     public static final String PARAM_MODE = "PARAM_MODE";
 
     public static final String STATE_FULLSCREEN = "STATE_FULLSCREEN";
+    public static final String STATE_PAGEINFO = "STATE_PAGEINFO";
     public static final String STATE_NEW_COMIC = "STATE_NEW_COMIC";
     public static final String STATE_NEW_COMIC_TITLE = "STATE_NEW_COMIC_TITLE";
 
     private ComicViewPager mViewPager;
-    private LinearLayout mPageNavLayout;
+    private View mPageNavLayout;
     private SeekBar mPageSeekBar;
     private TextView mPageNavTextView;
+    private TextView mPageInfoTextView;
+    private View mPageInfoButton;
     private ComicPagerAdapter mPagerAdapter;
     private SharedPreferences mPreferences;
     private GestureDetector mGestureDetector;
 
     private final static HashMap<Integer, Constants.PageViewMode> RESOURCE_VIEW_MODE;
-    private boolean mIsFullscreen;
+    // default to not showing menu
+    private static boolean mIsFullscreen = true;
+    // default to not showing page info
+    private static boolean mIsPageInfoShown = false;
     private int mCurrentPage;
     private String mFilename;
     private Constants.PageViewMode mPageViewMode;
@@ -182,6 +195,11 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 }
 
                 @Override
+                public Map getPageMetaData(int num) throws IOException {
+                    return Collections.emptyMap();
+                }
+
+                @Override
                 public String getType() {
                     return "dummy";
                 }
@@ -240,7 +258,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_reader, container, false);
 
-        mPageNavLayout = (LinearLayout) getActivity().findViewById(R.id.pageNavLayout);
+        mPageNavLayout = getActivity().findViewById(R.id.pageNavLayout);
         mPageSeekBar = (SeekBar) mPageNavLayout.findViewById(R.id.pageSeekBar);
         try {
             mPageSeekBar.setMax(mParser.numPages() - 1);
@@ -270,6 +288,20 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
         });
         mPageNavTextView = (TextView) mPageNavLayout.findViewById(R.id.pageNavTextView);
+
+        mPageInfoButton = mPageNavLayout.findViewById(R.id.pageInfoButton);
+        mPageInfoTextView = mPageNavLayout.findViewById(R.id.pageInfoTextView);
+        mPageInfoTextView.setText("");
+        setPageInfoShown(mIsPageInfoShown);
+        View.OnClickListener ocl = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setPageInfoShown(!mIsPageInfoShown);
+            }
+        };
+        mPageInfoButton.setOnClickListener(ocl);
+        mPageInfoTextView.setOnClickListener(ocl);
+
         mViewPager = (ComicViewPager) view.findViewById(R.id.viewPager);
         mViewPager.setAdapter(mPagerAdapter);
         mViewPager.setOffscreenPageLimit(3);
@@ -308,8 +340,11 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         }
 
         if (savedInstanceState != null) {
-            boolean fullscreen = savedInstanceState.getBoolean(STATE_FULLSCREEN);
+            boolean fullscreen = savedInstanceState.getBoolean(STATE_FULLSCREEN, true);
             setFullscreen(fullscreen);
+
+            boolean infoOn = savedInstanceState.getBoolean(STATE_PAGEINFO, false);
+            setPageInfoShown(infoOn);
 
             int newComicId = savedInstanceState.getInt(STATE_NEW_COMIC);
             if (newComicId != -1) {
@@ -317,7 +352,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 confirmSwitch(Storage.getStorage(getActivity()).getComic(newComicId), titleRes);
             }
         } else {
-            setFullscreen(true);
+            setFullscreen(mIsFullscreen);
         }
         //getActivity().setTitle(mFilename + " [" + mParser.getType() + "]");
         ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText(mFilename + " [" + mParser.getType() + "]");
@@ -352,6 +387,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putBoolean(STATE_FULLSCREEN, isFullscreen());
+        outState.putBoolean(STATE_PAGEINFO, (mPageInfoTextView.getVisibility() == View.VISIBLE));
         outState.putInt(STATE_NEW_COMIC, mNewComic != null ? mNewComic.getId() : -1);
         outState.putInt(STATE_NEW_COMIC_TITLE, mNewComic != null ? mNewComicTitle : -1);
         super.onSaveInstanceState(outState);
@@ -365,16 +401,27 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         super.onPause();
     }
 
+    public void onDestroyView() {
+        super.onDestroyView();
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mPicasso.shutdown();
 
-        try {
-            mParser.destroy();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        mPicasso.shutdown();
+        Utils.close(mParser);
+    }
+
+    public void onDetach() {
+        super.onDetach();
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // fixup image position etc. on rotation
+        updatePageViews(mViewPager);
     }
 
     @Override
@@ -383,6 +430,9 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     }
 
     public int getCurrentPage() {
+        if (mViewPager == null)
+            return -1;
+
         if (mIsLeftToRight)
             return mViewPager.getCurrentItem() + 1;
         else
@@ -433,8 +483,37 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         String navPage = new StringBuilder()
                 .append(page).append("/").append(mViewPager.getAdapter().getCount())
                 .toString();
-
         mPageNavTextView.setText(navPage);
+
+        updatePageImageInfo();
+    }
+
+    private void updatePageImageInfo() {
+        if (!mIsPageInfoShown)
+            return;
+
+        Map<String, String> metadata = null;
+        int position = getCurrentPage() - 1;
+        try {
+            if (position >= 0 && position < mParser.numPages())
+                metadata = mParser.getPageMetaData(position);
+        } catch (IOException e) {
+            Log.e("", "", e);
+        }
+        String metaText = "";
+        if (metadata != null && !metadata.isEmpty()) {
+            String name = metadata.get(Parser.PAGEMETADATA_KEY_NAME);
+            if (name != null)
+                metaText += name;
+            String t = metadata.get(Parser.PAGEMETADATA_KEY_MIME);
+            String w = metadata.get(Parser.PAGEMETADATA_KEY_WIDTH);
+            String h = metadata.get(Parser.PAGEMETADATA_KEY_HEIGHT);
+            if (t != null)
+                metaText += (metaText.isEmpty() ? "" : "\n")
+                        + String.valueOf(t) + ", "
+                        + String.valueOf(w) + "x" + String.valueOf(h) + "px";
+        }
+        mPageInfoTextView.setText(metaText);
     }
 
     private class ComicPagerAdapter extends PagerAdapter {
@@ -544,6 +623,9 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             setVisibility(View.VISIBLE, View.GONE, View.GONE);
             ImageView iv = (ImageView) layout.findViewById(R.id.pageImageView);
             iv.setImageBitmap(bitmap);
+
+            if (getCurrentPage() - 1 == position)
+                updatePageImageInfo();
         }
 
         @Override
@@ -584,7 +666,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         public void onLongPress(MotionEvent e) {
             // always switch of menus first
             if (!isFullscreen()) {
-                setFullscreen(true, true);
+                setFullscreen(true);
                 return;
             }
 
@@ -593,13 +675,14 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             float width = (float) mViewPager.getWidth();
             float height = (float) mViewPager.getHeight();
 
-            // hotspot only 30% centered
-            if (x < width / 9 * 3 || x > width / 9 * 6
-                    || y < height / 9 * 3 || y > height / 9 * 6)
+            // hotspot only 60% centered
+            int div = 10;
+            if (x < width / div * 2 || x > width / div * 8
+                    || y < height / div * 2 || y > height / div * 8)
                 return;
 
             boolean fullScreen = !isFullscreen();
-            setFullscreen(fullScreen, true);
+            setFullscreen(fullScreen);
         }
 
         /**
@@ -610,16 +693,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
          */
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
-            // always switch of menus first
-            if (!isFullscreen()) {
-                setFullscreen(true, true);
-                return true;
-            }
-
             float x = e.getX();
 
             // tap left side
-            if (x < (float) mViewPager.getWidth() / 10 * 4) {
+            if (x < (float) mViewPager.getWidth() / 10 * 3) {
                 if (mIsLeftToRight) {
                     if (getCurrentPage() == 1)
                         hitBeginning();
@@ -634,7 +711,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 return true;
             }
             // tap right side
-            else if (x > (float) mViewPager.getWidth() / 10 * 6) {
+            else if (x > (float) mViewPager.getWidth() / 10 * 7) {
                 if (mIsLeftToRight) {
                     if (getCurrentPage() == mViewPager.getAdapter().getCount())
                         hitEnding();
@@ -646,6 +723,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                     else
                         setCurrentPage(getCurrentPage() - 1);
                 }
+                return true;
+            }
+
+            // switch of menus if not navigating
+            if (!isFullscreen()) {
+                setFullscreen(true);
                 return true;
             }
 
@@ -671,21 +754,27 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         return ((AppCompatActivity) getActivity()).getSupportActionBar();
     }
 
-    private void setFullscreen(boolean fullscreen) {
-        setFullscreen(fullscreen, false);
+    private void setPageInfoShown(boolean shown) {
+        if (shown) {
+            mPageInfoButton.setVisibility(View.GONE);
+            mPageInfoTextView.setVisibility(View.VISIBLE);
+        } else {
+            mPageInfoTextView.setVisibility(View.GONE);
+            mPageInfoButton.setVisibility(View.VISIBLE);
+        }
+        mIsPageInfoShown = shown;
+        updatePageImageInfo();
     }
 
-    private void setFullscreen(boolean fullscreen, boolean animated) {
-        mIsFullscreen = fullscreen;
-
+    private void setFullscreen(boolean fullscreen) {
         ActionBar actionBar = getActionBar();
 
         if (fullscreen) {
             if (actionBar != null) actionBar.hide();
 
             int flag = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN;
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN;
             if (Utils.isKitKatOrLater()) {
                 flag |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
                 flag |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
@@ -706,7 +795,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             if (actionBar != null) actionBar.show();
 
             int flag = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
             if (Utils.isKitKatOrLater()) {
                 flag |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
             }
@@ -726,6 +815,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 }, 300);
             }
         }
+
+        mIsFullscreen = fullscreen;
     }
 
     private boolean isFullscreen() {
