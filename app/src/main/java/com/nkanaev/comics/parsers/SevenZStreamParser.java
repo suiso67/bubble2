@@ -13,9 +13,7 @@ import org.apache.commons.compress.archivers.sevenz.SevenZFile;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class SevenZStreamParser extends AbstractParser {
     private List<SevenZArchiveEntry> mEntries = null;
@@ -168,6 +166,14 @@ public class SevenZStreamParser extends AbstractParser {
             }
         }
         throw new IOException(needle.getName() + " not found in archive.");
+    }
+
+    @Override
+    public Map getPageMetaData(int num) throws IOException {
+        parse();
+        Map m = new HashMap();
+        m.put(Parser.PAGEMETADATA_KEY_NAME,mEntries.get(num).getName());
+        return m;
     }
 
     @Override

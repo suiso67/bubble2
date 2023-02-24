@@ -14,8 +14,7 @@ import com.nkanaev.comics.managers.Utils;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -46,8 +45,10 @@ public class ParserFactory {
             if (p != null) {
                 // wrap 7z,rar,zip in retry parser, unless pre-Oreo
                 if (p instanceof AbstractParser && Utils.isOreoOrLater() &&
-                        Arrays.asList(new String[]{"7z","rar","zip"}).contains(p.getType()))
+                        Arrays.asList(new String[]{"7z", "rar", "zip"}).contains(p.getType()))
                     p = new LenientTryAnotherParserWrapper((AbstractParser) p);
+                // wrap in MetaData wrapper
+                p = new CachingPageMetaDataParserWrapper(p);
                 // wrap in JP2 recoder
                 p = new CachingDecodeJP2ParserWrapper(p);
                 mParserCache.put(key, p);
@@ -188,6 +189,11 @@ public class ParserFactory {
         }
 
         @Override
+        public Map getPageMetaData(int num) throws IOException {
+            return mInstance.getPageMetaData(num);
+        }
+
+        @Override
         public String getType() {
             return mInstance.getType();
         }
@@ -218,98 +224,98 @@ public class ParserFactory {
 
         @Override
         public synchronized void parse() throws IOException {
-                try {
-                    mParser.parse();
-                } catch (Exception e) {
-                    if (mRetriedAlready || isIgnored(e))
-                        rethrow(e);
-
-                    mRetriedAlready = true;
-                    // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(CommonsZipParser.class))
-                        try {
-                            CommonsZipParser candidate = new CommonsZipParser();
-                            candidate.setSource(mParser.getSource());
-                            candidate.parse();
-                            mParser = candidate;
-                            return;
-                        } catch (Exception e2) {
-                            // nice try
-                        }
-                    // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(RarParser.class))
-                        try {
-                            RarParser candidate = new RarParser();
-                            candidate.setSource(mParser.getSource());
-                            candidate.parse();
-                            mParser = candidate;
-                            return;
-                        } catch (Exception e2) {
-                            // nice try
-                        }
-                    // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
-                        try {
-                            SevenZStreamParser candidate = new SevenZStreamParser();
-                            candidate.setSource(mParser.getSource());
-                            candidate.parse();
-                            mParser = candidate;
-                            return;
-                        } catch (Exception e2) {
-                            // nice try
-                        }
-
+            try {
+                mParser.parse();
+            } catch (Exception e) {
+                if (mRetriedAlready || isIgnored(e))
                     rethrow(e);
-                }
+
+                mRetriedAlready = true;
+                // try zip, if it wasn't before
+                if (!mParser.getClass().isAssignableFrom(CommonsZipParser.class))
+                    try {
+                        CommonsZipParser candidate = new CommonsZipParser();
+                        candidate.setSource(mParser.getSource());
+                        candidate.parse();
+                        mParser = candidate;
+                        return;
+                    } catch (Exception e2) {
+                        // nice try
+                    }
+                // try zip, if it wasn't before
+                if (!mParser.getClass().isAssignableFrom(RarParser.class))
+                    try {
+                        RarParser candidate = new RarParser();
+                        candidate.setSource(mParser.getSource());
+                        candidate.parse();
+                        mParser = candidate;
+                        return;
+                    } catch (Exception e2) {
+                        // nice try
+                    }
+                // try zip, if it wasn't before
+                if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
+                    try {
+                        SevenZStreamParser candidate = new SevenZStreamParser();
+                        candidate.setSource(mParser.getSource());
+                        candidate.parse();
+                        mParser = candidate;
+                        return;
+                    } catch (Exception e2) {
+                        // nice try
+                    }
+
+                rethrow(e);
+            }
         }
 
         @Override
         public synchronized int numPages() throws IOException {
-                try {
-                    return mParser.numPages();
-                } catch (Exception e) {
-                    if (mRetriedAlready || isIgnored(e))
-                        rethrow(e);
-
-                    mRetriedAlready = true;
-                    // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(CommonsZipParser.class))
-                        try {
-                            CommonsZipParser candidate = new CommonsZipParser();
-                            candidate.setSource(mParser.getSource());
-                            int count = candidate.numPages();
-                            mParser = candidate;
-                            return count;
-                        } catch (Exception e2) {
-                            // nice try
-                        }
-                    // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(RarParser.class))
-                        try {
-                            RarParser candidate = new RarParser();
-                            candidate.setSource(mParser.getSource());
-                            int count = candidate.numPages();
-                            mParser = candidate;
-                            return count;
-                        } catch (Exception e2) {
-                            // nice try
-                        }
-                    // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
-                        try {
-                            SevenZStreamParser candidate = new SevenZStreamParser();
-                            candidate.setSource(mParser.getSource());
-                            int count = candidate.numPages();
-                            mParser = candidate;
-                            return count;
-                        } catch (Exception e2) {
-                            // nice try
-                        }
-
-                    Log.e("LenientParser", "failed", new IOException("Parser failed. Retries too.", e));
+            try {
+                return mParser.numPages();
+            } catch (Exception e) {
+                if (mRetriedAlready || isIgnored(e))
                     rethrow(e);
-                }
-                return 0;
+
+                mRetriedAlready = true;
+                // try zip, if it wasn't before
+                if (!mParser.getClass().isAssignableFrom(CommonsZipParser.class))
+                    try {
+                        CommonsZipParser candidate = new CommonsZipParser();
+                        candidate.setSource(mParser.getSource());
+                        int count = candidate.numPages();
+                        mParser = candidate;
+                        return count;
+                    } catch (Exception e2) {
+                        // nice try
+                    }
+                // try zip, if it wasn't before
+                if (!mParser.getClass().isAssignableFrom(RarParser.class))
+                    try {
+                        RarParser candidate = new RarParser();
+                        candidate.setSource(mParser.getSource());
+                        int count = candidate.numPages();
+                        mParser = candidate;
+                        return count;
+                    } catch (Exception e2) {
+                        // nice try
+                    }
+                // try zip, if it wasn't before
+                if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
+                    try {
+                        SevenZStreamParser candidate = new SevenZStreamParser();
+                        candidate.setSource(mParser.getSource());
+                        int count = candidate.numPages();
+                        mParser = candidate;
+                        return count;
+                    } catch (Exception e2) {
+                        // nice try
+                    }
+
+                Log.e("LenientParser", "failed", new IOException("Parser failed. Retries too.", e));
+                rethrow(e);
+            }
+            return 0;
         }
 
         private void rethrow(Exception e) throws IOException {
@@ -321,50 +327,135 @@ public class ParserFactory {
 
         @Override
         public synchronized InputStream getPage(int num) throws IOException {
-                try {
-                    return mParser.getPage(num);
-                } catch (Exception e) {
-                    if (mRetriedAlready || isIgnored(e))
-                        rethrow(e);
-
-                    mRetriedAlready = true;
-                    // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(CommonsZipParser.class))
-                        try {
-                            CommonsZipParser candidate = new CommonsZipParser();
-                            candidate.setSource(mParser.getSource());
-                            InputStream is = candidate.getPage(num);
-                            mParser = candidate;
-                            return is;
-                        } catch (Exception e2) {
-                            // nice try
-                        }
-                    // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(RarParser.class))
-                        try {
-                            RarParser candidate = new RarParser();
-                            candidate.setSource(mParser.getSource());
-                            InputStream is = candidate.getPage(num);
-                            mParser = candidate;
-                            return is;
-                        } catch (Exception e2) {
-                            // nice try
-                        }
-                    // try zip, if it wasn't before
-                    if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
-                        try {
-                            SevenZStreamParser candidate = new SevenZStreamParser();
-                            candidate.setSource(mParser.getSource());
-                            InputStream is = candidate.getPage(num);
-                            mParser = candidate;
-                            return is;
-                        } catch (Exception e2) {
-                            // nice try
-                        }
-
+            try {
+                return mParser.getPage(num);
+            } catch (Exception e) {
+                if (mRetriedAlready || isIgnored(e))
                     rethrow(e);
-                    return null;
+
+                mRetriedAlready = true;
+                // try zip, if it wasn't before
+                if (!mParser.getClass().isAssignableFrom(CommonsZipParser.class))
+                    try {
+                        CommonsZipParser candidate = new CommonsZipParser();
+                        candidate.setSource(mParser.getSource());
+                        InputStream is = candidate.getPage(num);
+                        mParser = candidate;
+                        return is;
+                    } catch (Exception e2) {
+                        // nice try
+                    }
+                // try zip, if it wasn't before
+                if (!mParser.getClass().isAssignableFrom(RarParser.class))
+                    try {
+                        RarParser candidate = new RarParser();
+                        candidate.setSource(mParser.getSource());
+                        InputStream is = candidate.getPage(num);
+                        mParser = candidate;
+                        return is;
+                    } catch (Exception e2) {
+                        // nice try
+                    }
+                // try zip, if it wasn't before
+                if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
+                    try {
+                        SevenZStreamParser candidate = new SevenZStreamParser();
+                        candidate.setSource(mParser.getSource());
+                        InputStream is = candidate.getPage(num);
+                        mParser = candidate;
+                        return is;
+                    } catch (Exception e2) {
+                        // nice try
+                    }
+
+                rethrow(e);
+                return null;
+            }
+        }
+
+        @Override
+        public Map getPageMetaData(int num) throws IOException {
+            return mParser.getPageMetaData(num);
+        }
+
+        @Override
+        public String getType() {
+            return mParser.getType();
+        }
+
+        @Override
+        public void destroy() {
+            mParser.destroy();
+        }
+    }
+
+    private static class CachingPageMetaDataParserWrapper implements Parser {
+        private Parser mParser;
+        private HashMap<Integer, Map> mPagesMetaData = new HashMap();
+
+        public CachingPageMetaDataParserWrapper(Parser parser) {
+            mParser = parser;
+        }
+
+        @Override
+        public void parse() throws IOException {
+            mParser.parse();
+        }
+
+        @Override
+        public int numPages() throws IOException {
+            return mParser.numPages();
+        }
+
+        // synchronized so we do not access te same file channel concurrently
+        @Override
+        public synchronized InputStream getPage(int num) throws IOException {
+            InputStream is = mParser.getPage(num);
+            Integer key = Integer.valueOf(num);
+            ByteArrayInputStream bais = null;
+            // bail out if copying to bytearray fails (lack of memory?)
+            try {
+                bais = new ByteArrayInputStream(Utils.toByteArray(is));
+            } catch (Throwable t) {
+                Log.e("","",t);
+                return mParser.getPage(num);
+            }
+            try {
+                final BitmapFactory.Options options = new BitmapFactory.Options();
+                // read bitmap metadata w/o creating another in memory copy
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeStream(bais, null, options);
+                Map pageData = new HashMap();
+                if (options.outMimeType != null) {
+                    pageData.put(Parser.PAGEMETADATA_KEY_MIME, options.outMimeType);
+                    pageData.put(Parser.PAGEMETADATA_KEY_WIDTH, options.outWidth);
+                    pageData.put(Parser.PAGEMETADATA_KEY_HEIGHT, options.outHeight);
+                    mPagesMetaData.put(key, pageData);
                 }
+            } finally {
+                bais.reset();
+                return bais;
+            }
+        }
+
+        @Override
+        public Map getPageMetaData(int num) throws IOException {
+            Map<String,String> in = mParser.getPageMetaData(num);
+            if (in==null || in.isEmpty())
+                in = new HashMap<>();
+            Map<String,String> in2 = mPagesMetaData.get(Integer.valueOf(num));
+            // nothing to merge, leave early
+            if (in2==null)
+                return in;
+
+            for (String key : in2.keySet()) {
+                String value2 = String.valueOf(in2.get(key));
+                if (in.containsKey(key))
+                    in.put(key,String.valueOf(in.get(key))+"/"+value2);
+                else
+                    in.put(key,value2);
+            }
+            return in;
         }
 
         @Override
@@ -379,8 +470,8 @@ public class ParserFactory {
     }
 
     private static class CachingDecodeJP2ParserWrapper implements Parser {
-
         private Parser mParser;
+        private HashMap<Integer, Map> mPagesMetaData = new HashMap();
 
         public CachingDecodeJP2ParserWrapper(Parser parser) {
             mParser = parser;
@@ -401,6 +492,25 @@ public class ParserFactory {
             return recodeAndCache(num);
         }
 
+        @Override
+        public Map getPageMetaData(int num) throws IOException {
+            Map<String,String> in = mParser.getPageMetaData(num);
+            if (in==null || in.isEmpty())
+                in = new HashMap<>();
+            Map<String,String> in2 = mPagesMetaData.get(Integer.valueOf(num));
+            // nothing to merge, leave early
+            if (in2==null)
+                return in;
+
+            for (String key : in2.keySet()) {
+                String value2 = String.valueOf(in2.get(key));
+                if (in.containsKey(key))
+                    in.put(key,String.valueOf(in.get(key))+"/"+value2);
+                else
+                    in.put(key,value2);
+            }
+            return in;
+        }
 
         private InputStream recodeAndCache(int num) throws IOException {
             // consult cache if avail
@@ -427,7 +537,7 @@ public class ParserFactory {
                 new Thread(new CacheWriter(num)).start();
 
             // decode to memory
-            Bitmap bitmap = decodeJP2(bis);
+            Bitmap bitmap = decodeJP2(bis, num);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.PNG, 0 /*png is lossless*/, bos);
             byte[] byteArray = bos.toByteArray();
@@ -437,9 +547,17 @@ public class ParserFactory {
             return new ByteArrayInputStream(byteArray);
         }
 
-        private static Bitmap decodeJP2(InputStream is) {
+        private Bitmap decodeJP2(InputStream is, int num) {
             Bitmap bitmap = new JP2Decoder(is).decode();
             Utils.close(is);
+
+            Map pageData = new HashMap();
+            pageData.put(Parser.PAGEMETADATA_KEY_MIME, "image/x-jp2");
+            pageData.put(Parser.PAGEMETADATA_KEY_WIDTH, bitmap.getWidth());
+            pageData.put(Parser.PAGEMETADATA_KEY_HEIGHT, bitmap.getHeight());
+            mPagesMetaData.put(Integer.valueOf(num), pageData);
+
+
             // mDblTapScale in PageImageView is 1.5 currently, so set this as our limit
             DisplayMetrics displayMetrics = MainApplication.getAppContext().getResources().getDisplayMetrics();
             int max = Math.round(1.0f * Math.max(displayMetrics.widthPixels, displayMetrics.heightPixels));
@@ -486,7 +604,7 @@ public class ParserFactory {
                         if (num >= max)
                             num = num - max;
 
-                        Log.i("Caching",""+num);
+                        Log.i("Caching", "" + num);
 
                         InputStream stream = mParser.getPage(num);
                         BufferedInputStream bis = new BufferedInputStream(stream);
@@ -494,7 +612,7 @@ public class ParserFactory {
                         if (!Utils.isJP2Stream(bis))
                             continue;
 
-                        Bitmap bitmap = decodeJP2(bis);
+                        Bitmap bitmap = decodeJP2(bis,num);
                         File file = new File(mCacheDir, String.valueOf(num));
                         FileOutputStream fos = new FileOutputStream(file);
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 100 /*png is lossless*/, fos);

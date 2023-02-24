@@ -9,9 +9,7 @@ import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class TarFileParser extends AbstractParser {
     private File mUncompressedFile = null;
@@ -72,6 +70,14 @@ public class TarFileParser extends AbstractParser {
         parse();
         TarArchiveEntry needle = mEntries.get(num);
         return mTarFile.getInputStream(needle);
+    }
+
+    @Override
+    public Map getPageMetaData(int num) throws IOException {
+        parse();
+        Map m = new HashMap();
+        m.put(Parser.PAGEMETADATA_KEY_NAME,mEntries.get(num).getName());
+        return m;
     }
 
     @Override

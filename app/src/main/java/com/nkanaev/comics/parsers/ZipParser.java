@@ -6,9 +6,7 @@ import com.nkanaev.comics.managers.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -58,6 +56,14 @@ public class ZipParser extends AbstractParser {
     public InputStream getPage(int num) throws IOException {
         parse();
         return mZipFile.getInputStream(mEntries.get(num));
+    }
+
+    @Override
+    public Map getPageMetaData(int num) throws IOException {
+        parse();
+        Map m = new HashMap();
+        m.put(Parser.PAGEMETADATA_KEY_NAME,mEntries.get(num).getName());
+        return m;
     }
 
     @Override

@@ -8,9 +8,7 @@ import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
 
 
 public class RarParser extends AbstractParser {
@@ -129,6 +127,14 @@ public class RarParser extends AbstractParser {
         } catch (RarException e) {
             throw new IOException("unable to parse rar");
         }
+    }
+
+    @Override
+    public Map getPageMetaData(int num) throws IOException {
+        parse();
+        Map m = new HashMap();
+        m.put(Parser.PAGEMETADATA_KEY_NAME,mHeaders.get(num).getFileName());
+        return m;
     }
 
     @Override

@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DirectoryParser extends AbstractParser {
     private ArrayList<File> mFiles = null;
@@ -57,6 +59,14 @@ public class DirectoryParser extends AbstractParser {
     public InputStream getPage(int num) throws IOException {
         parse();
         return new FileInputStream(mFiles.get(num));
+    }
+
+    @Override
+    public Map getPageMetaData(int num) throws IOException {
+        parse();
+        Map m = new HashMap();
+        m.put(Parser.PAGEMETADATA_KEY_NAME,mFiles.get(num).getName());
+        return m;
     }
 
     @Override

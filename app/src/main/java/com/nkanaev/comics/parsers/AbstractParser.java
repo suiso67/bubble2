@@ -10,6 +10,8 @@ import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 
 public abstract class AbstractParser implements Parser {
     // remember source, can be either File or Intent
@@ -98,6 +100,12 @@ public abstract class AbstractParser implements Parser {
 
     @Override
     abstract public InputStream getPage(int num) throws IOException;
+
+    // not strictly necessary, implement to provide details about book pages (file name, resolution ...)
+    @Override
+    public Map getPageMetaData(int num) throws IOException {
+        return Collections.emptyMap();
+    }
 
     @Override
     abstract public int numPages() throws IOException;
