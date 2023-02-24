@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat;
 import com.gemalto.jp2.JP2Decoder;
 import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.R;
+import com.nkanaev.comics.parsers.Parser;
 
 import java.io.*;
 import java.lang.reflect.Method;
@@ -283,7 +284,12 @@ public final class Utils {
         if (o == null) return;
         try {
             Class c = o.getClass();
-            Method m = c.getMethod("close");
+            Method m;
+            if (Parser.class.isAssignableFrom(c)) {
+                m = c.getMethod("destroy");
+            } else {
+                m = c.getMethod("close");
+            }
             m.invoke(o);
         } catch (final Throwable t) {
             Log.e("Bubble2","Utils.close(Object)",t);
