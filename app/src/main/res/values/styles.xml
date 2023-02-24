@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primaryDark</item>
@@ -39,6 +39,8 @@
     </style>
 
     <style name="NavigationViewTextStyle" parent="AppTheme">
-        <item name="android:textStyle">bold</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textFontWeight" tools:targetApi="p">600</item>
+        <item name="android:fontStyle" tools:targetApi="o">normal</item>
     </style>
 </resources>
