@@ -84,6 +84,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     private static boolean mIsPageInfoShown = false;
     private int mCurrentPage;
     private File mFile = null;
+    private Uri mUri = null;
     private Constants.PageViewMode mPageViewMode;
     private boolean mIsLeftToRight;
     private float mStartingX;
@@ -148,26 +149,20 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         try {
             if (mode == Mode.MODE_INTENT) {
                 Intent intent = (Intent) bundle.getParcelable(PARAM_HANDLER);
-                Uri uri = intent.getData();
-                Log.i("URI", uri.toString());
-                mFile = new File(uri.getPath());
-                Log.i("FILE", mFile.getName());
-                InputStream is;
-//            try {
-                //is = getActivity().getContentResolver().openInputStream(uri);
-                //mParser = new CommonsStreamParser(is);
+                mUri = intent.getData();
+                String type = intent.getType();
+                Log.i("URI", mUri.toString());
+
                 mParser = ParserFactory.create(intent);
-//            } catch (FileNotFoundException e) {
-//                throw new RuntimeException(e);
-//            }
-//            Log.i("IS",is.toString());
-            } else if (mode == Mode.MODE_LIBRARY) {
+            }
+            else if (mode == Mode.MODE_LIBRARY) {
                 int comicId = bundle.getInt(PARAM_HANDLER);
                 mComic = Storage.getStorage(getActivity()).getComic(comicId);
                 mFile = mComic.getFile();
                 mCurrentPage = mComic.getCurrentPage();
                 mParser = ParserFactory.create(mFile);
-            } else if (mode == Mode.MODE_BROWSER) {
+            }
+            else if (mode == Mode.MODE_BROWSER) {
                 mFile = (File) bundle.getSerializable(PARAM_HANDLER);
                 mParser = ParserFactory.create(mFile);
             }
@@ -351,9 +346,14 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         } else {
             setFullscreen(mIsFullscreen);
         }
-        //getActivity().setTitle(mFilename + " [" + mParser.getType() + "]");
+
+        String title = "";
         if (mFile!=null)
-            ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText(mFile.getName() + " [" + mParser.getType() + "]");
+            title += mFile.getName();
+        else if (mUri != null)
+            title += mUri.getLastPathSegment();
+        ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText((title.isEmpty()?"":title+" ") + "[" + mParser.getType() + "]");
+
         updateSeekBar();
 
         return view;
@@ -758,6 +758,9 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             mPageInfoTextView.setVisibility(View.VISIBLE);
             if (mFile!=null)
                 ((ReaderActivity)getActivity()).setSubTitle(mFile.getAbsolutePath());
+            else if (mUri!=null) {
+                ((ReaderActivity)getActivity()).setSubTitle(mUri.toString());
+            }
         } else {
             mPageInfoTextView.setVisibility(View.GONE);
             mPageInfoButton.setVisibility(View.VISIBLE);
