@@ -65,10 +65,6 @@ public class CommonsStreamParser extends AbstractParser {
     }
 
     @Override
-    public void parse(File file) throws IOException {
-    }
-
-    @Override
     public void destroy() {
         mEntries.clear();
     }
