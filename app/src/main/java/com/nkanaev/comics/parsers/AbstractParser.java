@@ -43,32 +43,32 @@ public abstract class AbstractParser implements Parser {
         mSource = source;
     }
 
-    protected Uri uriFromIntent(Intent intent) {
+    public static Uri uriFromIntent(Intent intent) {
         Context context = MainApplication.getAppContext();
         return intent.getData();
     }
 
-    protected FileDescriptor fileDescriptorFromIntent(Intent intent) throws IOException {
+    public static FileDescriptor fileDescriptorFromIntent(Intent intent) throws IOException {
         Uri uri = uriFromIntent(intent);
         AssetFileDescriptor afd = MainApplication.getAppContext()
                 .getContentResolver().openAssetFileDescriptor(uri, "r");
         return afd.getFileDescriptor();
     }
 
-    protected FileInputStream inputStreamFromIntent(Intent intent) throws IOException {
+    public static FileInputStream inputStreamFromIntent(Intent intent) throws IOException {
         return new FileInputStream(fileDescriptorFromIntent(intent));
     }
 
-    protected FileChannel fileChannelFromIntent(Intent intent) throws IOException {
+    public static FileChannel fileChannelFromIntent(Intent intent) throws IOException {
         return inputStreamFromIntent(intent).getChannel();
     }
 
-    protected File fileFromIntent(Intent intent) {
+    public static File fileFromIntent(Intent intent) {
         return new File(uriFromIntent(intent).getPath());
     }
 
     abstract public void parse() throws IOException;
-
+/*
     protected void parse(Intent intent) throws IOException {
         mSource = intent;
         Uri uri = uriFromIntent(intent);
@@ -97,7 +97,7 @@ public abstract class AbstractParser implements Parser {
     protected void parse(File file) throws IOException {
         throw new UnsupportedOperationException();
     }
-
+*/
     @Override
     abstract public InputStream getPage(int num) throws IOException;
 
