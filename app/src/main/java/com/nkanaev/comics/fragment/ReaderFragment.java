@@ -12,7 +12,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.*;
@@ -20,6 +19,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
@@ -83,7 +83,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     // default to not showing page info
     private static boolean mIsPageInfoShown = false;
     private int mCurrentPage;
-    private String mFilename;
+    private File mFile = null;
     private Constants.PageViewMode mPageViewMode;
     private boolean mIsLeftToRight;
     private float mStartingX;
@@ -144,15 +144,14 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         Bundle bundle = getArguments();
         Mode mode = (Mode) bundle.getSerializable(PARAM_MODE);
 
-        File file = null;
         String error = "";
         try {
             if (mode == Mode.MODE_INTENT) {
                 Intent intent = (Intent) bundle.getParcelable(PARAM_HANDLER);
                 Uri uri = intent.getData();
                 Log.i("URI", uri.toString());
-                file = new File(uri.getPath());
-                Log.i("FILE", file.getName());
+                mFile = new File(uri.getPath());
+                Log.i("FILE", mFile.getName());
                 InputStream is;
 //            try {
                 //is = getActivity().getContentResolver().openInputStream(uri);
@@ -165,12 +164,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             } else if (mode == Mode.MODE_LIBRARY) {
                 int comicId = bundle.getInt(PARAM_HANDLER);
                 mComic = Storage.getStorage(getActivity()).getComic(comicId);
-                file = mComic.getFile();
+                mFile = mComic.getFile();
                 mCurrentPage = mComic.getCurrentPage();
-                mParser = ParserFactory.create(file);
+                mParser = ParserFactory.create(mFile);
             } else if (mode == Mode.MODE_BROWSER) {
-                file = (File) bundle.getSerializable(PARAM_HANDLER);
-                mParser = ParserFactory.create(file);
+                mFile = (File) bundle.getSerializable(PARAM_HANDLER);
+                mParser = ParserFactory.create(mFile);
             }
         } catch (Exception e) {
             error = e.getMessage();
@@ -209,8 +208,6 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 }
             };
         }
-
-        mFilename = file.getName();
 
         int count = 0;
         try {
@@ -355,7 +352,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             setFullscreen(mIsFullscreen);
         }
         //getActivity().setTitle(mFilename + " [" + mParser.getType() + "]");
-        ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText(mFilename + " [" + mParser.getType() + "]");
+        if (mFile!=null)
+            ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText(mFile.getName() + " [" + mParser.getType() + "]");
         updateSeekBar();
 
         return view;
@@ -758,9 +756,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         if (shown) {
             mPageInfoButton.setVisibility(View.GONE);
             mPageInfoTextView.setVisibility(View.VISIBLE);
+            if (mFile!=null)
+                ((ReaderActivity)getActivity()).setSubTitle(mFile.getAbsolutePath());
         } else {
             mPageInfoTextView.setVisibility(View.GONE);
             mPageInfoButton.setVisibility(View.VISIBLE);
+            ((ReaderActivity)getActivity()).setSubTitle("");
         }
         mIsPageInfoShown = shown;
         updatePageImageInfo();
@@ -805,14 +806,11 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
             // status bar & navigation bar background won't show in some cases
             if (Utils.isLollipopOrLater()) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        Window w = getActivity().getWindow();
-                        w.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                        w.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                    }
-                }, 300);
+                Window w = getActivity().getWindow();
+                w.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                @ColorInt int bg = getResources().getColor(R.color.darkest_semitransparent);
+                w.setNavigationBarColor(bg);
+                w.setStatusBarColor(bg);
             }
         }
 

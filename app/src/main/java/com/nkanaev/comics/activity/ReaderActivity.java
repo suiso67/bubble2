@@ -3,7 +3,9 @@ package com.nkanaev.comics.activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
+import androidx.core.view.WindowCompat;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +21,8 @@ public class ReaderActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Reader activity always stretches below navigation bar
+        WindowCompat.setDecorFitsSystemWindows(getWindow(),false);
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.layout_reader);
@@ -51,6 +55,30 @@ public class ReaderActivity extends AppCompatActivity {
             actionBar.setCustomView(R.layout.action_bar_title_layout);
             actionBar.setTitle("");
         }
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        super.setTitle(title);
+        TextView titleView = findViewById(R.id.action_bar_title);
+        if (titleView!=null)
+            titleView.setText(title);
+        else
+            getSupportActionBar().setTitle(title);
+    }
+
+    public void setSubTitle(CharSequence title) {
+        TextView subtitle = (TextView) findViewById(R.id.action_bar_subtitle);
+        if (subtitle==null)
+            return;
+
+        if (title==null||title.toString().isEmpty()) {
+            subtitle.setVisibility(View.GONE);
+            title="";
+        } else {
+            subtitle.setVisibility(View.VISIBLE);
+        }
+        subtitle.setText(title);
     }
 
     public void setFragment(Fragment fragment) {
