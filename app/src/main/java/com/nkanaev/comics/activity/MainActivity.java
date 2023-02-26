@@ -28,7 +28,8 @@ import com.nkanaev.comics.view.NavBGImageView;
 import com.squareup.picasso.Picasso;
 
 
-public class MainActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
+public class MainActivity extends AppCompatActivity
+        implements FragmentManager.OnBackStackChangedListener {
     private final static String STATE_CURRENT_MENU_ITEM = "STATE_CURRENT_MENU_ITEM";
     public static String PACKAGE_NAME;
 
