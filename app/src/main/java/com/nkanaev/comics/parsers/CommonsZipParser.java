@@ -1,5 +1,6 @@
 package com.nkanaev.comics.parsers;
 
+import android.content.Intent;
 import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -8,6 +9,7 @@ import org.apache.commons.compress.archivers.zip.ZipFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.SeekableByteChannel;
 import java.util.*;
 
 
@@ -16,17 +18,20 @@ public class CommonsZipParser extends AbstractParser {
     private ArrayList<ZipArchiveEntry> mEntries = null;
 
     public CommonsZipParser() {
-        super(new Class[]{File.class});
+        super(new Class[]{File.class, SeekableByteChannel.class});
     }
 
     @Override
-    public void parse() throws IOException {
+    public synchronized void parse() throws IOException {
         if (mZipFile != null && mEntries != null)
             return;
 
-        File file = (File) getSource();
+        Object o = getSource();
+        if (o instanceof File)
+            mZipFile = new ZipFile(((File)o).getAbsolutePath());
+        else
+            mZipFile = new ZipFile((SeekableByteChannel)o);
 
-        mZipFile = new ZipFile(file.getAbsolutePath());
         mEntries = new ArrayList<>();
 
         Enumeration<ZipArchiveEntry> e = mZipFile.getEntries();
