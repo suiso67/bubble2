@@ -114,6 +114,9 @@ public class TarFileParser extends AbstractParser {
                 is = new CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.ZSTANDARD, is);
             else if (Utils.isTBR(fileName))
                 is = new CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BROTLI, is);
+            // no name, let's try to detect
+            else
+                is = new CompressorStreamFactory().createCompressorInputStream(is);
         } catch (CompressorException e) {
             throw new IOException(e);
         }
