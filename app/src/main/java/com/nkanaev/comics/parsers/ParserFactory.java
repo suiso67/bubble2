@@ -1,6 +1,5 @@
 package com.nkanaev.comics.parsers;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,7 +13,9 @@ import com.nkanaev.comics.managers.Utils;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -76,56 +77,23 @@ public class ParserFactory {
     }
 
     private static Parser create(Intent intent) throws Exception {
-        Context context = MainApplication.getAppContext();
-        Uri uri = intent.getData();
-        File file = new File(uri.getPath());
-
-            /*
-            is = context.getContentResolver().openInputStream(uri);
-            if (Utils.isRar(file.getName())) {
-                RarParser p = new RarParser();
-                p.parse(is);
-                return p;
-            } else if (false && Utils.isZip(file.getName())) {
-                File cacheDir = context.getExternalCacheDir();
-                File tempZip = File.createTempFile("stream", ".zip", cacheDir);
-                Utils.copyToFile(is, tempZip);
-                ZipParser parser = new ZipParser() {
-                    public void destroy() throws IOException {
-                        super.destroy();
-                        tempZip.delete();
-                    }
-                };
-                parser.parse(tempZip);
-                return parser;
-            } else if (Utils.isSevenZ(file.getName())) {
-                SevenZParser p = new SevenZParser();
-                p.parse(uri);
-                return p;
-            } else {
-                //return new CommonsStreamParser(is);
-                CommonsUriParser p = new CommonsUriParser();
-                p.parse(uri);
-                return p;
-            }
-             */
-        Class parserClass = findParser(file);
-        Method canParseMethod = parserClass.getMethod("canParse", Class.class);
-        //Constructor c = parserClass.getConstructor(Object.class);
-        AbstractParser p = (AbstractParser) parserClass.getDeclaredConstructor().newInstance();
-        if ((boolean) canParseMethod.invoke(p, Intent.class)) {
-            p.setSource(intent);
-            return p;
-        } else if ((boolean) canParseMethod.invoke(p, File.class)) {
-            //Workaround: copy temp file and read that
-            File cacheDir = context.getExternalCacheDir();
-            File tempFile = File.createTempFile(parserClass.getName(), ".tmp", cacheDir);
-            InputStream is = context.getContentResolver().openInputStream(uri);
-            Utils.copyToFile(is, tempFile);
-            return new ParserWithTempFileWrapper(p, tempFile);
+        Uri uri = AbstractParser.uriFromIntent(intent);
+        if (uri == null)
+            throw new IllegalArgumentException("Intent without url!");
+        // handle file:// uris directly
+        if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return create(new File(uri.getPath()));
         }
 
-        throw new UnsupportedOperationException("Parser " + parserClass.getCanonicalName() + " does not support opening File or Intent!");
+        Class parserClass = findParser(new File(uri.getLastPathSegment()));
+        AbstractParser p = (AbstractParser) parserClass.getDeclaredConstructor().newInstance();
+        if (p.canParse(File.class)) {
+            AbstractParser intentParser = new IntentWithTempFileParserWrapper(p);
+            intentParser.setSource(intent);
+            return intentParser;
+        }
+
+        throw new UnsupportedOperationException("Parser " + parserClass.getCanonicalName() + " does not support opening File!");
     }
 
     private static Class<? extends AbstractParser> findParser(File file) {
@@ -163,33 +131,36 @@ public class ParserFactory {
         throw new UnsupportedOperationException("No parser found for file " + file);
     }
 
-    private static class ParserWithTempFileWrapper implements Parser {
+    private static class IntentWithTempFileParserWrapper extends AbstractParser {
         private AbstractParser mInstance;
-        private File mTempFile;
+        private File mTempDir = null;
 
-        public ParserWithTempFileWrapper(AbstractParser parser, File file) throws Exception {
+        public IntentWithTempFileParserWrapper(AbstractParser parser) throws Exception {
+            super(new Class[]{Intent.class});
             mInstance = parser;
-            mInstance.setSource(file);
-            mTempFile = file;
         }
 
         @Override
-        public void parse() throws IOException {
+        public synchronized void parse() throws IOException {
+            createTempFile();
             mInstance.parse();
         }
 
         @Override
         public int numPages() throws IOException {
+            parse();
             return mInstance.numPages();
         }
 
         @Override
         public InputStream getPage(int num) throws IOException {
+            parse();
             return mInstance.getPage(num);
         }
 
         @Override
         public Map getPageMetaData(int num) throws IOException {
+            parse();
             return mInstance.getPageMetaData(num);
         }
 
@@ -199,9 +170,31 @@ public class ParserFactory {
         }
 
         @Override
+        protected Object getSource() {
+            Object tempSource = mInstance.getSource();
+            if (tempSource != null)
+                return tempSource;
+            return super.getSource();
+        }
+
+        private void createTempFile() throws IOException {
+            if (mInstance.getSource() instanceof File)
+                return;
+
+            mTempDir = Utils.initCacheDirectory("tempfile");
+            Intent intent = (Intent) getSource();
+            Uri uri = uriFromIntent(intent);
+            String filename = uri.getLastPathSegment();
+            File tempFile = new File(mTempDir, filename);
+            InputStream is = MainApplication.getAppContext().getContentResolver().openInputStream(uri);
+            Utils.copyToFile(is, tempFile);
+            mInstance.setSource(tempFile);
+        }
+
+        @Override
         public void destroy() {
             mInstance.destroy();
-            mTempFile.delete();
+            Utils.rmDir(mTempDir);
         }
     }
 
@@ -417,7 +410,7 @@ public class ParserFactory {
             try {
                 bais = new ByteArrayInputStream(Utils.toByteArray(is));
             } catch (Throwable t) {
-                Log.e("","",t);
+                Log.e("", "", t);
                 return mParser.getPage(num);
             }
             try {
@@ -440,20 +433,20 @@ public class ParserFactory {
 
         @Override
         public Map getPageMetaData(int num) throws IOException {
-            Map<String,String> in = mParser.getPageMetaData(num);
-            if (in==null || in.isEmpty())
+            Map<String, String> in = mParser.getPageMetaData(num);
+            if (in == null || in.isEmpty())
                 in = new HashMap<>();
-            Map<String,String> in2 = mPagesMetaData.get(Integer.valueOf(num));
+            Map<String, String> in2 = mPagesMetaData.get(Integer.valueOf(num));
             // nothing to merge, leave early
-            if (in2==null)
+            if (in2 == null)
                 return in;
 
             for (String key : in2.keySet()) {
                 String value2 = String.valueOf(in2.get(key));
                 if (in.containsKey(key))
-                    in.put(key,String.valueOf(in.get(key))+"/"+value2);
+                    in.put(key, String.valueOf(in.get(key)) + "/" + value2);
                 else
-                    in.put(key,value2);
+                    in.put(key, value2);
             }
             return in;
         }
@@ -494,20 +487,20 @@ public class ParserFactory {
 
         @Override
         public Map getPageMetaData(int num) throws IOException {
-            Map<String,String> in = mParser.getPageMetaData(num);
-            if (in==null || in.isEmpty())
+            Map<String, String> in = mParser.getPageMetaData(num);
+            if (in == null || in.isEmpty())
                 in = new HashMap<>();
-            Map<String,String> in2 = mPagesMetaData.get(Integer.valueOf(num));
+            Map<String, String> in2 = mPagesMetaData.get(Integer.valueOf(num));
             // nothing to merge, leave early
-            if (in2==null)
+            if (in2 == null)
                 return in;
 
             for (String key : in2.keySet()) {
                 String value2 = String.valueOf(in2.get(key));
                 if (in.containsKey(key))
-                    in.put(key,String.valueOf(in.get(key))+"/"+value2);
+                    in.put(key, String.valueOf(in.get(key)) + "/" + value2);
                 else
-                    in.put(key,value2);
+                    in.put(key, value2);
             }
             return in;
         }
@@ -612,7 +605,7 @@ public class ParserFactory {
                         if (!Utils.isJP2Stream(bis))
                             continue;
 
-                        Bitmap bitmap = decodeJP2(bis,num);
+                        Bitmap bitmap = decodeJP2(bis, num);
                         File file = new File(mCacheDir, String.valueOf(num));
                         FileOutputStream fos = new FileOutputStream(file);
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 100 /*png is lossless*/, fos);
