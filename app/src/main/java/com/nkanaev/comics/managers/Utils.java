@@ -225,11 +225,18 @@ public final class Utils {
         return 1024 * 1024 * memoryClass / percentage;
     }
 
-    public static File getCoverCacheFile(String identifier, String extension) {
+    private static File getCacheFolder(){
         Context context = MainApplication.getAppContext();
         File dir = context.getExternalCacheDir();
         if (dir == null)
             dir = context.getCacheDir();
+        if (dir==null)
+            throw new RuntimeException("Couldn't find cache dir!");
+        return dir;
+    }
+
+    public static File getCoverCacheFile(String identifier, String extension) {
+        File dir = getCacheFolder();
         return new File(dir, "cover-"+Utils.MD5(identifier)+(extension!=null?"."+extension:""));
     }
 
@@ -297,9 +304,7 @@ public final class Utils {
     }
 
     public static File initCacheDirectory(String prefix) {
-        File appCacheDir = MainApplication.getAppContext().getExternalCacheDir();
-        if (appCacheDir == null)
-            appCacheDir = MainApplication.getAppContext().getCacheDir();
+        File appCacheDir = getCacheFolder();
         // create a unique id
         String uuid = UUID.randomUUID().toString();
         prefix = (prefix == null || "".equals(prefix)) ? "" : prefix + "-";
@@ -308,6 +313,22 @@ public final class Utils {
             boolean success = mCacheDir.mkdirs();
         }
         return mCacheDir;
+    }
+
+    // remove probably stale folders, exempt files (covers)
+    public static void cleanCacheDir(){
+        new Thread(){
+            @Override
+            public void run() {
+                File cacheDir = getCacheFolder();
+                File[] files = cacheDir.listFiles();
+                if (files!=null)
+                    for (File f: files) {
+                        if (f.isDirectory())
+                            rmDir(f,true);
+                    }
+            }
+        }.run();
     }
 
     public static void rmDir(File dir) {
