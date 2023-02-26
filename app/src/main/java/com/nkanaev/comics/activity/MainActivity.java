@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity
 
         // prevent rescan when view is rotated
         if (!mInitialLibraryScanRanAlready) {
+            Utils.cleanCacheDir();
             Scanner.getInstance().scanLibrary();
             mInitialLibraryScanRanAlready = true;
         }
