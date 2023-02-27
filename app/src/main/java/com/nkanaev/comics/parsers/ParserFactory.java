@@ -31,7 +31,12 @@ public class ParserFactory {
         try {
             String key = o.toString();
             // use cache
-            if (mParserCache.containsKey(key)) return mParserCache.get(key);
+            if (mParserCache.containsKey(key)) {
+                Parser p = mParserCache.get(key);
+                // ignore/recreate zero page parsers, probably erroneous
+                if (p.numPages() > 0)
+                    return p;
+            }
 
             Parser p;
             if (o instanceof String)
@@ -80,6 +85,7 @@ public class ParserFactory {
         Uri uri = AbstractParser.uriFromIntent(intent);
         if (uri == null)
             throw new IllegalArgumentException("Intent without url!");
+
         // handle file:// uris directly
         if ("file".equalsIgnoreCase(uri.getScheme())) {
             return create(new File(uri.getPath()));
@@ -184,8 +190,18 @@ public class ParserFactory {
             mTempDir = Utils.initCacheDirectory("tempfile");
             Intent intent = (Intent) getSource();
             Uri uri = uriFromIntent(intent);
-            String filename = uri.getLastPathSegment();
-            File tempFile = new File(mTempDir, filename);
+            // treat last path segment as possible uri (e.g. google files app)
+            String filename = Uri.decode(uri.getLastPathSegment());
+            if (filename!=null) {
+                Uri uri2 = Uri.parse(filename);
+                if (uri2 != null && uri2.getPath() != null)
+                    filename = uri2.getLastPathSegment();
+            } else {
+                // last resort, should never happen actually
+                // may probably fail because of missing file extension
+                filename = "tempfile";
+            }
+            File tempFile = new File(mTempDir, Uri.encode(filename));
             InputStream is = MainApplication.getAppContext().getContentResolver().openInputStream(uri);
             Utils.copyToFile(is, tempFile);
             mInstance.setSource(tempFile);

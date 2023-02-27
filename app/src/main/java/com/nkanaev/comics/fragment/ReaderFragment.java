@@ -150,6 +150,14 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             if (mode == Mode.MODE_INTENT) {
                 Intent intent = (Intent) bundle.getParcelable(PARAM_HANDLER);
                 mUri = intent.getData();
+                // google files app provides an url encoded file:// url as path,
+                // try it, prevents the need to copy the file
+                Uri pathUri = Uri.parse(mUri.getLastPathSegment());
+                if (pathUri!=null && "file".equalsIgnoreCase(pathUri.getScheme())) {
+                    mUri = pathUri;
+                    intent.setData(mUri);
+                }
+
                 String type = intent.getType();
                 Log.i("URI", mUri.toString());
 
