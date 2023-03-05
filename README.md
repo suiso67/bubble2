@@ -7,7 +7,9 @@ Upgraded dependencies, enhancements as felt needed.
 
 ## Download
 
-APKs avail on sf.net https://sourceforge.net/projects/bubble2/files/
+APKs available on sf.net https://sourceforge.net/projects/bubble2/files/ <br/>
+or
+use the [F-Droid](https://f-droid.org/) repository 
 
 ## Features
 
