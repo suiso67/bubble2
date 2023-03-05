@@ -11,7 +11,7 @@ APKs available on sf.net https://sourceforge.net/projects/bubble2/files/
 
 or
 
-[add it to F-Droid](https://f-droid.org/en/tutorials/add-repo/) using the repository link https://bubble2.sourceforge.io/repo/
+[add it to F-Droid](https://f-droid.org/en/tutorials/add-repo/) using the repository link https://bubble2.soldin.de/
 
 ## Features
 
