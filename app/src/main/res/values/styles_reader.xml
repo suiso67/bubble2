@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="ReaderTheme" parent="AppTheme">
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/darkest_trans80</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">@color/darkest_trans80</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
         <item name="colorPrimaryDark">@color/darkest_semitransparent</item>
+        <item name="colorPrimary">@color/darkest_semitransparent</item>
         <item name="android:textColor">@color/lightest</item>
         <item name="alertDialogTheme">@style/AppCompatAlertDialogStyle</item>
     </style>
@@ -13,7 +17,7 @@
         <item name="colorControlHighlight">@color/ripple_material_dark</item>
     </style>
 
-    <style name="MyDarkToolbarTheme" parent="Widget.AppCompat.ActionBar">
+    <style name="MyDarkToolbarTheme" parent="ReaderTheme">
         <item name="android:textColorPrimary">@color/lightest</item>
         <item name="android:textColorSecondary">@color/lightest</item>
         <item name="android:colorBackground">@color/darkest</item>
