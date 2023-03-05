@@ -10,8 +10,8 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.*;
@@ -19,7 +19,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
@@ -153,7 +152,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 // google files app provides an url encoded file:// url as path,
                 // try it, prevents the need to copy the file
                 Uri pathUri = Uri.parse(mUri.getLastPathSegment());
-                if (pathUri!=null && "file".equalsIgnoreCase(pathUri.getScheme())) {
+                if (pathUri != null && "file".equalsIgnoreCase(pathUri.getScheme())) {
                     mUri = pathUri;
                     intent.setData(mUri);
                 }
@@ -356,11 +355,11 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         }
 
         String title = "";
-        if (mFile!=null)
+        if (mFile != null)
             title += mFile.getName();
         else if (mUri != null)
             title += mUri.getLastPathSegment();
-        ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText((title.isEmpty()?"":title+" ") + "[" + mParser.getType() + "]");
+        ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText((title.isEmpty() ? "" : title + " ") + "[" + mParser.getType() + "]");
 
         updateSeekBar();
 
@@ -764,15 +763,15 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         if (shown) {
             mPageInfoButton.setVisibility(View.GONE);
             mPageInfoTextView.setVisibility(View.VISIBLE);
-            if (mFile!=null)
-                ((ReaderActivity)getActivity()).setSubTitle(mFile.getAbsolutePath());
-            else if (mUri!=null) {
-                ((ReaderActivity)getActivity()).setSubTitle(mUri.toString());
+            if (mFile != null)
+                ((ReaderActivity) getActivity()).setSubTitle(mFile.getAbsolutePath());
+            else if (mUri != null) {
+                ((ReaderActivity) getActivity()).setSubTitle(mUri.toString());
             }
         } else {
             mPageInfoTextView.setVisibility(View.GONE);
             mPageInfoButton.setVisibility(View.VISIBLE);
-            ((ReaderActivity)getActivity()).setSubTitle("");
+            ((ReaderActivity) getActivity()).setSubTitle("");
         }
         mIsPageInfoShown = shown;
         updatePageImageInfo();
@@ -780,9 +779,15 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
     private void setFullscreen(boolean fullscreen) {
         ActionBar actionBar = getActionBar();
+        // the new way (setting flags is deprecated)
+        // blend in/out looks worse on Android 12 tho
+//        WindowInsetsControllerCompat wic = new WindowInsetsControllerCompat(getActivity().getWindow(), mViewPager);
+//        WindowCompat.setDecorFitsSystemWindows(getActivity().getWindow(), false);
 
         if (fullscreen) {
             if (actionBar != null) actionBar.hide();
+
+//            wic.hide(WindowInsetsCompat.Type.systemBars());
 
             int flag = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -794,6 +799,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
             mViewPager.setSystemUiVisibility(flag);
 
+            // replaced by value in ReaderTheme style
+            /*
             // allow full screen over display cutouts/holes (since Android 9)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 Window w = getActivity().getWindow();
@@ -801,27 +808,36 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
                 w.setAttributes(layoutParams);
             }
+            */
 
             mPageNavLayout.setVisibility(View.INVISIBLE);
         } else {
             if (actionBar != null) actionBar.show();
 
+//            wic.show(WindowInsetsCompat.Type.systemBars());
+
             int flag = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
             if (Utils.isKitKatOrLater()) {
                 flag |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+                flag |= View.SYSTEM_UI_FLAG_VISIBLE;
             }
             mViewPager.setSystemUiVisibility(flag);
 
             mPageNavLayout.setVisibility(View.VISIBLE);
 
-            // status bar & navigation bar background won't show in some cases
+            // WORKAROUND:
+            // status bar & navigation bar background won't show, be clear, at times
+            // reproducible on Android 9 (Lineage 16)
             if (Utils.isLollipopOrLater()) {
-                Window w = getActivity().getWindow();
-                w.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                @ColorInt int bg = getResources().getColor(R.color.darkest_semitransparent);
-                w.setNavigationBarColor(bg);
-                w.setStatusBarColor(bg);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Window w = getActivity().getWindow();
+                        w.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                        w.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                    }
+                }, 100);
             }
         }
 
