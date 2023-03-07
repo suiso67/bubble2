@@ -16,7 +16,7 @@ def getVersionName = { ->
         commandLine "git", "describe", "--tags", "--long"
         standardOutput = stdout
     }
-    return stdout.toString().trim()
+    return stdout.toString('UTF-8').trim()
 }
 
 repositories {
