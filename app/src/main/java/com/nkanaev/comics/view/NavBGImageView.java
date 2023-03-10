@@ -223,6 +223,9 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
             catch (Exception e) {
                 Log.e("bubble2","error",e);
             }
+            finally {
+                Utils.close(mBitmap);
+            }
         }
     }
 }
