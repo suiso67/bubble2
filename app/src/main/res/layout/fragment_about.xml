@@ -80,10 +80,10 @@
                     <TextView
                             android:id="@+id/aboutVersion"
                             android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:ellipsize="end"
-                            android:gravity="center_horizontal"
+                            android:layout_gravity="center_horizontal"
                             android:textSize="@dimen/about_text_small"
                             android:textColor="#666"
                             android:singleLine="true"
@@ -91,9 +91,9 @@
 
                     <TextView
                             android:id="@+id/aboutLink"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:gravity="center_horizontal"
+                            android:layout_gravity="center_horizontal"
                             android:layout_weight="1"
                             android:ellipsize="end"
                             android:textSize="@dimen/about_text_small"
@@ -104,11 +104,11 @@
 
                     <TextView
                             android:id="@+id/aboutLicense"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:ellipsize="end"
-                            android:gravity="center_horizontal"
+                            android:layout_gravity="center_horizontal"
                             android:textSize="@dimen/about_text_small"
                             android:textStyle="normal"
                             android:textColor="@color/grey40"
