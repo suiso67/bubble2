@@ -42,6 +42,10 @@ android {
         versionName getVersionName()
         versionCode getVersionCode()
         setProperty("archivesBaseName", applicationId + "-v" + versionCode + "(" + versionName + ")")
+
+        manifestPlaceholders = [
+                appIcon: "@drawable/icon_squared"
+        ]
     }
 
     compileOptions {
@@ -53,6 +57,9 @@ android {
         debug {
             applicationIdSuffix '.debug'
             versionNameSuffix '-DEBUG'
+            manifestPlaceholders = [
+                    appIcon: "@drawable/icon_squared_debug"
+            ]
         }
     }
     packagingOptions {
@@ -63,7 +70,7 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
     // for multiple dex files on pre-Android 5 devices
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.startup:startup-runtime:1.1.1'
@@ -71,8 +78,8 @@ dependencies {
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.fragment:fragment:1.5.5'
-    implementation 'com.google.android.material:material:1.7.0'
-    implementation "androidx.constraintlayout:constraintlayout:2.2.0-alpha05"
+    implementation 'com.google.android.material:material:1.8.0'
+    implementation "androidx.constraintlayout:constraintlayout:2.2.0-alpha07"
     implementation 'com.github.junrar:junrar:7.5.3'
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'org.apache.commons:commons-compress:1.22'
