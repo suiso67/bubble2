@@ -294,6 +294,8 @@ public final class Utils {
             Method m;
             if (Parser.class.isAssignableFrom(c)) {
                 m = c.getMethod("destroy");
+            } else if (Bitmap.class.isAssignableFrom(c)) {
+                m = c.getMethod("recycle");
             } else {
                 m = c.getMethod("close");
             }
