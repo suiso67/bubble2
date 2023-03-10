@@ -20,24 +20,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ParserFactory {
-    //    private static Context context = null;
-    private static HashMap<String, Parser> mParserCache = new HashMap();
 
-    /*   public static void setContext(Context ctx) {
-           context = ctx;
-       }
-   */
     public static Parser create(Object o) throws Exception {
         try {
-            String key = o.toString();
-            // use cache
-            if (mParserCache.containsKey(key)) {
-                Parser p = mParserCache.get(key);
-                // ignore/recreate zero page parsers, probably erroneous
-                if (p.numPages() > 0)
-                    return p;
-            }
-
             Parser p;
             if (o instanceof String)
                 p = create(new File((String) o));
@@ -57,7 +42,7 @@ public class ParserFactory {
                 p = new CachingPageMetaDataParserWrapper(p);
                 // wrap in JP2 recoder
                 p = new CachingDecodeJP2ParserWrapper(p);
-                mParserCache.put(key, p);
+
             }
             return p;
         } catch (Exception e) {
@@ -138,53 +123,53 @@ public class ParserFactory {
     }
 
     private static class IntentWithTempFileParserWrapper extends AbstractParser {
-        private AbstractParser mInstance;
+        private AbstractParser mParser;
         private File mTempDir = null;
 
         public IntentWithTempFileParserWrapper(AbstractParser parser) throws Exception {
             super(new Class[]{Intent.class});
-            mInstance = parser;
+            mParser = parser;
         }
 
         @Override
         public synchronized void parse() throws IOException {
             createTempFile();
-            mInstance.parse();
+            mParser.parse();
         }
 
         @Override
         public int numPages() throws IOException {
             parse();
-            return mInstance.numPages();
+            return mParser.numPages();
         }
 
         @Override
         public InputStream getPage(int num) throws IOException {
             parse();
-            return mInstance.getPage(num);
+            return mParser.getPage(num);
         }
 
         @Override
         public Map getPageMetaData(int num) throws IOException {
             parse();
-            return mInstance.getPageMetaData(num);
+            return mParser.getPageMetaData(num);
         }
 
         @Override
         public String getType() {
-            return mInstance.getType();
+            return mParser.getType();
         }
 
         @Override
         protected Object getSource() {
-            Object tempSource = mInstance.getSource();
+            Object tempSource = mParser.getSource();
             if (tempSource != null)
                 return tempSource;
             return super.getSource();
         }
 
         private void createTempFile() throws IOException {
-            if (mInstance.getSource() instanceof File)
+            if (mParser.getSource() instanceof File)
                 return;
 
             mTempDir = Utils.initCacheDirectory("tempfile");
@@ -192,7 +177,7 @@ public class ParserFactory {
             Uri uri = uriFromIntent(intent);
             // treat last path segment as possible uri (e.g. google files app)
             String filename = Uri.decode(uri.getLastPathSegment());
-            if (filename!=null) {
+            if (filename != null) {
                 Uri uri2 = Uri.parse(filename);
                 if (uri2 != null && uri2.getPath() != null)
                     filename = uri2.getLastPathSegment();
@@ -204,12 +189,14 @@ public class ParserFactory {
             File tempFile = new File(mTempDir, Uri.encode(filename));
             InputStream is = MainApplication.getAppContext().getContentResolver().openInputStream(uri);
             Utils.copyToFile(is, tempFile);
-            mInstance.setSource(tempFile);
+            mParser.setSource(tempFile);
         }
 
         @Override
         public void destroy() {
-            mInstance.destroy();
+            // destroy wrapped parser
+            Utils.close(mParser);
+            mParser = null;
             Utils.rmDir(mTempDir);
         }
     }
@@ -394,12 +381,14 @@ public class ParserFactory {
 
         @Override
         public void destroy() {
-            mParser.destroy();
+            // destroy wrapped parser
+            Utils.close(mParser);
         }
     }
 
     private static class CachingPageMetaDataParserWrapper implements Parser {
         private Parser mParser;
+        private boolean mFetchMeta = false;
         private HashMap<Integer, Map> mPagesMetaData = new HashMap();
 
         public CachingPageMetaDataParserWrapper(Parser parser) {
@@ -419,44 +408,51 @@ public class ParserFactory {
         // synchronized so we do not access te same file channel concurrently
         @Override
         public synchronized InputStream getPage(int num) throws IOException {
-            InputStream is = mParser.getPage(num);
+            if (mFetchMeta)
+                initPageMetaData(num);
+
+            return mParser.getPage(num);
+        }
+
+        private Map initPageMetaData(int num) throws IOException {
             Integer key = Integer.valueOf(num);
-            ByteArrayInputStream bais = null;
-            // bail out if copying to bytearray fails (lack of memory?)
+            Map pageData = new HashMap();
+            InputStream is = null;
             try {
-                bais = new ByteArrayInputStream(Utils.toByteArray(is));
-            } catch (Throwable t) {
-                Log.e("", "", t);
-                return mParser.getPage(num);
-            }
-            try {
+                is = mParser.getPage(num);
                 final BitmapFactory.Options options = new BitmapFactory.Options();
                 // read bitmap metadata w/o creating another in memory copy
                 options.inJustDecodeBounds = true;
-                BitmapFactory.decodeStream(bais, null, options);
-                Map pageData = new HashMap();
+                BitmapFactory.decodeStream(is, null, options);
+
                 if (options.outMimeType != null) {
                     pageData.put(Parser.PAGEMETADATA_KEY_MIME, options.outMimeType);
                     pageData.put(Parser.PAGEMETADATA_KEY_WIDTH, options.outWidth);
                     pageData.put(Parser.PAGEMETADATA_KEY_HEIGHT, options.outHeight);
-                    mPagesMetaData.put(key, pageData);
                 }
             } finally {
-                bais.reset();
-                return bais;
+                Utils.close(is);
             }
+            mPagesMetaData.put(key, pageData);
+            return pageData;
         }
 
         @Override
         public Map getPageMetaData(int num) throws IOException {
+            mFetchMeta = true;
+
             Map<String, String> in = mParser.getPageMetaData(num);
             if (in == null || in.isEmpty())
                 in = new HashMap<>();
             Map<String, String> in2 = mPagesMetaData.get(Integer.valueOf(num));
-            // nothing to merge, leave early
+            // init if still missing (just enabled?)
             if (in2 == null)
+                in2 = initPageMetaData(num);
+            // nothing to merge, leave early
+            if (in2.isEmpty())
                 return in;
 
+            // merge same key values with slash
             for (String key : in2.keySet()) {
                 String value2 = String.valueOf(in2.get(key));
                 if (in.containsKey(key))
@@ -474,13 +470,17 @@ public class ParserFactory {
 
         @Override
         public void destroy() {
-            mParser.destroy();
+            mPagesMetaData.clear();
+            // destroy wrapped parser
+            Utils.close(mParser);
         }
     }
 
     private static class CachingDecodeJP2ParserWrapper implements Parser {
         private Parser mParser;
         private HashMap<Integer, Map> mPagesMetaData = new HashMap();
+        private boolean mCachingEnabled = false;
+        private CacheWriter mCacheWriter = null;
 
         public CachingDecodeJP2ParserWrapper(Parser parser) {
             mParser = parser;
@@ -522,14 +522,16 @@ public class ParserFactory {
         }
 
         private InputStream recodeAndCache(int num) throws IOException {
-            // consult cache if avail
+            // don't cache cover only (num=0) requests
+            if (!mCachingEnabled && num != 0)
+                mCachingEnabled = true;
+
             RunnerStatus status = mRunnerStatus.get();
-            Log.i("Runner", "" + status);
-            if (mCachedIndex != null && mCachedIndex.contains(num)) {
-                File cacheFile = new File(mCacheDir, String.valueOf(num));
-                if (cacheFile.canRead())
-                    return new FileInputStream(cacheFile);
-            }
+            Log.d(getClass().getCanonicalName(), "CacheRunner:" + status + " Num:" + num);
+
+            // consult cache, return if avail
+            InputStream cachedStream = cachedPageStream(num);
+            if (cachedStream != null) return cachedStream;
 
             InputStream stream = mParser.getPage(num);
 
@@ -539,47 +541,139 @@ public class ParserFactory {
                 return bis;
 
             // initialize cache only once, serve uncached until filled
-            if (num != 0 &&
+            if (mCachingEnabled &&
                     status != RunnerStatus.FINISHED &&
-                    status != RunnerStatus.RUNNING &&
-                    mCacheDir == null)
-                new Thread(new CacheWriter(num)).start();
+                    status != RunnerStatus.RUNNING) {
+                mCacheWriter = new CacheWriter(num);
+                new Thread(mCacheWriter).start();
+            } else if (status == RunnerStatus.RUNNING && mCacheWriter != null) {
+                mCacheWriter.reset(num);
+            }
+
+            InputStream result = decodeJP2(bis, num, true);
 
             // decode to memory
-            Bitmap bitmap = decodeJP2(bis, num);
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 0 /*png is lossless*/, bos);
-            byte[] byteArray = bos.toByteArray();
-            Utils.close(bos);
-            bitmap.recycle();
-
-            return new ByteArrayInputStream(byteArray);
+            return result;
         }
 
-        private Bitmap decodeJP2(InputStream is, int num) {
-            Bitmap bitmap = new JP2Decoder(is).decode();
-            Utils.close(is);
+        // synchronized to allow only one decoding at all times
+        // prevents app restarts because of memory outage
+        private synchronized InputStream decodeJP2(InputStream is, int num, boolean returnStream) {
+            InputStream cacheStream = cachedPageStream(num);
+            if (cacheStream != null) return cacheStream;
 
-            Map pageData = new HashMap();
-            pageData.put(Parser.PAGEMETADATA_KEY_MIME, "image/x-jp2");
-            pageData.put(Parser.PAGEMETADATA_KEY_WIDTH, bitmap.getWidth());
-            pageData.put(Parser.PAGEMETADATA_KEY_HEIGHT, bitmap.getHeight());
-            mPagesMetaData.put(Integer.valueOf(num), pageData);
+            Bitmap source = null, bitmap = null, scaled = null;
+            ByteArrayOutputStream bos = null;
+            InputStream result = null;
+            try {
+                source = new JP2Decoder(is).decode();
+                if (source == null) return null;
 
+                Map pageData = new HashMap();
+                pageData.put(Parser.PAGEMETADATA_KEY_MIME, "image/x-jp2");
+                pageData.put(Parser.PAGEMETADATA_KEY_WIDTH, source.getWidth());
+                pageData.put(Parser.PAGEMETADATA_KEY_HEIGHT, source.getHeight());
+                mPagesMetaData.put(Integer.valueOf(num), pageData);
 
-            // mDblTapScale in PageImageView is 1.5 currently, so set this as our limit
-            DisplayMetrics displayMetrics = MainApplication.getAppContext().getResources().getDisplayMetrics();
-            int max = Math.round(1.0f * Math.max(displayMetrics.widthPixels, displayMetrics.heightPixels));
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Bitmap.Config.RGB_565;
-            float scale = max / (float) Math.max(bitmap.getHeight(), bitmap.getWidth());
-            if (scale < 1) {
-                Bitmap scaled = Bitmap.createScaledBitmap(bitmap, Math.round(scale * bitmap.getWidth()), Math.round(scale * bitmap.getHeight()), true);
-                bitmap.recycle();
-                return scaled;
-                //bitmap.reconfigure(Math.round(scale * bitmap.getWidth()), Math.round(scale * bitmap.getHeight()), Bitmap.Config.RGB_565);
+                // mDblTapScale in PageImageView is 1.5 currently, so set this as our limit
+                DisplayMetrics displayMetrics = MainApplication.getAppContext().getResources().getDisplayMetrics();
+                int max = Math.round(1.0f * Math.max(displayMetrics.widthPixels, displayMetrics.heightPixels));
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                //options.inPreferredConfig = Bitmap.Config.RGB_565;
+                float scale = max / (float) Math.max(source.getHeight(), source.getWidth());
+                if (scale < 1) {
+                    scaled = Bitmap.createScaledBitmap(source, Math.round(scale * source.getWidth()), Math.round(scale * source.getHeight()), true);
+                    source.recycle();
+                    bitmap = scaled;
+                    //bitmap.reconfigure(Math.round(scale * bitmap.getWidth()), Math.round(scale * bitmap.getHeight()), Bitmap.Config.RGB_565);
+                } else {
+                    bitmap = source;
+                }
+
+                // "always" cache the result to file system
+                if (mCachingEnabled)
+                    cachePage(bitmap, num);
+                // try again, skips the need to png-ize memory buffer
+                if ((cacheStream = cachedPageStream(num)) != null)
+                    return cacheStream;
+
+                // just in case all the above failed we will return the bitmap from memory
+                if (returnStream) {
+                    bos = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 0 /*png is lossless*/, bos);
+                    byte[] byteArray = bos.toByteArray();
+                    result = new ByteArrayInputStream(byteArray);
+                }
+            } finally {
+                Utils.close(is);
+                Utils.close(bos);
+                Utils.close(source);
+                Utils.close(bitmap);
+                Utils.close(scaled);
             }
-            return bitmap;
+
+            return result;
+        }
+
+        private synchronized void cachePage(Bitmap bitmap, int num) {
+            // init late
+            if (mCachedIndex == null)
+                mCachedIndex = new ConcurrentLinkedQueue<Integer>();
+            // skip existing
+            if (bitmap == null || mCachedIndex.contains(num))
+                return;
+
+            String fileName = nameCacheFile(num);
+            Log.d(getClass().getCanonicalName(), "Caching -> " + fileName);
+
+            FileOutputStream fos = null;
+            try {
+                if (mCacheDir == null)
+                    mCacheDir = Utils.initCacheDirectory("jp2");
+                if (mCacheDir == null || !mCacheDir.exists())
+                    throw new IOException("CacheDir does not exist.");
+
+                File file = new File(mCacheDir, fileName);
+                fos = new FileOutputStream(file);
+                // png is lossless, but pretty big, jpeg 95 is ruffly 1/4 the size
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 95, fos);
+
+                // reached here? memorize success
+                mCachedIndex.add(num);
+            } catch (Exception e) {
+                Log.e(getClass().getCanonicalName(), "cachePage()", e);
+            } finally {
+                Utils.close(fos);
+            }
+        }
+
+        private String nameCacheFile(int num) {
+            return String.valueOf(num) + ".jpg";
+        }
+
+        private File cachedPageFile(int num) {
+            if (mCacheDir == null ||
+                    mCachedIndex == null ||
+                    !mCachedIndex.contains(num)) return null;
+
+            File file = new File(mCacheDir, nameCacheFile(num));
+            if (file.canRead())
+                return file;
+
+            return null;
+        }
+
+        private InputStream cachedPageStream(int num) {
+            File cacheFile = cachedPageFile(num);
+            if (cacheFile != null) {
+                try {
+                    return new FileInputStream(cacheFile);
+                } catch (Exception e) {
+                    Log.e(getClass().getCanonicalName(),
+                            "Supposedly existing cache file missing.", e);
+                }
+            }
+            return null;
         }
 
         public static enum RunnerStatus {
@@ -592,28 +686,37 @@ public class ParserFactory {
         private File mCacheDir = null;
 
         private class CacheWriter implements Runnable {
-            private int mOffset = 0;
+            private int mOffset, newOffset;
 
             public CacheWriter(int start) {
+                newOffset = start;
                 mOffset = start;
+            }
+
+            public void reset(int other) {
+                if (Math.abs(other - mOffset) <= 4)
+                    return;
+                // relocate loop
+                newOffset = other;
             }
 
             @Override
             public void run() {
                 mRunnerStatus.set(RunnerStatus.RUNNING);
                 try {
-                    if (mCacheDir == null)
-                        mCacheDir = Utils.initCacheDirectory("jp2");
-                    if (mCacheDir == null || !mCacheDir.exists())
-                        throw new IOException("CacheDir does not exist.");
-
                     int max = mParser.numPages();
                     for (int i = 0; i < max && mRunnerStatus.get() == RunnerStatus.RUNNING; i++) {
+                        // offset changed, reset loop
+                        if (newOffset != mOffset) {
+                            i = 0;
+                            mOffset = newOffset;
+                        }
                         int num = mOffset + i;
+
                         if (num >= max)
                             num = num - max;
 
-                        Log.i("Caching", "" + num);
+                        Log.d(getClass().getCanonicalName(), "Caching Loop -> " + num);
 
                         InputStream stream = mParser.getPage(num);
                         BufferedInputStream bis = new BufferedInputStream(stream);
@@ -621,22 +724,13 @@ public class ParserFactory {
                         if (!Utils.isJP2Stream(bis))
                             continue;
 
-                        Bitmap bitmap = decodeJP2(bis, num);
-                        File file = new File(mCacheDir, String.valueOf(num));
-                        FileOutputStream fos = new FileOutputStream(file);
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100 /*png is lossless*/, fos);
-                        Utils.close(fos);
-                        bitmap.recycle();
-
-                        // memorize
-                        if (mCachedIndex == null)
-                            mCachedIndex = new ConcurrentLinkedQueue<Integer>();
-                        mCachedIndex.add(num);
+                        decodeJP2(bis, num, false);
                     }
-                } catch (Exception e) {
-                    Log.e("ParserFactory#433", "JP2CacheRunner", e);
-                } finally {
                     mRunnerStatus.compareAndSet(RunnerStatus.RUNNING, RunnerStatus.FINISHED);
+                } catch (Exception e) {
+                    Log.e(getClass().getCanonicalName(), "JP2CacheRunner", e);
+                } finally {
+                    mRunnerStatus.compareAndSet(RunnerStatus.RUNNING, RunnerStatus.STOP);
                 }
             }
         }
@@ -663,7 +757,7 @@ public class ParserFactory {
             mCachedIndex = null;
 
             // destroy wrapped parser
-            mParser.destroy();
+            Utils.close(mParser);
         }
     }
 }
