@@ -76,7 +76,7 @@ public class LocalCoverHandler extends RequestHandler {
                 folder.mkdirs();
 
             outputStream = new FileOutputStream(coverFile);
-            boolean success = result.compress(Bitmap.CompressFormat.JPEG, 95, outputStream);
+            boolean success = result.compress(Bitmap.CompressFormat.JPEG, 85, outputStream);
             if (!success)
                 coverFile.delete();
 
@@ -88,8 +88,7 @@ public class LocalCoverHandler extends RequestHandler {
             throw (IOException) e;
         } finally {
             data = null;
-            if (parser != null)
-                parser.destroy();
+            Utils.close(parser);
             Utils.close(bis);
             Utils.close(outputStream);
         }
