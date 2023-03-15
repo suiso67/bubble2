@@ -8,10 +8,14 @@ import android.content.pm.ApplicationInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Insets;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.WindowInsets;
+import android.view.WindowManager;
+import android.view.WindowMetrics;
 import androidx.annotation.AttrRes;
 import androidx.annotation.ColorInt;
 import androidx.annotation.StyleRes;
@@ -164,8 +168,30 @@ public final class Utils {
     }
 
     public static int getDeviceWidth(Context context) {
-        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-        int value = Math.round(displayMetrics.widthPixels / displayMetrics.density);
+        DisplayMetrics displayMetrics = MainApplication.getAppContext().getResources().getDisplayMetrics();
+        WindowManager windowManager = (WindowManager) MainApplication.getAppContext().getSystemService(Context.WINDOW_SERVICE);
+        // this gives wrong scaledDensity, also it is nonsensical,
+        // why should the current screen be the default screen?
+        //DisplayMetrics displayMetrics = new DisplayMetrics();
+        //windowManager.getDefaultDisplay().getMetrics(displayMetrics);
+
+        // the old way
+        int width = displayMetrics.widthPixels;
+        // using scaledDensity, because on PocoX4Pro5G 'density=2.75'
+        // but 'scaledDensity=2.25' which is the accurate value
+        float density = displayMetrics.scaledDensity;
+        // the new way
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowMetrics windowMetrics = windowManager.getCurrentWindowMetrics();
+            Insets insets = windowMetrics.getWindowInsets()
+                    .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars());
+            if (Build.VERSION.SDK_INT >= 34) {
+                //density = windowMetrics.getDensity();
+            }
+            width = Math.abs(windowMetrics.getBounds().width()) - insets.left - insets.right;
+        }
+
+        int value = Math.round(width / density);
         return value;
     }
 
