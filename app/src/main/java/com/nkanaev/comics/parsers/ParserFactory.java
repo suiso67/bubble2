@@ -556,6 +556,14 @@ public class ParserFactory {
             return result;
         }
 
+        private static synchronized Bitmap _decodeJP2(InputStream is){
+            try {
+                return new JP2Decoder(is).decode();
+            }finally {
+                Utils.close(is);
+            }
+        }
+
         // synchronized to allow only one decoding at all times
         // prevents app restarts because of memory outage
         private synchronized InputStream decodeJP2(InputStream is, int num, boolean returnStream) {
@@ -566,7 +574,7 @@ public class ParserFactory {
             ByteArrayOutputStream bos = null;
             InputStream result = null;
             try {
-                source = new JP2Decoder(is).decode();
+                source = _decodeJP2(is);
                 if (source == null) return null;
 
                 Map pageData = new HashMap();
