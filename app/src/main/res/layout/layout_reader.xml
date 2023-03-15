@@ -58,7 +58,7 @@
 
                             android:maxLines="1"
                             android:ellipsize="end"
-                            android:textSize="@dimen/card_text"
+                            android:textSize="18sp"
                             android:text="1222/23003"/>
 
                     <androidx.constraintlayout.widget.Barrier
