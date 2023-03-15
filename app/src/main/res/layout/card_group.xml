@@ -2,29 +2,30 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:cardview="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     cardview:cardCornerRadius="2dp"
     cardview:cardElevation="2dp"
     cardview:cardBackgroundColor="@color/lightest">
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@color/lightest">
+            android:layout_height="wrap_content">
         <com.nkanaev.comics.view.GroupImageView
                 android:id="@+id/card_group_imageview"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintDimensionRatio="1:1"
                 android:visibility="visible"/>
-
         <TextView
                 android:id="@+id/comic_group_folder"
                 android:layout_width="match_parent"
-                android:layout_height="110dp"
-                android:padding="@dimen/card_padding"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:padding="8dp"
                 android:maxLines="5"
-                android:layout_weight="1"
-                android:textSize="@dimen/card_text"/>
-    </LinearLayout>
+                android:background="@drawable/gradient"
+                style="@style/CardTitle"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

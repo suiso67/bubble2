@@ -2,40 +2,53 @@
 <androidx.cardview.widget.CardView
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:cardview="http://schemas.android.com/apk/res-auto"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clickable="true"
+        android:focusable="true"
         android:foreground="?android:attr/selectableItemBackground"
         cardview:cardCornerRadius="2dp"
-        cardview:cardElevation="2dp"
-        cardview:cardBackgroundColor="@color/lightest">
-    <LinearLayout
-            android:id="@+id/comicLayout"
+        cardview:cardElevation="2dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@color/lightest">
+            android:layout_height="wrap_content">
         <com.nkanaev.comics.view.CoverImageView
                 android:id="@+id/comicImageView"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"/>
-        <TextView
-                android:id="@+id/comicTitleTextView"
+                android:layout_height="0dp"
+                android:scaleType="fitStart"
+                app:layout_constraintTop_toTopOf="parent"/>
+        <LinearLayout
+                android:id="@+id/comicLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingLeft="@dimen/card_padding"
-                android:paddingRight="@dimen/card_padding"
-                android:paddingTop="@dimen/card_padding"
-                android:maxLines="6"
-                android:textSize="@dimen/card_text"/>
-        <TextView
-                android:id="@+id/comicPagerTextView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="@dimen/card_padding"
-                android:textStyle="bold"
-                android:singleLine="true"
-                android:gravity="bottom|start"
-                android:textSize="@dimen/card_subtext"/>
-    </LinearLayout>
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:orientation="vertical"
+                android:background="@drawable/gradient">
+            <TextView
+                    android:id="@+id/comicTitleTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="1dp"
+                    android:maxLines="6"
+                    android:text="Comic title\nmore\nmore\neven more effing text"
+                    style="@style/CardTitle"/>
+            <TextView
+                    android:id="@+id/comicPagerTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:paddingTop="1dp"
+                    android:paddingBottom="4dp"
+                    android:singleLine="true"
+                    android:gravity="bottom|start"
+                    style="@style/CardSubTitle"/>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

@@ -3,8 +3,9 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primaryDark</item>
+
+        <item name="colorAccent">@color/primaryDark</item>
         <!--
-        <item name="colorAccent">@color/darker</item>
         <item name="colorControlNormal">@color/lightest</item>
         -->
         <item name="colorControlHighlight">@color/ripple_material_light</item>
@@ -42,5 +43,21 @@
         <item name="android:textStyle">normal</item>
         <item name="android:textFontWeight" tools:targetApi="p">600</item>
         <item name="android:fontStyle" tools:targetApi="o">normal</item>
+    </style>
+
+    <style name="CardTitle" parent="AppTheme">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:text">CardTitle</item>
+    </style>
+    <style name="CardSubTitle" parent="CardTitle">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:text">CardSubTitle</item>
+    </style>
+    <style name="LibraryHeader" parent="CardTitle">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:text">Header</item>
     </style>
 </resources>

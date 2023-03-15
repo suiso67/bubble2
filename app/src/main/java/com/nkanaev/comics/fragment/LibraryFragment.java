@@ -1,9 +1,11 @@
 package com.nkanaev.comics.fragment;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -12,10 +14,15 @@ import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.*;
-import android.widget.*;
+import android.widget.AdapterView;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.MainApplication;
@@ -28,7 +35,6 @@ import com.nkanaev.comics.managers.Utils;
 import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
 import com.nkanaev.comics.view.DirectorySelectDialog;
-import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -48,7 +54,7 @@ public class LibraryFragment extends Fragment
     private DirectorySelectDialog mDirectorySelectDialog;
     private SwipeRefreshLayout mRefreshLayout;
     private View mEmptyView;
-    private GridView mGridView;
+    private RecyclerView mFolderListView;
     private Picasso mPicasso;
     private boolean mIsRefreshPlanned = false;
     private Handler mUpdateHandler = new UpdateHandler(this);
@@ -98,7 +104,7 @@ public class LibraryFragment extends Fragment
         */
         File[] externalStorageFiles = Utils.listExternalStorageDirs();
         for (File f : externalStorageFiles) {
-            Log.i("CtxCompat", f.toString());
+            Log.d(getClass().getCanonicalName(), "External Storage -> " + f.toString());
         }
 
         mDirectorySelectDialog = new DirectorySelectDialog(getActivity(), externalStorageFiles);
@@ -132,22 +138,25 @@ public class LibraryFragment extends Fragment
 
         mPicasso = ((MainActivity) getActivity()).getPicasso();
 
-        mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.fragmentLibraryRefreshLayout);
+        mRefreshLayout = view.findViewById(R.id.fragmentLibraryRefreshLayout);
         mRefreshLayout.setColorSchemeResources(R.color.primary);
         //mRefreshLayout.setProgressBackgroundColorSchemeColor(Color.BLACK);
         mRefreshLayout.setOnRefreshListener(this);
         mRefreshLayout.setEnabled(true);
 
-        mGridView = (GridView) view.findViewById(R.id.groupGridView);
-        mGridView.setAdapter(new GroupBrowserAdapter());
-        mGridView.setOnItemClickListener(this);
+        mFolderListView = view.findViewById(R.id.groupGridView);
+        mFolderListView.setAdapter(new GroupGridAdapter());
+
+        final int numColumns = calculateNumColumns();
+        int spacing = (int) getResources().getDimension(R.dimen.grid_margin);
+        GridLayoutManager layoutManager = new GridLayoutManager(getActivity(), numColumns);
+        mFolderListView.setLayoutManager(layoutManager);
+        mFolderListView.addItemDecoration(new GridSpacingItemDecoration(numColumns, spacing));
+
+        mFolderListView.setItemViewCacheSize(20);
+        //mFolderListView.getRecycledViewPool().setMaxRecycledViews();
 
         mEmptyView = view.findViewById(R.id.library_empty);
-
-        int deviceWidth = Utils.getDeviceWidth(getActivity());
-        int columnWidth = getActivity().getResources().getInteger(R.integer.grid_group_column_width);
-        int numColumns = Math.round((float) deviceWidth / columnWidth);
-        mGridView.setNumColumns(numColumns);
 
         showEmptyMessage(mComicsListManager.getCount() == 0);
         getActivity().setTitle(R.string.menu_library);
@@ -223,12 +232,12 @@ public class LibraryFragment extends Fragment
                 @Override
                 public void run() {
                     getComics();
-                    ((BaseAdapter) mGridView.getAdapter()).notifyDataSetChanged();
+                    mFolderListView.getAdapter().notifyDataSetChanged();
                     mIsRefreshPlanned = false;
                 }
             };
             mIsRefreshPlanned = true;
-            mGridView.postDelayed(updateRunnable, 100);
+            mFolderListView.postDelayed(updateRunnable, 100);
         }
     }
 
@@ -244,11 +253,9 @@ public class LibraryFragment extends Fragment
     private void setLoading(boolean isLoading) {
         if (isLoading) {
             mRefreshLayout.setRefreshing(true);
-            //mGridView.setOnItemClickListener(null);
         } else {
             mRefreshLayout.setRefreshing(false);
             showEmptyMessage(mComicsListManager.getCount() < 1);
-            //mGridView.setOnItemClickListener(this);
         }
     }
 
@@ -285,41 +292,91 @@ public class LibraryFragment extends Fragment
         }
     }
 
-    private final class GroupBrowserAdapter extends BaseAdapter {
+    private int calculateNumColumns() {
+        int deviceWidth = Utils.getDeviceWidth(getActivity());
+        int columnWidth = getActivity().getResources().getInteger(R.integer.grid_group_column_width);
+
+        float value = (float) deviceWidth / columnWidth;
+
+        return Math.round(value);
+    }
+
+    private final class GroupGridAdapter extends RecyclerView.Adapter {
+
+        @NonNull
         @Override
-        public int getCount() {
+        public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
+            Context ctx = viewGroup.getContext();
+
+            View view = LayoutInflater.from(ctx)
+                    .inflate(R.layout.card_group, viewGroup, false);
+            return new GroupViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
+            GroupViewHolder holder = (GroupViewHolder) viewHolder;
+            holder.setup(position);
+        }
+
+        @Override
+        public int getItemCount() {
             return mComicsListManager.getCount();
         }
+    }
 
-        @Override
-        public Object getItem(int position) {
-            return mComicsListManager.getComicAtIndex(position);
+    private class GroupViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        ImageView groupImageView;
+        TextView tv;
+
+        public GroupViewHolder(View itemView) {
+            super(itemView);
+            groupImageView = (ImageView) itemView.findViewById(R.id.card_group_imageview);
+            tv = (TextView) itemView.findViewById(R.id.comic_group_folder);
+
+            itemView.setClickable(true);
+            itemView.setOnClickListener(this);
         }
 
-        @Override
-        public long getItemId(int position) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public void setup(int position) {
             Comic comic = mComicsListManager.getComicAtIndex(position);
-            String dirDisplay = mComicsListManager.getDirectoryDisplayAtIndex(position);
-
-            if (convertView == null) {
-                convertView = getActivity().getLayoutInflater().inflate(R.layout.card_group, parent, false);
-            }
-
-            ImageView groupImageView = (ImageView) convertView.findViewById(R.id.card_group_imageview);
-
             Uri uri = LocalCoverHandler.getComicCoverUri(comic);
-            mPicasso.load(uri)
-                    .into(groupImageView);
+            mPicasso.load(uri).into(groupImageView);
 
-            TextView tv = (TextView) convertView.findViewById(R.id.comic_group_folder);
+            String dirDisplay = mComicsListManager.getDirectoryDisplayAtIndex(position);
             tv.setText(dirDisplay);
+        }
 
-            return convertView;
+        @Override
+        public void onClick(View v) {
+            int position = getAbsoluteAdapterPosition();
+            String path = mComicsListManager.getDirectoryAtIndex(position);
+            LibraryBrowserFragment fragment = LibraryBrowserFragment.create(path);
+            ((MainActivity) getActivity()).pushFragment(fragment);
+        }
+    }
+
+    private final class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {
+        private int mSpanCount;
+        private int mSpacing;
+
+        public GridSpacingItemDecoration(int spanCount, int spacing) {
+            mSpanCount = spanCount;
+            mSpacing = spacing;
+        }
+
+        @Override
+        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+            int position = parent.getChildAdapterPosition(view);
+            int column = position % mSpanCount;
+
+            outRect.left = mSpacing - column * mSpacing / mSpanCount;
+            outRect.right = (column + 1) * mSpacing / mSpanCount;
+
+            if (position < mSpanCount) {
+                outRect.top = mSpacing;
+            }
+            outRect.bottom = mSpacing;
         }
     }
 }
