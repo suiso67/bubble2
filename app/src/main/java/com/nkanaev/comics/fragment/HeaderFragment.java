@@ -98,7 +98,7 @@ public class HeaderFragment extends Fragment
     }
 
     @Override
-    public void onBitmapFailed(Drawable errorDrawable) {}
+    public void onBitmapFailed(Exception e, Drawable errorDrawable) {}
 
     @Override
     public void onPrepareLoad(Drawable placeHolderDrawable) {}
