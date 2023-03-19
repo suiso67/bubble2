@@ -279,7 +279,8 @@ public final class Utils {
             Log.e("Utils.toByteArray", e.getMessage(), e);
             throw new IOException(e);
         } finally {
-            output.close();
+            close(output);
+            close(is);
         }
     }
 

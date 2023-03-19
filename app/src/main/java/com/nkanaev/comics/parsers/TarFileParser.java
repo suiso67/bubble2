@@ -14,7 +14,7 @@ import java.util.*;
 public class TarFileParser extends AbstractParser {
     private File mUncompressedFile = null;
     private TarFile mTarFile = null;
-    private List<TarArchiveEntry> mEntries = new ArrayList();
+    private List<TarArchiveEntry> mEntries = new ArrayList<>();
 
     private boolean mParsedAlready = false;
 
@@ -37,7 +37,7 @@ public class TarFileParser extends AbstractParser {
         }
 
         mTarFile = new TarFile(file);
-        ArrayList entries = new ArrayList<>();
+        ArrayList<TarArchiveEntry> entries = new ArrayList<>();
         for (TarArchiveEntry entry : mTarFile.getEntries()) {
             if (entry.isDirectory()) {
                 continue;
@@ -66,16 +66,26 @@ public class TarFileParser extends AbstractParser {
     }
 
     @Override
-    public InputStream getPage(int num) throws IOException {
+    public synchronized InputStream getPage(int num) throws IOException {
         parse();
         TarArchiveEntry needle = mEntries.get(num);
-        return mTarFile.getInputStream(needle);
+        InputStream is = mTarFile.getInputStream(needle);
+        // cache to memory to prevent concurrent access via returned
+        // input stream to underlying file channel
+        byte[] data = Utils.toByteArray(is);
+        return new ByteArrayInputStream(data){
+            @Override
+            public void close() throws IOException {
+                // just to be make extra sure
+                this.buf = null;
+            }
+        };
     }
 
     @Override
     public Map getPageMetaData(int num) throws IOException {
         parse();
-        Map m = new HashMap();
+        Map<String,String> m = new HashMap<>();
         m.put(Parser.PAGEMETADATA_KEY_NAME,mEntries.get(num).getName());
         return m;
     }
