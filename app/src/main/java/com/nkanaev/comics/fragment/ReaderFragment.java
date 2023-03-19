@@ -14,7 +14,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
+import android.util.TypedValue;
 import android.view.*;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -24,6 +27,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import com.nkanaev.comics.BuildConfig;
@@ -81,7 +85,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     private static boolean mIsFullscreen = true;
     // default to not showing page info
     private static boolean mIsPageInfoShown = false;
-    private int mCurrentPage;
+    private int mCurrentPage = -1;
     private File mFile = null;
     private Uri mUri = null;
     private Constants.PageViewMode mPageViewMode;
@@ -211,17 +215,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             };
         }
 
-        int count = 0;
-        try {
-            count = mParser.numPages();
-        } catch (IOException e) {
-            Log.e("ReaderFragment", "", e);
-        }
-        mCurrentPage = Math.max(1, Math.min(mCurrentPage, count));
-
         mComicHandler = new LocalComicHandler(mParser);
         mPicasso = new Picasso.Builder(getActivity())
                 .loggingEnabled(BuildConfig.DEBUG)
+                .indicatorsEnabled(BuildConfig.DEBUG)
                 .addRequestHandler(mComicHandler)
                 .build();
         mPagerAdapter = new ComicPagerAdapter();
@@ -303,7 +300,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
         mViewPager = (ComicViewPager) view.findViewById(R.id.viewPager);
         mViewPager.setAdapter(mPagerAdapter);
-        mViewPager.setOffscreenPageLimit(3);
+        mViewPager.setOffscreenPageLimit(2);
         mViewPager.setOnTouchListener(this);
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
@@ -333,11 +330,6 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
         });
 
-        if (mCurrentPage != -1) {
-            setCurrentPage(mCurrentPage);
-            mCurrentPage = -1;
-        }
-
         if (savedInstanceState != null) {
             boolean fullscreen = savedInstanceState.getBoolean(STATE_FULLSCREEN, true);
             setFullscreen(fullscreen);
@@ -362,6 +354,11 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText((title.isEmpty() ? "" : title + " ") + "[" + mParser.getType() + "]");
 
         updateSeekBar();
+
+        if (mCurrentPage != -1) {
+            setCurrentPage(mCurrentPage);
+            mCurrentPage = -1;
+        }
 
         return view;
     }
@@ -603,8 +600,14 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 .into(t);
     }
 
+    // toggle visibility states
+    private enum Show {
+        PAGE, PROGRESS, ERROR
+    }
+
     private class MyTarget implements Target, View.OnClickListener {
         private WeakReference<View> mLayout;
+        private Animation mProgressAnimation = null;
         public final int position;
 
         public MyTarget(View layout, int position) {
@@ -612,11 +615,38 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             this.position = position;
         }
 
-        private void setVisibility(int imageView, int progressBar, int reloadButton) {
+        private int visibilityFlag(boolean visible){
+            return visible ? View.VISIBLE : View.GONE;
+        }
+
+        private void setVisibility(Show v) {
             View layout = mLayout.get();
-            layout.findViewById(R.id.pageImageView).setVisibility(imageView);
-            layout.findViewById(R.id.pageProgressBar).setVisibility(progressBar);
-            layout.findViewById(R.id.reloadButton).setVisibility(reloadButton);
+            if (layout == null)
+                return;
+
+            layout.findViewById(R.id.pageImageView).setVisibility(visibilityFlag(v == Show.PAGE));
+
+            boolean showProgress = (v == Show.PROGRESS);
+            ImageView progressImage = layout.findViewById(R.id.progressImage);
+            if (showProgress) {
+                int radius = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+                mProgressAnimation = new CircularPathAnimation(radius);
+                mProgressAnimation.setDuration(2000);
+                mProgressAnimation.setRepeatCount(Animation.INFINITE);
+                mProgressAnimation.setInterpolator(new FastOutSlowInInterpolator());
+                progressImage.startAnimation(mProgressAnimation);
+            } else if (mProgressAnimation != null) {
+                mProgressAnimation.cancel();
+                mProgressAnimation.reset();
+            }
+            progressImage.setVisibility(visibilityFlag(showProgress));
+
+            boolean showError = (v == Show.ERROR);
+            ImageButton errorButton = (ImageButton) layout.findViewById(R.id.errorButton);
+            if (showError){
+                errorButton.setOnClickListener(this);
+            }
+            errorButton.setVisibility(visibilityFlag(showError));
         }
 
         @Override
@@ -625,7 +655,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             if (layout == null)
                 return;
 
-            setVisibility(View.VISIBLE, View.GONE, View.GONE);
+            setVisibility(Show.PAGE);
             ImageView iv = (ImageView) layout.findViewById(R.id.pageImageView);
             iv.setImageBitmap(bitmap);
 
@@ -634,29 +664,18 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         }
 
         @Override
-        public void onBitmapFailed(Drawable errorDrawable) {
-            View layout = mLayout.get();
-            if (layout == null)
-                return;
-
-            setVisibility(View.GONE, View.GONE, View.VISIBLE);
-
-            ImageButton ib = (ImageButton) layout.findViewById(R.id.reloadButton);
-            ib.setOnClickListener(this);
+        public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+            // TODO: show error stack in textview
+            setVisibility(Show.ERROR);
         }
 
         @Override
         public void onPrepareLoad(Drawable placeHolderDrawable) {
-
+            setVisibility(Show.PROGRESS);
         }
 
         @Override
         public void onClick(View v) {
-            View layout = mLayout.get();
-            if (layout == null)
-                return;
-
-            setVisibility(View.GONE, View.VISIBLE, View.GONE);
             loadImage(this);
         }
     }
@@ -824,6 +843,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
             mViewPager.setSystemUiVisibility(flag);
 
+            try {
+                mPageSeekBar.setMax(mParser.numPages() - 1);
+            } catch (IOException e) {
+                mPageSeekBar.setMax(0);
+                Log.e("ReaderFragment#212", "onCreateView", e);
+            }
             mPageNavLayout.setVisibility(View.VISIBLE);
 
             // WORKAROUND:
@@ -898,5 +923,66 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         Rect bounds = mPageSeekBar.getProgressDrawable().getBounds();
         mPageSeekBar.setProgressDrawable(d);
         mPageSeekBar.getProgressDrawable().setBounds(bounds);
+    }
+
+    private class CircularPathAnimation extends Animation {
+
+        private View view;
+        // center x,y position of circular path
+        private float cx, cy;
+        private float prevX, prevY;
+        private float radius;
+        private float prevDx, prevDy;
+
+        /**
+         * @param radius - radius of circular path
+         */
+        public CircularPathAnimation(float radius) {
+            this.radius = radius;
+        }
+
+        @Override
+        public boolean willChangeBounds() {
+            return true;
+        }
+
+        @Override
+        public void initialize(int width, int height, int parentWidth, int parentHeight) {
+            // memorize original position of image center
+            cx = width / 2;
+            cy = height / 2;
+
+            // set previous position to center
+            prevX = cx;
+            prevY = cy;
+        }
+
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+            if (interpolatedTime == 0) {
+                t.getMatrix().setTranslate(prevDx, prevDy);
+                return;
+            }
+
+            // calculate new angle
+            float angleDeg = (interpolatedTime * 360f + 90) % 360;
+            float angleRad = (float) Math.toRadians(angleDeg);
+
+            // calculate new position
+            float x = (float) (cx + radius * Math.cos(angleRad));
+            float y = (float) (cy + radius * Math.sin(angleRad));
+
+            // calculate difference for translation
+            float dx = prevX - x;
+            float dy = prevY - y;
+
+            prevX = x;
+            prevY = y;
+
+            prevDx = dx;
+            prevDy = dy;
+
+            t.getMatrix().setTranslate(dx, dy);
+        }
     }
 }

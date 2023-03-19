@@ -11,19 +11,20 @@
     <RelativeLayout
             android:layout_width="fill_parent"
             android:layout_height="fill_parent">
-        <ProgressBar
-                android:id="@+id/pageProgressBar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:visibility="visible"/>
         <ImageButton
-                android:id="@+id/reloadButton"
+                android:id="@+id/errorButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
                 android:background="@android:color/transparent"
                 android:visibility="gone"
                 android:src="@drawable/broken"/>
+        <ImageView
+                android:id="@+id/progressImage"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_centerInParent="true"
+                android:src="@drawable/icon_squared"
+                android:visibility="visible"/>
     </RelativeLayout>
 </LinearLayout>
