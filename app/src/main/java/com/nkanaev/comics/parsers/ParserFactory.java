@@ -408,13 +408,14 @@ public class ParserFactory {
         // synchronized so we do not access te same file channel concurrently
         @Override
         public synchronized InputStream getPage(int num) throws IOException {
+            InputStream is = null;
             if (mFetchMeta)
-                initPageMetaData(num);
+                is = initPageMetaData(num);
 
-            return mParser.getPage(num);
+            return is != null ? is : mParser.getPage(num);
         }
 
-        private Map initPageMetaData(int num) throws IOException {
+        private InputStream initPageMetaData(int num) throws IOException {
             Integer key = Integer.valueOf(num);
             Map pageData = new HashMap();
             InputStream is = null;
@@ -431,10 +432,18 @@ public class ParserFactory {
                     pageData.put(Parser.PAGEMETADATA_KEY_HEIGHT, options.outHeight);
                 }
             } finally {
-                Utils.close(is);
+                // keep memory buffer inputstreams
+                if (is instanceof ByteArrayInputStream) {
+                    is.reset();
+                }
+                // discard others, not seekable properly
+                else {
+                    Utils.close(is);
+                    is = null;
+                }
             }
             mPagesMetaData.put(key, pageData);
-            return pageData;
+            return is;
         }
 
         @Override
@@ -446,8 +455,11 @@ public class ParserFactory {
                 in = new HashMap<>();
             Map<String, String> in2 = mPagesMetaData.get(Integer.valueOf(num));
             // init if still missing (just enabled?)
-            if (in2 == null)
-                in2 = initPageMetaData(num);
+            if (in2 == null) {
+                InputStream is = initPageMetaData(num);
+                Utils.close(is);
+                in2 = mPagesMetaData.get(Integer.valueOf(num));
+            }
             // nothing to merge, leave early
             if (in2.isEmpty())
                 return in;
