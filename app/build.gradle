@@ -24,7 +24,13 @@ repositories {
     mavenLocal()
     google()
     // jp2-android repo
-    jcenter()
+    maven {
+        url "https://jcenter.bintray.com/"
+    }
+    // commons-compress rc-1 location
+    maven {
+        url "https://repository.apache.org/content/repositories/orgapachecommons-1628/"
+    }
 }
 
 android {
@@ -46,7 +52,7 @@ android {
         manifestPlaceholders = [
                 appIcon: "@drawable/icon_squared"
         ]
-    }
+   }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -92,7 +98,7 @@ dependencies {
     implementation "androidx.constraintlayout:constraintlayout:2.2.0-alpha08"
     implementation 'com.github.junrar:junrar:7.5.3'
     implementation 'com.squareup.picasso:picasso:2.8'
-    implementation 'org.apache.commons:commons-compress:1.22'
+    implementation 'org.apache.commons:commons-compress:1.23.0'
     //implementation fileTree(dir: 'lib', include: ['*.jar'])
     implementation 'org.tukaani:xz:1.9'
     implementation 'com.github.luben:zstd-jni:1.5.2-5@aar'
