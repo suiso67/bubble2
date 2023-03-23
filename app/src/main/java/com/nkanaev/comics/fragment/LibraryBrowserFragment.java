@@ -235,9 +235,6 @@ public class LibraryBrowserFragment extends Fragment
         mComics = Storage.getStorage(getActivity()).listComics(mPath);
         findRecents();
         filterContent();
-        if (mComicListView != null) {
-            mComicListView.getAdapter().notifyDataSetChanged();
-        }
     }
 
     private void findRecents() {
@@ -283,6 +280,11 @@ public class LibraryBrowserFragment extends Fragment
                     continue;
             }
             mAllItems.add(c);
+        }
+
+        // we modified items list, notify the grid adapter accordingly
+        if (mComicListView != null) {
+            mComicListView.getAdapter().notifyDataSetChanged();
         }
     }
 
