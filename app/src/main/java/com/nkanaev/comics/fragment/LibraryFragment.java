@@ -21,7 +21,6 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.nkanaev.comics.Constants;
@@ -35,6 +34,7 @@ import com.nkanaev.comics.managers.Utils;
 import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
 import com.nkanaev.comics.view.DirectorySelectDialog;
+import com.nkanaev.comics.view.PreCachingGridLayoutManager;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -148,12 +148,17 @@ public class LibraryFragment extends Fragment
         mFolderListView.setAdapter(new GroupGridAdapter());
 
         final int numColumns = calculateNumColumns();
-        int spacing = (int) getResources().getDimension(R.dimen.grid_margin);
-        GridLayoutManager layoutManager = new GridLayoutManager(getActivity(), numColumns);
+        PreCachingGridLayoutManager layoutManager = new PreCachingGridLayoutManager(getActivity(), numColumns);
+        int height = Utils.getDeviceHeightPixels();
+        layoutManager.setExtraLayoutSpace(height*2);
         mFolderListView.setLayoutManager(layoutManager);
+
+        int spacing = (int) getResources().getDimension(R.dimen.grid_margin);
         mFolderListView.addItemDecoration(new GridSpacingItemDecoration(numColumns, spacing));
 
-        mFolderListView.setItemViewCacheSize(20);
+        // some performance optimizations
+        mFolderListView.setHasFixedSize(true);
+        mFolderListView.setItemViewCacheSize(Math.max(4 * numColumns,40));
         //mFolderListView.getRecycledViewPool().setMaxRecycledViews();
 
         mEmptyView = view.findViewById(R.id.library_empty);
@@ -303,6 +308,12 @@ public class LibraryFragment extends Fragment
 
     private final class GroupGridAdapter extends RecyclerView.Adapter {
 
+        public GroupGridAdapter() {
+            super();
+            // implemented getItemId() below
+            setHasStableIds(true);
+        }
+
         @NonNull
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
@@ -322,6 +333,12 @@ public class LibraryFragment extends Fragment
         @Override
         public int getItemCount() {
             return mComicsListManager.getCount();
+        }
+
+        @Override
+        public long getItemId(int position) {
+            Comic comic = mComicsListManager.getComicAtIndex(position);
+            return (long)comic.getId();
         }
     }
 
