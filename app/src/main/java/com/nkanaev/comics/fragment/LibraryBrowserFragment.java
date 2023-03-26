@@ -32,6 +32,7 @@ import com.nkanaev.comics.managers.Scanner;
 import com.nkanaev.comics.managers.Utils;
 import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
+import com.nkanaev.comics.view.PreCachingGridLayoutManager;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -43,9 +44,9 @@ public class LibraryBrowserFragment extends Fragment
         UpdateHandlerTarget {
     public static final String PARAM_PATH = "browserCurrentPath";
 
-    final int ITEM_VIEW_TYPE_COMIC = 1;
-    final int ITEM_VIEW_TYPE_HEADER_RECENT = 2;
-    final int ITEM_VIEW_TYPE_HEADER_ALL = 3;
+    final int ITEM_VIEW_TYPE_COMIC = -1;
+    final int ITEM_VIEW_TYPE_HEADER_RECENT = -2;
+    final int ITEM_VIEW_TYPE_HEADER_ALL = -3;
 
     final int NUM_HEADERS = 2;
 
@@ -90,14 +91,18 @@ public class LibraryBrowserFragment extends Fragment
         final int numColumns = calculateNumColumns();
         int spacing = (int) getResources().getDimension(R.dimen.grid_margin);
 
-        GridLayoutManager layoutManager = new GridLayoutManager(getActivity(), numColumns);
+        PreCachingGridLayoutManager layoutManager = new PreCachingGridLayoutManager(getActivity(), numColumns);
         layoutManager.setSpanSizeLookup(createSpanSizeLookup());
+        int height = Utils.getDeviceHeightPixels();
+        layoutManager.setExtraLayoutSpace(height*2);
 
         mComicListView = (RecyclerView) view.findViewById(R.id.library_grid);
+        // some preformance optimizations
         mComicListView.setHasFixedSize(true);
         // raise default cache values (number of cards) from a very low DEFAULT_CACHE_SIZE=2
-        mComicListView.setItemViewCacheSize(20);
-        mComicListView.getRecycledViewPool().setMaxRecycledViews(ITEM_VIEW_TYPE_COMIC,20);
+        mComicListView.setItemViewCacheSize(Math.max(4 * numColumns,40));
+        //mComicListView.getRecycledViewPool().setMaxRecycledViews(ITEM_VIEW_TYPE_COMIC,20);
+
         mComicListView.setLayoutManager(layoutManager);
         mComicListView.setAdapter(new ComicGridAdapter());
         mComicListView.addItemDecoration(new GridSpacingItemDecoration(numColumns, spacing));
@@ -392,6 +397,13 @@ public class LibraryBrowserFragment extends Fragment
 
 
     private final class ComicGridAdapter extends RecyclerView.Adapter {
+
+        public ComicGridAdapter() {
+            super();
+            // implemented getItemId() below
+            setHasStableIds(true);
+        }
+
         @Override
         public int getItemCount() {
             if (hasRecent()) {
@@ -403,6 +415,16 @@ public class LibraryBrowserFragment extends Fragment
         @Override
         public int getItemViewType(int position) {
             return getItemViewTypeAtPosition(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            int type = getItemViewTypeAtPosition(position);
+            if (type == ITEM_VIEW_TYPE_COMIC) {
+                Comic comic = getComicAtPosition(position);
+                return comic.getId();
+            }
+            return type;
         }
 
         @Override
