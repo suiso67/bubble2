@@ -195,10 +195,9 @@ public final class Utils {
         return value;
     }
 
-    public static int getDeviceHeight(Context context) {
-        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-        int value = Math.round(displayMetrics.heightPixels / displayMetrics.density);
-        return value;
+    public static int getDeviceHeightPixels() {
+        DisplayMetrics displayMetrics = MainApplication.getAppContext().getResources().getDisplayMetrics();
+        return displayMetrics.heightPixels;
     }
 
     public static int getMaxPageSize(){
