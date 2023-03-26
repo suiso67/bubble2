@@ -28,7 +28,8 @@
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
                 android:layout_marginBottom="40dp"
-                android:id="@+id/pageNavLayout">
+                android:id="@+id/pageNavLayout"
+                android:visibility="invisible">
             <LinearLayout
                     android:clickable="true"
                     android:layout_width="match_parent"
