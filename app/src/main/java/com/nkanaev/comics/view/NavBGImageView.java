@@ -35,13 +35,11 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
     private static Bitmap mLastBitmap = null;
 
     public NavBGImageView(Context context) {
-        super(context);
-        init();
+        this(context, null);
     }
 
-    public NavBGImageView(Context context, AttributeSet attributeSet) {
-        super(context, attributeSet);
-        init();
+    public NavBGImageView(Context context, @Nullable AttributeSet attributeSet) {
+        this(context, attributeSet, 0);
     }
 
     public NavBGImageView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
@@ -49,8 +47,8 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
         init();
     }
 
-    private void init(){
-        if (mLastBitmap!=null)
+    private void init() {
+        if (mLastBitmap != null)
             setImageBitmap(mLastBitmap);
 
         final GestureDetector gDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener() {
@@ -58,11 +56,13 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
             public boolean onDown(MotionEvent e) {
                 return false;
             }
+
             @Override
             public boolean onDoubleTap(MotionEvent e) {
                 reset();
                 return true;
             }
+
             @Override
             public void onLongPress(@NonNull MotionEvent e) {
                 reset();
@@ -94,7 +94,7 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
     private long lastRun = 0;
 
     private synchronized void createBitmap() {
-        if ( !Utils.isJellyBeanMR1orLater() || getWidth() < 1 || getHeight() < 1)
+        if (!Utils.isJellyBeanMR1orLater() || getWidth() < 1 || getHeight() < 1)
             return;
 
         // skip if last run was under 3s (3000ms) ago, give Animation and HalftonerTask time to finish
@@ -111,14 +111,14 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
             Uri uri = LocalCoverHandler.getComicCoverUri(c);
             try {
                 Bitmap bitmap = LocalCoverHandler.getCover(uri);
-                if (bitmap==null)
+                if (bitmap == null)
                     return;
                 HalftonerTask task = new HalftonerTask(bitmap);
                 task.execute();
                 //mDrawable = new BitmapDrawable(getActivity().getResources(), bitmap);
 
             } catch (IOException e) {
-                Log.e("bubble2","error",e);
+                Log.e("bubble2", "error", e);
             }
 
         }
@@ -128,14 +128,14 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
         Context context = getContext();
         while (context instanceof ContextWrapper) {
             if (context instanceof Activity) {
-                return (Activity)context;
+                return (Activity) context;
             }
-            context = ((ContextWrapper)context).getBaseContext();
+            context = ((ContextWrapper) context).getBaseContext();
         }
         return null;
     }
 
-    public void reset (){
+    public void reset() {
         createBitmap();
     }
 
@@ -154,24 +154,23 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
             double vh = getHeight();
 
             int nbw, nbh, bx, by;
-            if (bh/bw > vh/vw) {
-                nbw = (int)vw;
-                nbh = (int)(bh * (vw / bw));
+            if (bh / bw > vh / vw) {
+                nbw = (int) vw;
+                nbh = (int) (bh * (vw / bw));
                 bx = 0;
-                by = (int)((double)nbh / 2 - vh / 2);
-            }
-            else {
-                nbw = (int)(bw * (vh / bh));
-                nbh = (int)vh;
-                bx = (int)((double)nbw / 2 - vw / 2);
+                by = (int) ((double) nbh / 2 - vh / 2);
+            } else {
+                nbw = (int) (bw * (vh / bh));
+                nbh = (int) vh;
+                bx = (int) ((double) nbw / 2 - vw / 2);
                 by = 0;
             }
 
             Bitmap scaled = Bitmap.createScaledBitmap(mBitmap, nbw, nbh, false);
             Bitmap mutable = scaled.copy(Bitmap.Config.ARGB_8888, true);
-            Bitmap bitmap = Bitmap.createBitmap(mutable, bx, by, (int)vw, (int)vh);
+            Bitmap bitmap = Bitmap.createBitmap(mutable, bx, by, (int) vw, (int) vh);
 
-            double s = Math.PI/6;
+            double s = Math.PI / 6;
             int a, r, g, b, l, t, f, p;
             int primary = getResources().getColor(R.color.primary);
             for (int y = 0; y < bitmap.getHeight(); y++) {
@@ -181,8 +180,8 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
                     r = Color.red(p);
                     g = Color.green(p);
                     b = Color.blue(p);
-                    l = (int)(0.299 * r + 0.587 * g + 0.114 * b);
-                    t = (int)((Math.cos(s*(x+0.5))*Math.cos(s*(y+0.5))+1)*127);
+                    l = (int) (0.299 * r + 0.587 * g + 0.114 * b);
+                    t = (int) ((Math.cos(s * (x + 0.5)) * Math.cos(s * (y + 0.5)) + 1) * 127);
                     f = (l > t) ? primary : Color.argb(a, 0, 0, 0);
                     bitmap.setPixel(x, y, f);
                 }
@@ -206,7 +205,7 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
                 //mDrawable = new BitmapDrawable(getActivity().getResources(), bitmap);
                 //invalidate();
                 Drawable old = getDrawable();
-                if (old instanceof BitmapDrawable){
+                if (old instanceof BitmapDrawable) {
                     ImageView v = getActivity().findViewById(R.id.drawer_bg_image2);
                     v.setImageDrawable(old);
                 }
@@ -219,11 +218,9 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
                         lastRun = 0;
                     }
                 }).setListener(null);
-            }
-            catch (Exception e) {
-                Log.e("bubble2","error",e);
-            }
-            finally {
+            } catch (Exception e) {
+                Log.e("bubble2", "error", e);
+            } finally {
                 Utils.close(mBitmap);
             }
         }
