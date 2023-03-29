@@ -17,7 +17,6 @@ import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.*;
 import android.view.animation.Animation;
-import android.view.animation.Transformation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -40,6 +39,7 @@ import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
 import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
+import com.nkanaev.comics.view.CircularPathAnimation;
 import com.nkanaev.comics.view.ComicViewPager;
 import com.nkanaev.comics.view.PageImageView;
 import com.squareup.picasso.MemoryPolicy;
@@ -403,6 +403,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         super.onPause();
     }
 
+    @Override
+    public void onResume() {
+        setFullscreen(isFullscreen());
+        super.onResume();
+    }
+
     public void onDestroyView() {
         super.onDestroyView();
     }
@@ -666,6 +672,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         @Override
         public void onBitmapFailed(Exception e, Drawable errorDrawable) {
             // TODO: show error stack in textview
+            Log.e("","",e);
             setVisibility(Show.ERROR);
         }
 
@@ -798,13 +805,15 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
     private void setFullscreen(boolean fullscreen) {
         ActionBar actionBar = getActionBar();
+        View decorView =getActivity().getWindow().getDecorView();
         // the new way (setting flags is deprecated)
         // blend in/out looks worse on Android 12 tho
-//        WindowInsetsControllerCompat wic = new WindowInsetsControllerCompat(getActivity().getWindow(), mViewPager);
+//       WindowInsetsControllerCompat wic = new WindowInsetsControllerCompat(getActivity().getWindow(), mViewPager);
 //        WindowCompat.setDecorFitsSystemWindows(getActivity().getWindow(), false);
 
         if (fullscreen) {
             if (actionBar != null) actionBar.hide();
+            mPageNavLayout.setVisibility(View.INVISIBLE);
 
 //            wic.hide(WindowInsetsCompat.Type.systemBars());
 
@@ -816,7 +825,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 flag |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
                 flag |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
             }
-            mViewPager.setSystemUiVisibility(flag);
+            decorView.setSystemUiVisibility(flag);
 
             // replaced by value in ReaderTheme style
             /*
@@ -829,10 +838,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
             */
 
-            mPageNavLayout.setVisibility(View.INVISIBLE);
         } else {
-            if (actionBar != null) actionBar.show();
-
 //            wic.show(WindowInsetsCompat.Type.systemBars());
 
             int flag = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -841,7 +847,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 flag |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
                 flag |= View.SYSTEM_UI_FLAG_VISIBLE;
             }
-            mViewPager.setSystemUiVisibility(flag);
+            decorView.setSystemUiVisibility(flag);
 
             try {
                 mPageSeekBar.setMax(mParser.numPages() - 1);
@@ -849,11 +855,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 mPageSeekBar.setMax(0);
                 Log.e("ReaderFragment#212", "onCreateView", e);
             }
+            if (actionBar != null) actionBar.show();
             mPageNavLayout.setVisibility(View.VISIBLE);
 
             // WORKAROUND:
-            // status bar & navigation bar background won't show, be clear, at times
-            // reproducible on Android 9 (Lineage 16)
+            // status bar & navigation bar background won't show, being transparent,
+            // at times. reproducible on Android 9 (Lineage 16)
             if (Utils.isLollipopOrLater()) {
                 new Handler().postDelayed(new Runnable() {
                     @Override
@@ -925,64 +932,4 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         mPageSeekBar.getProgressDrawable().setBounds(bounds);
     }
 
-    private class CircularPathAnimation extends Animation {
-
-        private View view;
-        // center x,y position of circular path
-        private float cx, cy;
-        private float prevX, prevY;
-        private float radius;
-        private float prevDx, prevDy;
-
-        /**
-         * @param radius - radius of circular path
-         */
-        public CircularPathAnimation(float radius) {
-            this.radius = radius;
-        }
-
-        @Override
-        public boolean willChangeBounds() {
-            return true;
-        }
-
-        @Override
-        public void initialize(int width, int height, int parentWidth, int parentHeight) {
-            // memorize original position of image center
-            cx = width / 2;
-            cy = height / 2;
-
-            // set previous position to center
-            prevX = cx;
-            prevY = cy;
-        }
-
-        @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
-            if (interpolatedTime == 0) {
-                t.getMatrix().setTranslate(prevDx, prevDy);
-                return;
-            }
-
-            // calculate new angle
-            float angleDeg = (interpolatedTime * 360f + 90) % 360;
-            float angleRad = (float) Math.toRadians(angleDeg);
-
-            // calculate new position
-            float x = (float) (cx + radius * Math.cos(angleRad));
-            float y = (float) (cy + radius * Math.sin(angleRad));
-
-            // calculate difference for translation
-            float dx = prevX - x;
-            float dy = prevY - y;
-
-            prevX = x;
-            prevY = y;
-
-            prevDx = dx;
-            prevDy = dy;
-
-            t.getMatrix().setTranslate(dx, dy);
-        }
-    }
 }
