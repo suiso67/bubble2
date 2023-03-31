@@ -22,7 +22,7 @@ public class DirectoryParser extends AbstractParser {
     }
 
     @Override
-    public void parse() throws IOException {
+    public synchronized void parse() throws IOException {
         if (mFiles != null) return;
 
         File dir = (File) getSource();
@@ -44,7 +44,8 @@ public class DirectoryParser extends AbstractParser {
         Collections.sort(mFiles, new IgnoreCaseComparator() {
             @Override
             public String stringValue(Object o) {
-                return ((File) o).getName();
+                String name = ((File) o).getName();
+                return name;
             }
         });
     }
