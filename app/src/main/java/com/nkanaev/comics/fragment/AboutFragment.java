@@ -42,7 +42,7 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
             new LibraryDescription(
                     "Junrar",
                     "Plain java unrar util",
-                    "Unrar License",
+                    "Unrar license",
                     "Edmund Wagner",
                     "https://github.com/edmund-wagner/junrar"
             ),
@@ -63,30 +63,30 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
             new LibraryDescription(
                     "Zstd-jni",
                     "JNI bindings to Zstd Library",
-                    "BSD License",
+                    "BSD license",
                     "Luben Karavelov",
                     "https://github.com/luben/zstd-jni"
             ),
             new LibraryDescription(
                     "Brotli",
                     "Generic-purpose lossless compression algorithm",
-                    "MIT License",
+                    "MIT license",
                     "Google",
                     "https://github.com/google/brotli"
             ),
             new LibraryDescription(
                     "JP2 for Android",
                     "Open-source JPEG-2000 image encoder/decoder for Android based on OpenJPEG",
-                    "BSD (2-clause) License",
+                    "BSD (2-clause) license",
                     "ThalesGroup",
                     "https://github.com/ThalesGroup/JP2ForAndroid"
             ),
             new LibraryDescription(
-                    "Java Natural Order comparator",
+                    "Natural Sorting for Java",
                     "Perform 'natural order' comparisons of strings in Java.",
-                    "Zlib-Style License",
-                    "Pierre-Luc Paour, Martin Pool",
-                    "https://github.com/paour/natorder"
+                    "MIT license",
+                    "Jagoba Gascón",
+                    "https://github.com/jagobagascon/Natural-Sorting-for-Java"
             ),
             new LibraryDescription(
                     "Material Design Icons",
