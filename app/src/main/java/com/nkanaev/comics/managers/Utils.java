@@ -415,6 +415,15 @@ public final class Utils {
         return path;
     }
 
+    public static String removeExtensionIfAny(String fileName) {
+        int i = fileName.lastIndexOf('.');
+        if (i < 1)
+            return fileName;
+
+        String name = fileName.substring(0, i);
+        return name;
+    }
+
     public static @ColorInt int getThemeColor(@AttrRes int resid, @StyleRes int themeid){
         TypedValue typedValue = new TypedValue();
         Resources.Theme theme = new ContextThemeWrapper(MainApplication.getAppContext(), themeid).getTheme();
