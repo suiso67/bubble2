@@ -1,6 +1,5 @@
 package com.nkanaev.comics.parsers;
 
-import android.content.Intent;
 import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
