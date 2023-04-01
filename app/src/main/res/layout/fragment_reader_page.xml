@@ -19,12 +19,6 @@
                 android:background="@android:color/transparent"
                 android:visibility="gone"
                 android:src="@drawable/broken"/>
-        <ImageView
-                android:id="@+id/progressImage"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_centerInParent="true"
-                android:src="@drawable/icon_squared"
-                android:visibility="visible"/>
+        <include layout="@layout/progress_image"/>
     </RelativeLayout>
 </LinearLayout>

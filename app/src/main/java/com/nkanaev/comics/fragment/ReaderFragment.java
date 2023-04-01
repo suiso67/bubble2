@@ -22,6 +22,7 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -50,18 +51,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public class ReaderFragment extends Fragment implements View.OnTouchListener {
-    public static final int RESULT = 1;
-
-    public static final String RESULT_CURRENT_PAGE = "fragment.reader.currentpage";
-
     public static final String PARAM_HANDLER = "PARAM_HANDLER";
-
     public static final String PARAM_URI = "PARAM_URI";
     public static final String PARAM_MODE = "PARAM_MODE";
 
@@ -76,7 +70,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     private TextView mPageNavTextView;
     private TextView mPageInfoTextView;
     private View mPageInfoButton;
-    private ComicPagerAdapter mPagerAdapter;
+
     private SharedPreferences mPreferences;
     private GestureDetector mGestureDetector;
 
@@ -85,26 +79,27 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     private static boolean mIsFullscreen = true;
     // default to not showing page info
     private static boolean mIsPageInfoShown = false;
-    private int mCurrentPage = -1;
+
     private File mFile = null;
     private Uri mUri = null;
     private Constants.PageViewMode mPageViewMode;
     private boolean mIsLeftToRight;
-    private float mStartingX;
 
     private Parser mParser;
+    private Exception mParserException = null;
+    private int mPageCount = 0;
     private Picasso mPicasso;
     private LocalComicHandler mComicHandler;
     private SparseArray<Target> mTargets = new SparseArray<>();
 
-    private Comic mComic;
+    private Comic mComic = null;
     private Comic mNewComic;
     private int mNewComicTitle;
 
     public enum Mode {
         MODE_LIBRARY,
         MODE_BROWSER,
-        MODE_INTENT;
+        MODE_INTENT
     }
 
     static {
@@ -170,7 +165,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 int comicId = bundle.getInt(PARAM_HANDLER);
                 mComic = Storage.getStorage(getActivity()).getComic(comicId);
                 mFile = mComic.getFile();
-                mCurrentPage = mComic.getCurrentPage();
+
                 mParser = ParserFactory.create(mFile);
             }
             else if (mode == Mode.MODE_BROWSER) {
@@ -186,7 +181,6 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             mParser = new Parser() {
                 @Override
                 public void parse() throws IOException {
-
                 }
 
                 @Override
@@ -215,13 +209,26 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             };
         }
 
+        // start parsing early in background
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mParser.parse();
+                } catch (IOException e) {
+                    mParserException = e;
+                }
+            }
+        }).start();
+
+        // setup picasso
         mComicHandler = new LocalComicHandler(mParser);
         mPicasso = new Picasso.Builder(getActivity())
                 .loggingEnabled(BuildConfig.DEBUG)
                 .indicatorsEnabled(BuildConfig.DEBUG)
                 .addRequestHandler(mComicHandler)
                 .build();
-        mPagerAdapter = new ComicPagerAdapter();
+
         mGestureDetector = new GestureDetector(getActivity(), new MyTouchListener());
 
         mPreferences = getActivity().getSharedPreferences(Constants.SETTINGS_NAME, 0);
@@ -253,15 +260,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_reader, container, false);
-
         mPageNavLayout = getActivity().findViewById(R.id.pageNavLayout);
+
+        // setup seekbar
         mPageSeekBar = (SeekBar) mPageNavLayout.findViewById(R.id.pageSeekBar);
-        try {
-            mPageSeekBar.setMax(mParser.numPages() - 1);
-        } catch (IOException e) {
-            mPageSeekBar.setMax(0);
-            Log.e("ReaderFragment#212", "onCreateView", e);
-        }
         mPageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -283,11 +285,15 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 mPicasso.resumeTag(ReaderFragment.this.getActivity());
             }
         });
-        mPageNavTextView = (TextView) mPageNavLayout.findViewById(R.id.pageNavTextView);
+        updateSeekBar();
 
+        mPageNavTextView = (TextView) mPageNavLayout.findViewById(R.id.pageNavTextView);
+        mPageNavTextView.setText(""); // strip dummy text
+
+        // setup page info button
         mPageInfoButton = mPageNavLayout.findViewById(R.id.pageInfoButton);
         mPageInfoTextView = mPageNavLayout.findViewById(R.id.pageInfoTextView);
-        mPageInfoTextView.setText("");
+        mPageInfoTextView.setText(""); // strip dummy text
         setPageInfoShown(mIsPageInfoShown);
         View.OnClickListener ocl = new View.OnClickListener() {
             @Override
@@ -298,8 +304,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         mPageInfoButton.setOnClickListener(ocl);
         mPageInfoTextView.setOnClickListener(ocl);
 
-        mViewPager = (ComicViewPager) view.findViewById(R.id.viewPager);
-        mViewPager.setAdapter(mPagerAdapter);
+        // setup view pager, set adapter after parsing in bg thread below
+        mViewPager = view.findViewById(R.id.viewPager);
         mViewPager.setOffscreenPageLimit(2);
         mViewPager.setOnTouchListener(this);
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
@@ -308,7 +314,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 if (mIsLeftToRight) {
                     setCurrentPage(position + 1);
                 } else {
-                    setCurrentPage(mViewPager.getAdapter().getCount() - position);
+                    setCurrentPage(mPageCount - position);
                 }
             }
         });
@@ -346,6 +352,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             setFullscreen(mIsFullscreen);
         }
 
+        // set actionbar title
         String title = "";
         if (mFile != null)
             title += mFile.getName();
@@ -353,14 +360,40 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             title += mUri.getLastPathSegment();
         ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText((title.isEmpty() ? "" : title + " ") + "[" + mParser.getType() + "]");
 
-        updateSeekBar();
+        // move parsing into bg thread to return view early
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (mParserException == null)
+                    try {
+                        mPageCount = mParser.numPages();
+                    } catch (IOException e) {
+                        Log.e("", "", e);
+                    }
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mViewPager.setAdapter(new ComicPagerAdapter());
+                        mPageSeekBar.setMax(mPageCount - 1);
 
-        if (mCurrentPage != -1) {
-            setCurrentPage(mCurrentPage);
-            mCurrentPage = -1;
-        }
+                        if (mComic!=null) {
+                            int curPage = mComic.getCurrentPage();
+                            setCurrentPage(Math.max(curPage, 1));
+                        }
+
+                        view.findViewById(R.id.progressPlaceholder).setVisibility(View.GONE);
+                        mViewPager.setVisibility(View.VISIBLE);
+                    }
+                });
+            }
+        }).start();
 
         return view;
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
     }
 
     @Override
@@ -444,7 +477,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         if (mIsLeftToRight)
             return mViewPager.getCurrentItem() + 1;
         else
-            return mViewPager.getAdapter().getCount() - mViewPager.getCurrentItem();
+            return mPageCount - mViewPager.getCurrentItem();
     }
 
     @Override
@@ -480,19 +513,26 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     }
 
     private void setCurrentPage(int page, boolean animated) {
+        int prevItem = mViewPager.getCurrentItem();
+        int newItem = page -1;
+
         if (mIsLeftToRight) {
-            mViewPager.setCurrentItem(page - 1);
+            mViewPager.setCurrentItem(newItem, animated);
             mPageSeekBar.setProgress(page - 1);
         } else {
-            mViewPager.setCurrentItem(mViewPager.getAdapter().getCount() - page, animated);
-            mPageSeekBar.setProgress(mViewPager.getAdapter().getCount() - page);
+            mViewPager.setCurrentItem(mPageCount - page, animated);
+            mPageSeekBar.setProgress(mPageCount - page);
         }
 
-        String navPage = new StringBuilder()
-                .append(page).append("/").append(mViewPager.getAdapter().getCount())
-                .toString();
-        mPageNavTextView.setText(navPage);
+        if (prevItem == newItem)
+            return;
 
+        String navText = new StringBuilder()
+                .append(page).append("/").append(mPageCount)
+                .toString();
+        mPageNavTextView.setText(navText);
+
+        mPageInfoTextView.setText("");
         updatePageImageInfo();
     }
 
@@ -500,31 +540,63 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         if (!mIsPageInfoShown)
             return;
 
-        Map<String, String> metadata = null;
-        int position = getCurrentPage() - 1;
-        try {
-            if (position >= 0 && position < mParser.numPages())
-                metadata = mParser.getPageMetaData(position);
-        } catch (IOException e) {
-            Log.e("", "", e);
-        }
-        String metaText = "";
-        if (metadata != null && !metadata.isEmpty()) {
-            String name = metadata.get(Parser.PAGEMETADATA_KEY_NAME);
-            if (name != null)
-                metaText += name;
-            String t = metadata.get(Parser.PAGEMETADATA_KEY_MIME);
-            String w = metadata.get(Parser.PAGEMETADATA_KEY_WIDTH);
-            String h = metadata.get(Parser.PAGEMETADATA_KEY_HEIGHT);
-            if (t != null)
-                metaText += (metaText.isEmpty() ? "" : "\n")
-                        + String.valueOf(t) + ", "
-                        + String.valueOf(w) + "x" + String.valueOf(h) + "px";
-        }
-        mPageInfoTextView.setText(metaText);
+        int pageNum = getCurrentPage() - 1;
+        if (pageNum < 0 || pageNum >= mPageCount)
+            return;
+
+        // move parser access to bg thread to keep ui responsive
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Map<String, String> metadata = null;
+                try {
+                    metadata = mParser.getPageMetaData(pageNum);
+                } catch (IOException e) {
+                    Log.e("", "", e);
+                }
+                String metaText = "";
+                if (metadata != null && !metadata.isEmpty()) {
+                    String name = metadata.get(Parser.PAGEMETADATA_KEY_NAME);
+                    if (name != null)
+                        metaText += name;
+                    String t = metadata.get(Parser.PAGEMETADATA_KEY_MIME);
+                    String w = metadata.get(Parser.PAGEMETADATA_KEY_WIDTH);
+                    String h = metadata.get(Parser.PAGEMETADATA_KEY_HEIGHT);
+                    if (t != null)
+                        metaText += (metaText.isEmpty() ? "" : "\n")
+                                + String.valueOf(t) + ", "
+                                + String.valueOf(w) + "x" + String.valueOf(h) + "px";
+                    // append the rest, ignore the already added from above
+                    List<String> ignoredKeys =
+                            Arrays.asList(new String[]{
+                                    Parser.PAGEMETADATA_KEY_NAME,
+                                    Parser.PAGEMETADATA_KEY_MIME,
+                                    Parser.PAGEMETADATA_KEY_WIDTH,
+                                    Parser.PAGEMETADATA_KEY_HEIGHT});
+                    for (Map.Entry<String, String> entry : metadata.entrySet()) {
+                        String key = entry.getKey();
+                        if (ignoredKeys.contains(key))
+                            continue;
+                        metaText += (metaText.isEmpty() ? "" : "\n") +
+                                key+": "+entry.getValue();
+                    }
+                }
+                final String text = metaText;
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // just in case the above took too long and user
+                        // switched page already, skip the now obsolete write
+                        if (getCurrentPage()-1 == pageNum)
+                            mPageInfoTextView.setText(text);
+                    }
+                });
+            }
+        }).start();
     }
 
     private class ComicPagerAdapter extends PagerAdapter {
+
         @Override
         public int getItemPosition(Object object) {
             return POSITION_NONE;
@@ -532,12 +604,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
         @Override
         public int getCount() {
-            try {
-                return mParser.numPages();
-            } catch (IOException e) {
-                Log.e("ReaderFragment#413", "getCount()", e);
-                return 0;
-            }
+            return mPageCount;
         }
 
         @Override
@@ -621,7 +688,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             this.position = position;
         }
 
-        private int visibilityFlag(boolean visible){
+        private int visibilityFlag(boolean visible) {
             return visible ? View.VISIBLE : View.GONE;
         }
 
@@ -649,7 +716,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
             boolean showError = (v == Show.ERROR);
             ImageButton errorButton = (ImageButton) layout.findViewById(R.id.errorButton);
-            if (showError){
+            if (showError) {
                 errorButton.setOnClickListener(this);
             }
             errorButton.setVisibility(visibilityFlag(showError));
@@ -672,7 +739,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         @Override
         public void onBitmapFailed(Exception e, Drawable errorDrawable) {
             // TODO: show error stack in textview
-            Log.e("","",e);
+            Log.e("", "", e);
             setVisibility(Show.ERROR);
         }
 
@@ -734,7 +801,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                     else
                         setCurrentPage(getCurrentPage() - 1);
                 } else {
-                    if (getCurrentPage() == mViewPager.getAdapter().getCount())
+                    if (getCurrentPage() == mPageCount)
                         hitEnding();
                     else
                         setCurrentPage(getCurrentPage() + 1);
@@ -744,7 +811,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             // tap right side
             else if (x > (float) mViewPager.getWidth() / 10 * 7) {
                 if (mIsLeftToRight) {
-                    if (getCurrentPage() == mViewPager.getAdapter().getCount())
+                    if (getCurrentPage() == mPageCount)
                         hitEnding();
                     else
                         setCurrentPage(getCurrentPage() + 1);
@@ -786,7 +853,9 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     }
 
     private void setPageInfoShown(boolean shown) {
+        mIsPageInfoShown = shown;
         if (shown) {
+            updatePageImageInfo();
             mPageInfoButton.setVisibility(View.GONE);
             mPageInfoTextView.setVisibility(View.VISIBLE);
             if (mFile != null)
@@ -799,13 +868,11 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             mPageInfoButton.setVisibility(View.VISIBLE);
             ((ReaderActivity) getActivity()).setSubTitle("");
         }
-        mIsPageInfoShown = shown;
-        updatePageImageInfo();
     }
 
     private void setFullscreen(boolean fullscreen) {
         ActionBar actionBar = getActionBar();
-        View decorView =getActivity().getWindow().getDecorView();
+        View decorView = getActivity().getWindow().getDecorView();
         // the new way (setting flags is deprecated)
         // blend in/out looks worse on Android 12 tho
 //       WindowInsetsControllerCompat wic = new WindowInsetsControllerCompat(getActivity().getWindow(), mViewPager);
@@ -849,12 +916,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
             decorView.setSystemUiVisibility(flag);
 
-            try {
-                mPageSeekBar.setMax(mParser.numPages() - 1);
-            } catch (IOException e) {
-                mPageSeekBar.setMax(0);
-                Log.e("ReaderFragment#212", "onCreateView", e);
-            }
+            mPageSeekBar.setMax(mPageCount - 1);
             if (actionBar != null) actionBar.show();
             mPageNavLayout.setVisibility(View.VISIBLE);
 
