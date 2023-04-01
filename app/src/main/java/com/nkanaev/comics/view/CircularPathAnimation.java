@@ -1,16 +1,12 @@
 package com.nkanaev.comics.view;
 
-import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 
 public class CircularPathAnimation extends Animation {
-
-    private View view;
-    // center x,y position of circular path
     private float cx, cy;
     private float prevX, prevY;
-    private float radius;
+    private final float radius;
     private float prevDx, prevDy;
 
     /**
@@ -28,12 +24,13 @@ public class CircularPathAnimation extends Animation {
     @Override
     public void initialize(int width, int height, int parentWidth, int parentHeight) {
         // memorize original position of image center
-        cx = width / 2;
-        cy = height / 2;
+        cx = width / 2f;
+        cy = height / 2f;
 
-        // set previous position to center
+        // match below anim start position of 90deg up
+        // so image does not jump on anim start
         prevX = cx;
-        prevY = cy;
+        prevY = cy-radius;
     }
 
     @Override
@@ -44,7 +41,7 @@ public class CircularPathAnimation extends Animation {
         }
 
         // calculate new angle
-        float angleDeg = (interpolatedTime * 360f + 90) % 360;
+        float angleDeg = (interpolatedTime * 360f - 90) % 360;
         float angleRad = (float) Math.toRadians(angleDeg);
 
         // calculate new position
@@ -52,8 +49,8 @@ public class CircularPathAnimation extends Animation {
         float y = (float) (cy + radius * Math.sin(angleRad));
 
         // calculate difference for translation
-        float dx = prevX - x;
-        float dy = prevY - y;
+        float dx = x -prevX;
+        float dy = y -prevY;
 
         prevX = x;
         prevY = y;
