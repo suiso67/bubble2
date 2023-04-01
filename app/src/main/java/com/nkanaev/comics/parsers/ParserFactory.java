@@ -13,6 +13,7 @@ import com.nkanaev.comics.managers.Utils;
 
 import java.io.*;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -390,9 +391,14 @@ public class ParserFactory {
         private Parser mParser;
         private boolean mFetchMeta = false;
         private HashMap<Integer, Map> mPagesMetaData = new HashMap();
+        private ArrayList mPagesSeen = new ArrayList<Integer>();
 
         public CachingPageMetaDataParserWrapper(Parser parser) {
             mParser = parser;
+        }
+
+        private Integer key(int num){
+            return Integer.valueOf(num);
         }
 
         @Override
@@ -405,18 +411,19 @@ public class ParserFactory {
             return mParser.numPages();
         }
 
-        // synchronized so we do not access te same file channel concurrently
         @Override
-        public synchronized InputStream getPage(int num) throws IOException {
+        public InputStream getPage(int num) throws IOException {
             InputStream is = null;
-            if (mFetchMeta)
+            if (mFetchMeta && !mPagesMetaData.containsKey(key(num)))
                 is = initPageMetaData(num);
+            else if (!mFetchMeta)
+                mPagesSeen.add(key(num));
 
             return is != null ? is : mParser.getPage(num);
         }
 
-        private InputStream initPageMetaData(int num) throws IOException {
-            Integer key = Integer.valueOf(num);
+        private synchronized InputStream initPageMetaData(int num) throws IOException {
+            Integer key = key(num);
             Map pageData = new HashMap();
             InputStream is = null;
             try {
@@ -431,19 +438,24 @@ public class ParserFactory {
                     pageData.put(Parser.PAGEMETADATA_KEY_WIDTH, options.outWidth);
                     pageData.put(Parser.PAGEMETADATA_KEY_HEIGHT, options.outHeight);
                 }
-            } finally {
+            }
+            catch (Exception e) {
+                // ignore, just log
+                Log.e("bubble2","failed to decode/fetch metadata",e);
+            }
+            finally {
                 // keep memory buffer inputstreams
                 if (is instanceof ByteArrayInputStream) {
                     is.reset();
                 }
-                // discard others, not seekable properly
+                // discard others, not (re)seekable properly
                 else {
                     Utils.close(is);
                     is = null;
                 }
+                mPagesMetaData.put(key, pageData);
+                return is;
             }
-            mPagesMetaData.put(key, pageData);
-            return is;
         }
 
         @Override
@@ -453,15 +465,15 @@ public class ParserFactory {
             Map<String, String> in = mParser.getPageMetaData(num);
             if (in == null || in.isEmpty())
                 in = new HashMap<>();
-            Map<String, String> in2 = mPagesMetaData.get(Integer.valueOf(num));
-            // init if still missing (just enabled?)
-            if (in2 == null) {
+            Map<String, String> in2 = mPagesMetaData.get(key(num));
+            // init if still missing (just enabled?), for already requested pages only
+            if (in2 == null && mPagesSeen.contains(key(num))) {
                 InputStream is = initPageMetaData(num);
                 Utils.close(is);
-                in2 = mPagesMetaData.get(Integer.valueOf(num));
+                in2 = mPagesMetaData.get(key(num));
             }
             // nothing to merge, leave early
-            if (in2.isEmpty())
+            if (in2 == null || in2.isEmpty())
                 return in;
 
             // merge same key values with slash
