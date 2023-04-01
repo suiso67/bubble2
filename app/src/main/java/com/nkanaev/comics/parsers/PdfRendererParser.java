@@ -1,46 +1,59 @@
 package com.nkanaev.comics.parsers;
 
-import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.pdf.PdfRenderer;
 import android.os.ParcelFileDescriptor;
+import android.util.Log;
+import com.nkanaev.comics.BuildConfig;
 import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.managers.Utils;
 
 import java.io.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-public class PdfRendererParser extends AbstractParser{
-    PdfRenderer renderer = null;
+public class PdfRendererParser extends AbstractParser {
+    int mPageCount = 0;
+    private HashMap<Integer, Map> mPagesMetaData = new HashMap<>();
 
     public PdfRendererParser() {
         super(new Class[]{File.class});
     }
 
-    @Override
-    public void parse() throws IOException {
+    // creating pdf parser is cheap, no use to reuse it
+    private PdfRenderer createPdfRenderer() throws IOException {
         File file = (File) getSource();
-        ParcelFileDescriptor pd = ParcelFileDescriptor.open(file,ParcelFileDescriptor.MODE_READ_ONLY);
-        renderer = new PdfRenderer(pd);
+        ParcelFileDescriptor pd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
+        return new PdfRenderer(pd);
     }
 
     @Override
-    public synchronized InputStream getPage(int num) throws IOException {
-        if (renderer==null)
-            parse();
+    public synchronized void parse() throws IOException {
+        if (mPageCount>0) return;
 
+        PdfRenderer pr = createPdfRenderer();
+        mPageCount = pr.getPageCount();
+        Utils.close(pr);
+    }
+
+    @Override
+    public InputStream getPage(int num) throws IOException {
+        long start = Utils.now();
         // read image
-        PdfRenderer.Page page = null;
         ByteArrayOutputStream bos = null;
         Bitmap bitmap = null;
+        PdfRenderer pr = null;
+        PdfRenderer.Page page = null;
         try {
-            page = renderer.openPage(num);
-            int ddpi = MainApplication.getAppContext().getResources().getDisplayMetrics().densityDpi;
+            pr = createPdfRenderer();
+            page = pr.openPage(num);
             // pdf sizes are relative to the document
             // let's calculate a pixel size that fits on our device keeping the aspect ratio
-            float aspect = (float)page.getWidth()/page.getHeight();
+            float aspect = (float) page.getWidth() / page.getHeight();
             int maxSize = Utils.getMaxPageSize();
-            int w = aspect<=1?maxSize:Math.round(aspect*maxSize);
-            int h = aspect>=1?maxSize:Math.round(maxSize/aspect);
+            int w = aspect <= 1 ? maxSize : Math.round(aspect * maxSize);
+            int h = aspect >= 1 ? maxSize : Math.round(maxSize / aspect);
             bitmap = Bitmap.createBitmap(
                     w,
                     h,
@@ -48,24 +61,40 @@ public class PdfRendererParser extends AbstractParser{
             );
             page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
 
+            long start2 = Utils.now();
             // write to in-memory stream
             bos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100 /*jpg100 is way faster than png, dunnowhy*/, bos);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100 /*jpg100 is way faster than png or webp, dunnowhy*/, bos);
             byte[] byteArray = bos.toByteArray();
+            if (BuildConfig.DEBUG) {
+                String text = "getPage(" + num + ") " + Utils.milliSecondsSince(start) + ", recode " + Utils.milliSecondsSince(start2);
+                mPagesMetaData.put(Integer.valueOf(num), Collections.singletonMap("debug-pdf",text));
+                Log.d("bubble2 pdf", text);
+            }
             return new ByteArrayInputStream(byteArray);
         } finally {
-            // make sure pages are closed always
+            // cleanup, close everything
             Utils.close(page);
             Utils.close(bos);
-            if (bitmap!=null) bitmap.recycle();
+            Utils.close(bitmap);
+            // in case we were closed during rendering
+            Utils.close(pr);
         }
     }
 
     @Override
+    public Map getPageMetaData(int num) throws IOException {
+        Integer key = Integer.valueOf(num);
+        if (mPagesMetaData.containsKey(key))
+            return new HashMap<>(mPagesMetaData.get(key));
+
+        return super.getPageMetaData(num);
+    }
+
+    @Override
     public int numPages() throws IOException {
-        if (renderer==null)
-            parse();
-        return renderer.getPageCount();
+        parse();
+        return mPageCount;
     }
 
     @Override
@@ -75,8 +104,6 @@ public class PdfRendererParser extends AbstractParser{
 
     @Override
     public void destroy() {
-        Utils.close(renderer);
-        renderer = null;
         super.destroy();
     }
 }
