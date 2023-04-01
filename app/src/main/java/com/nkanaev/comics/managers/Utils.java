@@ -204,7 +204,7 @@ public final class Utils {
         DisplayMetrics displayMetrics = MainApplication.getAppContext().getResources().getDisplayMetrics();
         int w = displayMetrics.widthPixels;
         int h = displayMetrics.heightPixels;
-        return Math.round(1.5f * Math.max(w, h));
+        return Math.round(1.25f * Math.max(w, h));
     }
 
     public static String MD5(String string) {
@@ -263,6 +263,10 @@ public final class Utils {
     public static File getCoverCacheFile(String identifier, String extension) {
         File dir = getCacheFolder();
         return new File(dir, "cover-"+Utils.MD5(identifier)+(extension!=null?"."+extension:""));
+    }
+
+    public static ByteArrayInputStream toByteArrayInputStream(InputStream is) throws IOException {
+        return new ByteArrayInputStream(toByteArray(is));
     }
 
     public static byte[] toByteArray(InputStream is) throws IOException {
@@ -434,4 +438,29 @@ public final class Utils {
         return 0;
     }
 
+    /**
+     *  a helper method to measure time frames in milliseconds
+     * @return current time in milliseconds
+     */
+    public static long now(){
+        return System.currentTimeMillis();
+    }
+
+    /**
+     *  a helper method to measure time frames in milliseconds
+     * @param i time in milliseconds
+     * @return milliseconds since time
+     */
+    public static long milliSecondsSince( long i ){
+        return System.currentTimeMillis() - i;
+    }
+
+    /**
+     * a helper method to nicely format the above output e.g. 12046ms -> 12.05s
+     * @param i milliseconds
+     * @return eg. "1.05" for a difference of 1047ms
+     */
+    public static String secondsSinceString( long i ){
+        return String.format("%.2f", milliSecondsSince(i)/1000f);
+    }
 }
