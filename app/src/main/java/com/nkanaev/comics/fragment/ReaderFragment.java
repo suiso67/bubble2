@@ -376,10 +376,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                         mViewPager.setAdapter(new ComicPagerAdapter());
                         mPageSeekBar.setMax(mPageCount - 1);
 
-                        if (mComic!=null) {
-                            int curPage = mComic.getCurrentPage();
-                            setCurrentPage(Math.max(curPage, 1));
-                        }
+                        int curPage = (mComic != null) ? mComic.getCurrentPage() : 0;
+                        setCurrentPage(Math.max(curPage, 1));
 
                         view.findViewById(R.id.progressPlaceholder).setVisibility(View.GONE);
                         mViewPager.setVisibility(View.VISIBLE);
@@ -512,9 +510,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         setCurrentPage(page, true);
     }
 
+    int mPrevItem = Integer.MIN_VALUE;
+
     private void setCurrentPage(int page, boolean animated) {
-        int prevItem = mViewPager.getCurrentItem();
-        int newItem = page -1;
+        int newItem = page - 1;
 
         if (mIsLeftToRight) {
             mViewPager.setCurrentItem(newItem, animated);
@@ -524,15 +523,17 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             mPageSeekBar.setProgress(mPageCount - page);
         }
 
-        if (prevItem == newItem)
+        if (mPrevItem == newItem)
             return;
+        else
+            mPrevItem = newItem;
 
         String navText = new StringBuilder()
                 .append(page).append("/").append(mPageCount)
                 .toString();
         mPageNavTextView.setText(navText);
 
-        mPageInfoTextView.setText("");
+        mPageInfoTextView.setVisibility(View.INVISIBLE);
         updatePageImageInfo();
     }
 
@@ -578,7 +579,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                         if (ignoredKeys.contains(key))
                             continue;
                         metaText += (metaText.isEmpty() ? "" : "\n") +
-                                key+": "+entry.getValue();
+                                key + ": " + entry.getValue();
                     }
                 }
                 final String text = metaText;
@@ -587,8 +588,13 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                     public void run() {
                         // just in case the above took too long and user
                         // switched page already, skip the now obsolete write
-                        if (getCurrentPage()-1 == pageNum)
-                            mPageInfoTextView.setText(text);
+                        if (getCurrentPage() - 1 != pageNum)
+                            return;
+                        if (!mIsPageInfoShown)
+                            return;
+
+                        mPageInfoTextView.setText(text);
+                        mPageInfoTextView.setVisibility(View.VISIBLE);
                     }
                 });
             }
