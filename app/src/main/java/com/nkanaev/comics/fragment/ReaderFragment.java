@@ -358,7 +358,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             title += mFile.getName();
         else if (mUri != null)
             title += mUri.getLastPathSegment();
-        ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText((title.isEmpty() ? "" : title + " ") + "[" + mParser.getType() + "]");
+        ((TextView) getActivity().findViewById(R.id.action_bar_title)).setText(title);
 
         // move parsing into bg thread to return view early
         new Thread(new Runnable() {
@@ -381,6 +381,9 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
                         view.findViewById(R.id.progressPlaceholder).setVisibility(View.GONE);
                         mViewPager.setVisibility(View.VISIBLE);
+
+                        TextView titleTextView = getActivity().findViewById(R.id.action_bar_title);
+                        titleTextView.append((titleTextView.getText().toString().isEmpty() ? "" : "  ")+"[" + mParser.getType() + "]");
                     }
                 });
             }
