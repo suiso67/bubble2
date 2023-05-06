@@ -989,6 +989,21 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                     }
                 })
                 .create();
+        // apply systembars hidden/shown status to dialog's window from activity's window
+        // fixes "statusbar is and stays enabled when dialog is shown" on Android9
+        Window dialogWindow = dialog.getWindow();
+        dialogWindow.setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+        dialogWindow.getDecorView().setSystemUiVisibility(getActivity().getWindow().getDecorView().getSystemUiVisibility());
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface di) {
+                //Clear the not focusable flag from the window
+                dialogWindow.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+                //Update the WindowManager with the new attributes (no nicer way I know of to do this)..
+                WindowManager wm = (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
+                wm.updateViewLayout(dialogWindow.getDecorView(), dialogWindow.getAttributes());
+            }
+        });
         dialog.show();
     }
 
