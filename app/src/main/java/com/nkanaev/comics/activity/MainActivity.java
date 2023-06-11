@@ -19,7 +19,6 @@ import android.view.MenuItem;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.fragment.AboutFragment;
 import com.nkanaev.comics.fragment.BrowserFragment;
-import com.nkanaev.comics.fragment.HeaderFragment;
 import com.nkanaev.comics.fragment.LibraryFragment;
 import com.nkanaev.comics.managers.LocalCoverHandler;
 import com.nkanaev.comics.managers.Scanner;
@@ -31,6 +30,7 @@ import com.squareup.picasso.Picasso;
 public class MainActivity extends AppCompatActivity
         implements FragmentManager.OnBackStackChangedListener {
     private final static String STATE_CURRENT_MENU_ITEM = "STATE_CURRENT_MENU_ITEM";
+    private final static String STATE_INITIAL_SCAN_RAN_ALREADY = "INITIAL_SCAN_FINISHED";
     public static String PACKAGE_NAME;
 
     private DrawerLayout mDrawerLayout;
@@ -85,7 +85,9 @@ public class MainActivity extends AppCompatActivity
         };
         mDrawerLayout.setDrawerListener(mDrawerToggle);
 
-        // prevent rescan when view is rotated
+        // prevent rescan when view is rotated or activity just restarted
+        if (savedInstanceState!=null)
+            mInitialLibraryScanRanAlready = savedInstanceState.getBoolean(STATE_INITIAL_SCAN_RAN_ALREADY);
         if (!mInitialLibraryScanRanAlready) {
             Utils.cleanCacheDir();
             Scanner.getInstance().scanLibrary();
@@ -141,6 +143,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putInt(STATE_CURRENT_MENU_ITEM, mCurrentNavItem);
+        outState.putBoolean(STATE_INITIAL_SCAN_RAN_ALREADY, mInitialLibraryScanRanAlready);
         super.onSaveInstanceState(outState);
     }
 
