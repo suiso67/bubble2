@@ -1,11 +1,12 @@
 package com.nkanaev.comics.parsers;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.pdf.PdfRenderer;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import com.nkanaev.comics.BuildConfig;
-import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.managers.Utils;
 
 import java.io.*;
@@ -59,12 +60,17 @@ public class PdfRendererParser extends AbstractParser {
                     h,
                     Bitmap.Config.ARGB_8888
             );
+            // make sure background is white by default
+            Canvas canvas = new Canvas(bitmap);
+            canvas.drawColor(Color.WHITE);
+            // render page onto it
             page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
 
             long start2 = Utils.now();
             // write to in-memory stream
             bos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100 /*jpg100 is way faster than png or webp, dunnowhy*/, bos);
+            // jpg100 is way faster than png or webp, dunnowhy
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100 , bos);
             byte[] byteArray = bos.toByteArray();
             if (BuildConfig.DEBUG) {
                 String text = "getPage(" + num + ") " + Utils.milliSecondsSince(start) + ", recode " + Utils.milliSecondsSince(start2);
