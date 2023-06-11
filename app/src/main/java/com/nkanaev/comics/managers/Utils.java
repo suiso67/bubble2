@@ -31,6 +31,8 @@ import java.io.*;
 import java.lang.reflect.Method;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipFile;
 
@@ -165,6 +167,26 @@ public final class Utils {
         return isZip(filename) || isRar(filename) ||
                 isTarball(filename) || isSevenZ(filename) ||
                 isPdf(filename);
+    }
+
+    static List<String> mimeTypesZip = Arrays.asList("application/zip", "application/cbz", "application/x-cbz");
+    static List<String> mimeTypesRar = Arrays.asList("application/rar", "application/cbr", "application/x-cbr");
+    static List<String> mimeTypesSevenZ = Arrays.asList("application/x-cb7", "application/x-7z-compressed");
+    static List<String> mimeTypesTar = Arrays.asList("application/x-cbt", "application/x-compressed-tar", "application/x-bzip-compressed-tar", "application/x-tar", "application/x-gtar");
+    static List<String> mimeTypesPdf = Arrays.asList("application/pdf", "application/x-pdf");
+    public static String dummyFileNameFromMimeType(String mimeType){
+        mimeType = mimeType.toLowerCase();
+        if (mimeTypesZip.contains(mimeType))
+            return "dummy.zip";
+        else if (mimeTypesRar.contains(mimeType))
+            return "dummy.rar";
+        else if (mimeTypesSevenZ.contains(mimeType))
+            return "dummy.7z";
+        else if (mimeTypesTar.contains(mimeType))
+            return "dummy.tar";
+        else if (mimeTypesPdf.contains(mimeType))
+            return "dummy.pdf";
+        return null;
     }
 
     public static int getDeviceWidth(Context context) {

@@ -77,7 +77,8 @@ public class ParserFactory {
             return create(new File(uri.getPath()));
         }
 
-        Class parserClass = findParser(new File(uri.getLastPathSegment()));
+        Class parserClass = findParser(intent);
+
         AbstractParser p = (AbstractParser) parserClass.getDeclaredConstructor().newInstance();
         if (p.canParse(File.class)) {
             AbstractParser intentParser = new IntentWithTempFileParserWrapper(p);
@@ -86,6 +87,26 @@ public class ParserFactory {
         }
 
         throw new UnsupportedOperationException("Parser " + parserClass.getCanonicalName() + " does not support opening File!");
+    }
+
+    private static Class<? extends AbstractParser> findParser(Intent intent) {
+        Uri uri = AbstractParser.uriFromIntent(intent);
+        File file = new File(uri.getLastPathSegment());
+        try {
+            return findParser(file);
+        } catch (UnsupportedOperationException e) {
+            // lets retry below
+        }
+        // retry mimetype if needed
+        String dummyName;
+        if (intent.getType()!=null && (dummyName=Utils.dummyFileNameFromMimeType(intent.getType()))!=null)
+            try {
+                return findParser(new File(dummyName));
+            } catch (UnsupportedOperationException e){
+                // throw error below
+            }
+
+        throw new UnsupportedOperationException("No parser found for file " + file +" mimeType " + intent.getType());
     }
 
     private static Class<? extends AbstractParser> findParser(File file) {
