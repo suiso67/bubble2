@@ -183,8 +183,8 @@ public class LibraryBrowserFragment extends Fragment
         if (mFilterMenu == null) return;
 
         @StyleRes int theme = ((MainActivity) getActivity()).getToolbar().getPopupTheme();
-        @ColorInt int normal = Utils.getThemeColor(R.attr.colorControlNormal, theme);
-        @ColorInt int active = Utils.getThemeColor(R.attr.colorControlActivated, theme);
+        @ColorInt int normal = Utils.getThemeColor(androidx.appcompat.R.attr.colorControlNormal, theme);
+        @ColorInt int active = Utils.getThemeColor(androidx.appcompat.R.attr.colorControlActivated, theme);
         for (int i = 0; i < mFilterMenu.size(); i++) {
             MenuItem item = mFilterMenu.getItem(i);
             if (item.isChecked())
