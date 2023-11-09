@@ -491,6 +491,11 @@ public final class Utils {
         return String.format("%.2f", milliSecondsSince(i)/1000f);
     }
 
+    public static double getGLEsVersion() {
+        double version = Double.parseDouble(((ActivityManager) MainApplication.getAppContext().getSystemService(Context.ACTIVITY_SERVICE)).getDeviceConfigurationInfo().getGlEsVersion());
+        return version;
+    }
+
     private static int glMaxTextureSize = -1;
 
     public static int glMaxTextureSize(){
