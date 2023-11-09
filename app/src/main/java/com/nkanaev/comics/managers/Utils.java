@@ -9,6 +9,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Insets;
+import android.opengl.*;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -27,6 +28,7 @@ import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.parsers.Parser;
 
+import javax.microedition.khronos.egl.EGL10;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.security.MessageDigest;
@@ -37,7 +39,6 @@ import java.util.UUID;
 import java.util.zip.ZipFile;
 
 import static android.content.Context.ACTIVITY_SERVICE;
-
 
 public final class Utils {
     public static int getScreenDpWidth(Context context) {
@@ -67,6 +68,10 @@ public final class Utils {
 
     public static boolean isLollipopOrLater() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+    }
+
+    public static boolean isMarshmallowOrLater() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
     }
 
     // FileChannel
@@ -484,5 +489,148 @@ public final class Utils {
      */
     public static String secondsSinceString( long i ){
         return String.format("%.2f", milliSecondsSince(i)/1000f);
+    }
+
+    private static int glMaxTextureSize = -1;
+
+    public static int glMaxTextureSize(){
+        if (glMaxTextureSize < 0)
+            glMaxTextureSize = isJellyBeanMR1orLater() ? gl20MaxTextureSize() : gl10MaxTextureSize();
+        return glMaxTextureSize;
+    }
+
+    public static int gl20MaxTextureSize(){
+        EGLDisplay dpy = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY);
+        int[] vers = new int[2];
+        EGL14.eglInitialize(dpy, vers, 0, vers, 1);
+
+        int[] configAttr = {
+                EGL14.EGL_COLOR_BUFFER_TYPE, EGL14.EGL_RGB_BUFFER,
+                EGL14.EGL_LEVEL, 0,
+                EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
+                EGL14.EGL_SURFACE_TYPE, EGL14.EGL_PBUFFER_BIT,
+                EGL14.EGL_NONE
+        };
+        EGLConfig[] configs = new EGLConfig[1];
+        int[] numConfig = new int[1];
+        EGL14.eglChooseConfig(dpy, configAttr, 0,
+                configs, 0, 1, numConfig, 0);
+        if (numConfig[0] == 0) {
+            // TROUBLE! No config found.
+        }
+        EGLConfig config = configs[0];
+
+        int[] surfAttr = {
+                EGL14.EGL_WIDTH, 64,
+                EGL14.EGL_HEIGHT, 64,
+                EGL14.EGL_NONE
+        };
+        EGLSurface surf = EGL14.eglCreatePbufferSurface(dpy, config, surfAttr, 0);
+
+        int[] ctxAttrib = {
+                EGL14.EGL_CONTEXT_CLIENT_VERSION, 2,
+                EGL14.EGL_NONE
+        };
+        EGLContext ctx = EGL14.eglCreateContext(dpy, config, EGL14.EGL_NO_CONTEXT, ctxAttrib, 0);
+
+        EGL14.eglMakeCurrent(dpy, surf, surf, ctx);
+
+        int[] maxSize = new int[1];
+        GLES20.glGetIntegerv(GLES20.GL_MAX_TEXTURE_SIZE, maxSize, 0);
+        //GLES30.glGetIntegerv(GLES30.GL_MAX_TEXTURE_SIZE, maxSize, 0);
+        //GLES32.glGetIntegerv(GLES32.GL_MAX_TEXTURE_SIZE, maxSize, 0);
+
+        EGL14.eglMakeCurrent(dpy, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE,
+                EGL14.EGL_NO_CONTEXT);
+        EGL14.eglDestroySurface(dpy, surf);
+        EGL14.eglDestroyContext(dpy, ctx);
+        EGL14.eglTerminate(dpy);
+
+        return maxSize[0];
+    }
+
+    public static int gl10MaxTextureSize(){
+        EGL10 egl = (EGL10) javax.microedition.khronos.egl.EGLContext.getEGL();
+
+        javax.microedition.khronos.egl.EGLDisplay dpy = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+        int[] vers = new int[2];
+        egl.eglInitialize(dpy, vers);
+
+        int[] configAttr = {
+                EGL10.EGL_COLOR_BUFFER_TYPE, EGL10.EGL_RGB_BUFFER,
+                EGL10.EGL_LEVEL, 0,
+                EGL10.EGL_SURFACE_TYPE, EGL10.EGL_PBUFFER_BIT,
+                EGL10.EGL_NONE
+        };
+        javax.microedition.khronos.egl.EGLConfig[] configs = new javax.microedition.khronos.egl.EGLConfig[1];
+        int[] numConfig = new int[1];
+        egl.eglChooseConfig(dpy, configAttr, configs, 1, numConfig);
+        if (numConfig[0] == 0) {
+            // TROUBLE! No config found.
+        }
+        javax.microedition.khronos.egl.EGLConfig config = configs[0];
+
+        int[] surfAttr = {
+                EGL10.EGL_WIDTH, 64,
+                EGL10.EGL_HEIGHT, 64,
+                EGL10.EGL_NONE
+        };
+        javax.microedition.khronos.egl.EGLSurface surf = egl.eglCreatePbufferSurface(dpy, config, surfAttr);
+        final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;  // missing in EGL10
+        int[] ctxAttrib = {
+                EGL_CONTEXT_CLIENT_VERSION, 1,
+                EGL10.EGL_NONE
+        };
+        javax.microedition.khronos.egl.EGLContext ctx = egl.eglCreateContext(dpy, config, EGL10.EGL_NO_CONTEXT, ctxAttrib);
+        egl.eglMakeCurrent(dpy, surf, surf, ctx);
+        int[] maxSize = new int[1];
+        GLES10.glGetIntegerv(GLES10.GL_MAX_TEXTURE_SIZE, maxSize, 0);
+        egl.eglMakeCurrent(dpy, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE,
+                EGL10.EGL_NO_CONTEXT);
+        egl.eglDestroySurface(dpy, surf);
+        egl.eglDestroyContext(dpy, ctx);
+        egl.eglTerminate(dpy);
+
+        return maxSize[0];
+    }
+
+    public static int eglMaxPBuffer() {
+        // Safe minimum default size
+        final int IMAGE_MAX_BITMAP_DIMENSION = 2048;
+
+        // Get EGL Display
+        EGL10 egl = (EGL10) javax.microedition.khronos.egl.EGLContext.getEGL();
+        javax.microedition.khronos.egl.EGLDisplay display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+
+        // Initialise
+        int[] version = new int[2];
+        egl.eglInitialize(display, version);
+
+        // Query total number of configurations
+        int[] totalConfigurations = new int[1];
+        egl.eglGetConfigs(display, null, 0, totalConfigurations);
+
+        // Query actual list configurations
+        javax.microedition.khronos.egl.EGLConfig[] configurationsList = new javax.microedition.khronos.egl.EGLConfig[totalConfigurations[0]];
+        egl.eglGetConfigs(display, configurationsList, totalConfigurations[0], totalConfigurations);
+
+        int[] textureSize = new int[1];
+        int maximumTextureSize = 0;
+
+        // Iterate through all the configurations to located the maximum texture size
+        for (int i = 0; i < totalConfigurations[0]; i++) {
+            // Only need to check for width since opengl textures are always squared
+            egl.eglGetConfigAttrib(display, configurationsList[i], EGL10.EGL_MAX_PBUFFER_WIDTH, textureSize);
+
+            // Keep track of the maximum texture size
+            if (maximumTextureSize < textureSize[0])
+                maximumTextureSize = textureSize[0];
+        }
+
+        // Release
+        egl.eglTerminate(display);
+
+        // Return largest texture size found, or default
+        return Math.max(maximumTextureSize, IMAGE_MAX_BITMAP_DIMENSION);
     }
 }
