@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ParserFactory {
 
@@ -39,6 +41,8 @@ public class ParserFactory {
                 if (p instanceof AbstractParser && Utils.isOreoOrLater() &&
                         Arrays.asList(new String[]{"7z", "rar", "zip"}).contains(p.getType()))
                     p = new LenientTryAnotherParserWrapper((AbstractParser) p);
+                // wrap in Ignore wrapper
+                p = new IgnorePageRegExWrapper(p);
                 // wrap in MetaData wrapper
                 p = new CachingPageMetaDataParserWrapper(p);
                 // wrap in JP2 recoder
@@ -811,6 +815,80 @@ public class ParserFactory {
 
             // destroy wrapped parser
             Utils.close(mParser);
+        }
+    }
+
+    private static class IgnorePageRegExWrapper implements Parser {
+        private Parser mParser;
+        // ignore files in macOS resource fork folders as packaged by macOS zip tool
+        private Pattern mIgnorePattern = Pattern.compile("(?:^/?|.*/)__MACOSX/.*");
+
+        private ArrayList<Integer> mPages = null;
+
+        public IgnorePageRegExWrapper(Parser parser) throws Exception {
+            mParser = parser;
+        }
+
+        @Override
+        public synchronized void parse() throws IOException {
+            if (mPages != null)
+                return;
+
+            mParser.parse();
+            int numPages = mParser.numPages();
+
+            ArrayList<Integer> pList = new ArrayList();
+            for (int i = 0; i < numPages; i++) {
+                String name = (String) mParser.getPageMetaData(i).get(Parser.PAGEMETADATA_KEY_NAME);
+                // no name? nothing to do
+                if (name==null || name.isEmpty()) {
+                    pList.add(i);
+                    continue;
+                }
+                // only keep paths that _do_not_ match regex pattern
+                Matcher matcher = mIgnorePattern.matcher(name);
+                if (!matcher.matches())
+                    pList.add(i);
+            }
+            mPages = pList;
+        }
+
+        @Override
+        public int numPages() throws IOException {
+            parse();
+            return mPages != null ? mPages.size() : mParser.numPages();
+        }
+
+        private int translate(int num) throws IOException {
+            parse();
+            int index = mPages != null ? mPages.get(num) : num;
+            return index;
+        }
+
+        @Override
+        public InputStream getPage(int num) throws IOException {
+            num = translate(num);
+            return mParser.getPage(num);
+        }
+
+        @Override
+        public Map getPageMetaData(int num) throws IOException {
+            num = translate(num);
+            return mParser.getPageMetaData(num);
+        }
+
+        @Override
+        public String getType() {
+            return mParser.getType();
+        }
+
+        @Override
+        public void destroy() {
+            if (mPages!=null) {
+                mPages.clear();
+                mPages = null;
+            }
+            mParser.destroy();
         }
     }
 }
