@@ -45,6 +45,7 @@ import com.nkanaev.comics.view.ComicViewPager;
 import com.nkanaev.comics.view.PageImageView;
 import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.RequestCreator;
 import com.squareup.picasso.Target;
 
 import java.io.File;
@@ -670,16 +671,19 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             pos = mViewPager.getAdapter().getCount() - t.position - 1;
         }
 
-        // mDblTapScale in PageImageView is 1.5 currently, so set this as our limit
-        int max = Utils.getMaxPageSize();
-
-        mPicasso.load(mComicHandler.getPageUri(pos))
+        RequestCreator rc = mPicasso.load(mComicHandler.getPageUri(pos))
                 .memoryPolicy(MemoryPolicy.NO_STORE)
-                .tag(getActivity())
-                .resize(max, max)
-                .centerInside()
-                .onlyScaleDown()
-                .into(t);
+                .tag(getActivity());
+        // disabled as tests on real devices flawlessly load bitmap > texturesize
+        // might be needed in future though depending on bug reports
+        if (false) {
+            // mDblTapScale in PageImageView is 1.5 currently, so set this as our limit
+            int max = Utils.getMaxPageSize();
+
+            int glmax = Utils.glMaxTextureSize();
+            rc = rc.resize(glmax, glmax).centerInside().onlyScaleDown();
+        }
+        rc.into(t);
     }
 
     // toggle visibility states
@@ -748,7 +752,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         @Override
         public void onBitmapFailed(Exception e, Drawable errorDrawable) {
             // TODO: show error stack in textview
-            Log.e("", "", e);
+            Log.e("MyTarget:onBitmapFailed()", "", e);
             setVisibility(Show.ERROR);
         }
 
