@@ -8,7 +8,7 @@ import androidx.appcompat.widget.AppCompatImageView;
 
 public class CoverImageView extends AppCompatImageView {
     // The standard American comic page size is 6.875 by 10.438 inches with bleed
-    static final double factor = 6.875/10.438;
+    public static final double FACTOR = 6.875/10.438;
 
     public CoverImageView(Context context) {
         super(context);
@@ -22,7 +22,7 @@ public class CoverImageView extends AppCompatImageView {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         int width = getMeasuredWidth();
-        setMeasuredDimension(width, (int)(width * 1/factor) );
+        setMeasuredDimension(width, (int)(width * 1/ FACTOR) );
     }
 
     @Override

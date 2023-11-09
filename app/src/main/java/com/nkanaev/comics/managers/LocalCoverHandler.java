@@ -9,6 +9,7 @@ import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
+import com.nkanaev.comics.view.CoverImageView;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Request;
 import com.squareup.picasso.RequestHandler;
@@ -38,7 +39,7 @@ public class LocalCoverHandler extends RequestHandler {
 
     public static Bitmap getCover(Uri comicUri) throws IOException {
 
-        File coverFile = Utils.getCoverCacheFile( comicUri.getPath(), "jpg" );
+        File coverFile = Utils.getCoverCacheFile(comicUri.getPath(), "jpg");
 
         if (coverFile.isFile()) {
             Bitmap bitmap = BitmapFactory.decodeFile(coverFile.getAbsolutePath(), null);
@@ -69,6 +70,20 @@ public class LocalCoverHandler extends RequestHandler {
             //options.inPreferredConfig = Bitmap.Config.RGB_565;
 
             Bitmap result = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+
+            // crop result to coverlike dimensions if needed
+            int height = result.getHeight();
+            int width = result.getWidth();
+            int hLimit = (int) (width * (1 / CoverImageView.FACTOR));
+            int wLimit = (int) (height * (2 * CoverImageView.FACTOR));
+            Bitmap oldResult = result;
+            if (height > width && height > hLimit) {
+                result = Bitmap.createBitmap(result, 0, 0, width, hLimit);
+                oldResult.recycle();
+            } else if (width > height && width > wLimit) {
+                result = Bitmap.createBitmap(result, 0, 0, wLimit, height);
+                oldResult.recycle();
+            }
 
             // corner case, cache folder might be missing
             File folder = coverFile.getParentFile();
