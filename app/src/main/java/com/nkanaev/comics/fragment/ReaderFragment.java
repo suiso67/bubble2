@@ -672,6 +672,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         }
 
         RequestCreator rc = mPicasso.load(mComicHandler.getPageUri(pos))
+                //.config(Bitmap.Config.RGB_565)
                 .memoryPolicy(MemoryPolicy.NO_STORE)
                 .tag(getActivity());
         // disabled as tests on real devices flawlessly load bitmap > texturesize
@@ -680,8 +681,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             // mDblTapScale in PageImageView is 1.5 currently, so set this as our limit
             int max = Utils.getMaxPageSize();
 
-            int glmax = Utils.glMaxTextureSize();
-            rc = rc.resize(glmax, glmax).centerInside().onlyScaleDown();
+            //max = Utils.glMaxTextureSize();
+            rc = rc.resize(max, max).centerInside().onlyScaleDown();
         }
         rc.into(t);
     }
@@ -752,7 +753,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         @Override
         public void onBitmapFailed(Exception e, Drawable errorDrawable) {
             // TODO: show error stack in textview
-            Log.e("MyTarget:onBitmapFailed()", "", e);
+            Log.e("onBitmapFailed()", "", e);
             setVisibility(Show.ERROR);
         }
 
