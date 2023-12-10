@@ -42,7 +42,11 @@ public class LocalCoverHandler extends RequestHandler {
         File coverFile = Utils.getCoverCacheFile(comicUri.getPath(), "jpg");
 
         if (coverFile.isFile()) {
-            Bitmap bitmap = BitmapFactory.decodeFile(coverFile.getAbsolutePath(), null);
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            // Bitmap.Config.HARDWARE uses less memory
+            if (Utils.isOreoOrLater())
+                options.inPreferredConfig = Bitmap.Config.HARDWARE;
+            Bitmap bitmap = BitmapFactory.decodeFile(coverFile.getAbsolutePath(), options);
             if (bitmap != null)
                 return bitmap;
         }
