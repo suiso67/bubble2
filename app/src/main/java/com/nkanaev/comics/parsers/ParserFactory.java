@@ -122,6 +122,10 @@ public class ParserFactory {
             // pretty much the only parser for pre-Oreo devices now
             return ZipParser.class;
         } else if (Utils.isRar(file.getName())) {
+            // decodes Rar5+, faster than junrar
+            if (LibSevenZParser.isAvailable())
+                return LibSevenZParser.class;
+
             if (!Utils.isOreoOrLater()) {
                 throw new UnsupportedOperationException("Rar only available on Oreo (API26) or later");
             }
@@ -132,6 +136,10 @@ public class ParserFactory {
             }
             return TarFileParser.class;
         } else if (Utils.isSevenZ(file.getName())) {
+            // faster lib-7z implementation
+            if (LibSevenZParser.isAvailable())
+                return LibSevenZParser.class;
+
             if (!Utils.isOreoOrLater()) {
                 throw new UnsupportedOperationException("7zip only available on Oreo (API26) or later");
             }

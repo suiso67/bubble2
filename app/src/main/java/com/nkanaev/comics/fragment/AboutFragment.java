@@ -4,6 +4,10 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Layout;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,22 +17,34 @@ import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.MainActivity;
+import net.sf.sevenzipjbinding.SevenZip;
 
 public class AboutFragment extends Fragment implements View.OnClickListener {
     static private class LibraryDescription {
-        public final String name;
-        public final String description;
-        public final String license;
-        public final String owner;
-        public final String link;
+        public final CharSequence name;
+        public final CharSequence description;
+        public final CharSequence license;
+        public final CharSequence owner;
+        public final CharSequence link;
 
-        LibraryDescription(String name, String description, String license, String owner, String link) {
+        LibraryDescription(CharSequence name, CharSequence description, CharSequence license, CharSequence owner, CharSequence link) {
             this.name = name;
             this.description = description;
             this.license = license;
             this.owner = owner;
             this.link = link;
         }
+    }
+
+    private static CharSequence lib7zVersions() {
+        SevenZip.Version version = SevenZip.getSevenZipVersion();
+        CharSequence out = "\n" +
+                "7-zip version: " + version.version + ", " + version.date + ", " + version.copyright + "\n" +
+                "7-Zip-JBinding version: " + SevenZip.getSevenZipJBindingVersion() + "\n" +
+                "Native library initialized: " + SevenZip.isInitializedSuccessfully();
+        final SpannableString s = new SpannableString(out);
+        s.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_OPPOSITE),0,s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return s;
     }
 
     private LibraryDescription[] mDescriptions = new LibraryDescription[]{
@@ -59,6 +75,13 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
                     "Public Domain",
                     "Tukaani Developers",
                     "http://tukaani.org/xz/java.html"
+            ),
+            new LibraryDescription(
+                    "7-Zip-JBinding-4Android",
+                    TextUtils.concat("Android library version of 7-Zip-JBinding java wrapper.", lib7zVersions()),
+                    "GNU LGPL 2.1 or later + unRAR restriction",
+                    "Igor Pavlov, Boris Brodski, Fredrik Claesson",
+                    "https://github.com/omicronapps/7-Zip-JBinding-4Android"
             ),
             new LibraryDescription(
                     "Zstd-jni",

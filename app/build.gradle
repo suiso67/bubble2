@@ -26,6 +26,7 @@ repositories {
     maven {
         url "https://jcenter.bintray.com/"
     }
+    maven { url 'https://jitpack.io' }
     // commons-compress rc-1 location
     /*maven {
         url "https://repository.apache.org/content/repositories/orgapachecommons-1628/"
@@ -100,6 +101,7 @@ dependencies {
     implementation 'org.apache.commons:commons-compress:1.24.0'
     // implementation fileTree(dir: 'lib', include: ['*.jar'])
     implementation 'org.tukaani:xz:1.9'
+    implementation 'com.github.omicronapps:7-Zip-JBinding-4Android:Release-16.02-2.02'
     implementation 'com.github.luben:zstd-jni:1.5.5-6@aar'
     implementation 'org.brotli:dec:0.1.2'
     implementation 'com.gemalto.jp2:jp2-android:1.0.3'
