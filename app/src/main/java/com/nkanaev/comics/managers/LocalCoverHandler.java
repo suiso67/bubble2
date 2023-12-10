@@ -51,7 +51,7 @@ public class LocalCoverHandler extends RequestHandler {
                 return bitmap;
         }
 
-        byte[] data;
+
         Parser parser = null;
         BufferedInputStream bis = null;
         FileOutputStream outputStream = null;
@@ -65,7 +65,7 @@ public class LocalCoverHandler extends RequestHandler {
 
             InputStream stream = parser.getPage(0);
             bis = new BufferedInputStream(stream);
-            data = Utils.toByteArray(bis);
+            byte[] data = Utils.toByteArray(bis);
 
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
