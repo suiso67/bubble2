@@ -51,13 +51,15 @@ public class LocalCoverHandler extends RequestHandler {
                 return bitmap;
         }
 
-        byte[] data = new byte[0];
+        byte[] data;
         Parser parser = null;
         BufferedInputStream bis = null;
         FileOutputStream outputStream = null;
         try {
             parser = ParserFactory.create(comicUri.getPath());
 
+            if (parser == null)
+                throw new IOException("no parser for '" + comicUri + "'.");
             if (parser.numPages() < 1)
                 throw new IOException("comic '" + comicUri + "' has no pages.");
 
@@ -106,7 +108,6 @@ public class LocalCoverHandler extends RequestHandler {
                 e = new IOException(e);
             throw (IOException) e;
         } finally {
-            data = null;
             Utils.close(parser);
             Utils.close(bis);
             Utils.close(outputStream);
