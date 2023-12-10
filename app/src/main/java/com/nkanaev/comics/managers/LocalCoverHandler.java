@@ -41,6 +41,7 @@ public class LocalCoverHandler extends RequestHandler {
 
         File coverFile = Utils.getCoverCacheFile(comicUri.getPath(), "jpg");
 
+        // reuse saved cover cache file
         if (coverFile.isFile()) {
             BitmapFactory.Options options = new BitmapFactory.Options();
             // Bitmap.Config.HARDWARE uses less memory
@@ -50,7 +51,6 @@ public class LocalCoverHandler extends RequestHandler {
             if (bitmap != null)
                 return bitmap;
         }
-
 
         Parser parser = null;
         BufferedInputStream bis = null;
