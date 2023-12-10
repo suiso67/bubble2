@@ -638,4 +638,24 @@ public final class Utils {
         // Return largest texture size found, or default
         return Math.max(maximumTextureSize, IMAGE_MAX_BITMAP_DIMENSION);
     }
+
+    private static int MAXMEMORYSIZE = 0;
+
+    public static int bitmapMaxMemorySize() {
+        if (MAXMEMORYSIZE>0)
+            return MAXMEMORYSIZE;
+
+        // default is 100MB in
+        // android/view/DisplayListCanvas.java and later in
+        // android/graphics/RecordingCanvas.java
+        MAXMEMORYSIZE = 100 * 1024 * 1024; // 100 MB;
+        try {
+            Method method = Class.forName("android.graphics.RecordingCanvas").getDeclaredMethod("getPanelFrameSize", null);
+            method.setAccessible(true);
+            MAXMEMORYSIZE = (int) method.invoke(null);
+        } catch (Exception e) {
+            // ignore
+        }
+        return MAXMEMORYSIZE;
+    }
 }
