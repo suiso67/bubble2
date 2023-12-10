@@ -10,7 +10,7 @@ import net.sf.sevenzipjbinding.*;
 import net.sf.sevenzipjbinding.impl.*;
 
 public class LibSevenZParser extends AbstractParser {
-    private static String TAG = "LibSevenZParser";
+    private static final String TAG = "LibSevenZParser";
     private List<ArchiveEntry> mEntries = null;
     private String mArchiveFormat = null;
 
@@ -33,7 +33,7 @@ public class LibSevenZParser extends AbstractParser {
 
         int itemCount = archive.getNumberOfItems();
         Log.d(TAG, "Items in archive: " + itemCount);
-        List entries = new ArrayList();
+        List<ArchiveEntry> entries = new ArrayList<>();
         for (int i = 0; i < itemCount; i++) {
             String path = archive.getStringProperty(i, PropID.PATH);
             boolean isFolder = (boolean) archive.getProperty(i, PropID.IS_FOLDER);
@@ -95,7 +95,7 @@ public class LibSevenZParser extends AbstractParser {
             Utils.close(archive);
         }
         if (result != ExtractOperationResult.OK) {
-            Log.e(TAG, result.toString());
+            Log.e(TAG, String.valueOf(result));
         }
 
         return bos.getInputStream();
@@ -170,7 +170,7 @@ public class LibSevenZParser extends AbstractParser {
             // reuse protected byte buffer, save memory
             ByteArrayInputStream in = new ByteArrayInputStream(this.buf, 0, this.count);
             // free reference, prevent further modification
-            this.buf = null;
+            this.buf = new byte[0];
 
             return in;
         }
