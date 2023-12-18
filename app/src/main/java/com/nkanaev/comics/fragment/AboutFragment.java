@@ -37,10 +37,10 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    private static CharSequence lib7zVersions() {
+    private static CharSequence lib7zDetails() {
         SevenZip.Version version = SevenZip.getSevenZipVersion();
         CharSequence out = "\n" +
-                "7-zip version: " + version.version + ", " + version.date + ", " + version.copyright + "\n" +
+                "7-zip version: " + version.version + ", " + version.date + "\n" +
                 "7-Zip-JBinding version: " + SevenZip.getSevenZipJBindingVersion() + "\n" +
                 "Native library initialized: " + SevenZip.isInitializedSuccessfully();
         final SpannableString s = new SpannableString(out);
@@ -79,7 +79,7 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
             ),
             new LibraryDescription(
                     "7-Zip-JBinding-4Android",
-                    TextUtils.concat("Android library version of 7-Zip-JBinding java wrapper.", lib7zVersions()),
+                    TextUtils.concat("Android library version of 7-Zip-JBinding java wrapper.", lib7zDetails()),
                     "GNU LGPL 2.1 or later + unRAR restriction",
                     "Igor Pavlov, Boris Brodski, Fredrik Claesson",
                     "https://github.com/omicronapps/7-Zip-JBinding-4Android"
