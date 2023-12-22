@@ -2,6 +2,10 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/rotate"
+          android:title="@string/action_view_rotate"
+          android:icon="@drawable/ic_rotate_90_degrees_cw_18"
+          app:showAsAction="always"/>
     <item android:id="@+id/menu_reader_reading"
           android:title="@string/action_reading_mode"
           android:icon="@drawable/ic_book_18"

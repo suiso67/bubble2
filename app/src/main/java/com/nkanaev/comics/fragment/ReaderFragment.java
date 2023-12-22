@@ -64,6 +64,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     public static final String STATE_PAGEINFO = "STATE_PAGEINFO";
     public static final String STATE_NEW_COMIC = "STATE_NEW_COMIC";
     public static final String STATE_NEW_COMIC_TITLE = "STATE_NEW_COMIC_TITLE";
+    public static final String STATE_PAGE_ROTATIONS = "STATE_PAGE_ROTATIONS ";
 
     private ComicViewPager mViewPager;
     private View mPageNavLayout;
@@ -91,7 +92,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     private int mPageCount = 0;
     private Picasso mPicasso;
     private LocalComicHandler mComicHandler;
-    private SparseArray<Target> mTargets = new SparseArray<>();
+    private SparseArray<MyTarget> mTargets = new SparseArray<>();
+    private HashMap<Integer,Integer> mRotations = new HashMap();
 
     private Comic mComic = null;
     private Comic mNewComic;
@@ -349,6 +351,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 int titleRes = savedInstanceState.getInt(STATE_NEW_COMIC_TITLE);
                 confirmSwitch(Storage.getStorage(getActivity()).getComic(newComicId), titleRes);
             }
+            // restore previous rotations
+            HashMap pageRotations = (HashMap) savedInstanceState.getSerializable(STATE_PAGE_ROTATIONS);
+            if (pageRotations!=null)
+                mRotations = pageRotations;
         } else {
             setFullscreen(mIsFullscreen);
         }
@@ -427,6 +433,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         outState.putBoolean(STATE_PAGEINFO, (mPageInfoTextView.getVisibility() == View.VISIBLE));
         outState.putInt(STATE_NEW_COMIC, mNewComic != null ? mNewComic.getId() : -1);
         outState.putInt(STATE_NEW_COMIC_TITLE, mNewComic != null ? mNewComicTitle : -1);
+        outState.putSerializable(STATE_PAGE_ROTATIONS, mRotations);
         super.onSaveInstanceState(outState);
     }
 
@@ -505,6 +512,17 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 setCurrentPage(page, false);
                 mViewPager.getAdapter().notifyDataSetChanged();
                 updateSeekBar();
+                break;
+            case R.id.rotate:
+                // add 90 degree to current page rotation
+                int pos = getCurrentPage()-1;
+                Integer degrees = mRotations.get(pos);
+                if (degrees == null)
+                    degrees = 0;
+                degrees += 90;
+                mRotations.put(pos,degrees);
+                //apply rotation
+                mViewPager.getAdapter().notifyDataSetChanged();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -607,7 +625,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
     private class ComicPagerAdapter extends PagerAdapter {
 
-        @Override
+         @Override
         public int getItemPosition(Object object) {
             return POSITION_NONE;
         }
@@ -684,6 +702,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             //max = Utils.glMaxTextureSize();
             rc = rc.resize(max, max).centerInside().onlyScaleDown();
         }
+        // apply rotation if any
+        Integer degrees = mRotations.get(pos);
+        if (degrees != null && degrees != 0)
+            rc.rotate(degrees);
         rc.into(t);
     }
 
@@ -693,7 +715,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     }
 
     private class MyTarget implements Target, View.OnClickListener {
-        private WeakReference<View> mLayout;
+        public WeakReference<View> mLayout;
         private Animation mProgressAnimation = null;
         public final int position;
 

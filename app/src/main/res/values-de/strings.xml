@@ -7,6 +7,7 @@
     <string name="about_thanks">Danke!</string>
     <string name="action_refresh">Erneut laden</string>
     <string name="action_settings">Einstellungen</string>
+    <string name="action_view_rotate">Drehen</string>
     <string name="action_view_mode">Ansichtsmodus</string>
     <string name="action_view_mode_aspect_fill">Vollbild</string>
     <string name="action_view_mode_aspect_fit">ganze Seite</string>

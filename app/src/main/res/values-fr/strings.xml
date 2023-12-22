@@ -17,6 +17,8 @@
     <string name="action_refresh">Rafraichir</string>
     <string name="action_settings">Paramètres</string>
 
+    <string name="action_view_rotate"></string>
+
     <string name="action_view_mode">Vue</string>
     <string name="action_view_mode_aspect_fill">Remplissage</string>
     <string name="action_view_mode_aspect_fit">Adaptée</string>
