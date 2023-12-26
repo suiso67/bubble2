@@ -64,7 +64,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     public static final String STATE_PAGEINFO = "STATE_PAGEINFO";
     public static final String STATE_NEW_COMIC = "STATE_NEW_COMIC";
     public static final String STATE_NEW_COMIC_TITLE = "STATE_NEW_COMIC_TITLE";
-    public static final String STATE_PAGE_ROTATIONS = "STATE_PAGE_ROTATIONS ";
+    public static final String STATE_PAGE_ROTATIONS = "STATE_PAGE_ROTATIONS";
 
     private ComicViewPager mViewPager;
     private View mPageNavLayout;
