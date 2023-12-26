@@ -7,14 +7,14 @@ import android.net.Uri;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import com.gemalto.jp2.JP2Decoder;
-import com.github.junrar.exception.UnsupportedRarV5Exception;
 import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.managers.Utils;
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 
 import java.io.*;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -23,6 +23,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ParserFactory {
+
+    public static enum Type {
+        ZIP, RAR, SEVEN_Z, TAR, PDF, DIR
+    };
 
     public static Parser create(Object o) throws Exception {
         try {
@@ -37,17 +41,12 @@ public class ParserFactory {
                 throw new IllegalArgumentException("Parser.create() call with unimplemented parameter");
 
             if (p != null) {
-                // wrap 7z,rar,zip in retry parser, unless pre-Oreo
-                if (p instanceof AbstractParser && Utils.isOreoOrLater() &&
-                        Arrays.asList(new String[]{"7z", "rar", "zip"}).contains(p.getType()))
-                    p = new LenientTryAnotherParserWrapper((AbstractParser) p);
                 // wrap in Ignore wrapper
                 p = new IgnorePageRegExWrapper(p);
                 // wrap in MetaData wrapper
                 p = new CachingPageMetaDataParserWrapper(p);
                 // wrap in JP2 recoder
                 p = new CachingDecodeJP2ParserWrapper(p);
-
             }
             return p;
         } catch (Exception e) {
@@ -114,14 +113,38 @@ public class ParserFactory {
     }
 
     private static Class<? extends AbstractParser> findParser(File file) {
+
+        InputStream is = null;
+        Type type = null;
+
+        // detect folder
         if (file.isDirectory()) {
+            type = Type.DIR;
+        }
+        // parse file header for signature first, set type
+        else {
+            try {
+                is = new FileInputStream(file);
+                type = detectFileType(is);
+            } catch (Exception e) {
+                // ignore
+            } finally {
+                Utils.close(is);
+            }
+        }
+
+        // no type so far? assume type by file extension/
+        if (type == null)
+            type = assumeFileType(file.getName());
+
+        if (type == Type.DIR) {
             return DirectoryParser.class;
-        } else if (Utils.isZip(file.getName())) {
+        } else if (type == Type.ZIP) {
             if (Utils.isOreoOrLater())
                 return CommonsZipParser.class;
             // pretty much the only parser for pre-Oreo devices now
             return ZipParser.class;
-        } else if (Utils.isRar(file.getName())) {
+        } else if (type == Type.RAR) {
             // decodes Rar5+, faster than junrar
             if (LibSevenZParser.isAvailable())
                 return LibSevenZParser.class;
@@ -130,12 +153,12 @@ public class ParserFactory {
                 throw new UnsupportedOperationException("Rar only available on Oreo (API26) or later");
             }
             return RarParser.class;
-        } else if (Utils.isTarball(file.getName())) {
+        } else if (type == Type.TAR) {
             if (!Utils.isOreoOrLater()) {
                 throw new UnsupportedOperationException("Tar only available on Oreo (API26) or later");
             }
             return TarFileParser.class;
-        } else if (Utils.isSevenZ(file.getName())) {
+        } else if (type == Type.SEVEN_Z) {
             // faster lib-7z implementation
             if (LibSevenZParser.isAvailable())
                 return LibSevenZParser.class;
@@ -145,7 +168,7 @@ public class ParserFactory {
             }
             // TODO: random access SevenZFileParser throws CRC errors
             return SevenZStreamParser.class;
-        } else if (Utils.isPdf(file.getName())) {
+        } else if (type == Type.PDF) {
             if (!Utils.isLollipopOrLater()) {
                 throw new UnsupportedOperationException("Pdf only available on Lollipop (API21) or later");
             }
@@ -154,6 +177,53 @@ public class ParserFactory {
 
         // no parser, no fun ;(
         throw new UnsupportedOperationException("No parser found for file " + file);
+    }
+
+    private static Type detectFileType(InputStream is){
+        if (!is.markSupported())
+            is = new BufferedInputStream(is);
+
+        try {
+            if (Utils.isRarStream(is))
+                return Type.RAR;
+            if (Utils.isPdfStream(is))
+                return Type.PDF;
+
+            try {
+                String commonsType = ArchiveStreamFactory.detect(is);
+                switch (commonsType) {
+                    case ArchiveStreamFactory.TAR:
+                        return Type.TAR;
+                    case ArchiveStreamFactory.ZIP:
+                        return Type.ZIP;
+                    case ArchiveStreamFactory.SEVEN_Z:
+                        return Type.SEVEN_Z;
+                }
+            } catch (ArchiveException e) {
+                Log.e("ParserFactory", "detecttype", e);
+            }
+        } finally {
+            Utils.close(is);
+        }
+        return null;
+    }
+
+    private static Type assumeFileType(String fileName) {
+        if (fileName == null)
+            return null;
+
+        if (Utils.isZip(fileName)) {
+            return Type.ZIP;
+        } else if (Utils.isRar(fileName)) {
+            return Type.RAR;
+        } else if (Utils.isTarball(fileName)) {
+            return Type.TAR;
+        } else if (Utils.isSevenZ(fileName)) {
+            return Type.SEVEN_Z;
+        } else if (Utils.isPdf(fileName)) {
+            return Type.PDF;
+        }
+        return null;
     }
 
     private static class IntentWithTempFileParserWrapper extends AbstractParser {
@@ -232,191 +302,6 @@ public class ParserFactory {
             Utils.close(mParser);
             mParser = null;
             Utils.rmDir(mTempDir);
-        }
-    }
-
-    private static class LenientTryAnotherParserWrapper implements Parser {
-        private AbstractParser mParser;
-        private boolean mRetriedAlready = false;
-
-        public LenientTryAnotherParserWrapper(AbstractParser parser) {
-            mParser = parser;
-        }
-
-        private boolean isIgnored(Throwable t) {
-            while (t != null) {
-                if (t instanceof UnsupportedRarV5Exception)
-                    return true;
-                t = t.getCause();
-            }
-            return false;
-        }
-
-        @Override
-        public synchronized void parse() throws IOException {
-            try {
-                mParser.parse();
-            } catch (Exception e) {
-                if (mRetriedAlready || isIgnored(e))
-                    rethrow(e);
-
-                mRetriedAlready = true;
-                // try zip, if it wasn't before
-                if (!mParser.getClass().isAssignableFrom(CommonsZipParser.class))
-                    try {
-                        CommonsZipParser candidate = new CommonsZipParser();
-                        candidate.setSource(mParser.getSource());
-                        candidate.parse();
-                        mParser = candidate;
-                        return;
-                    } catch (Exception e2) {
-                        // nice try
-                    }
-                // try zip, if it wasn't before
-                if (!mParser.getClass().isAssignableFrom(RarParser.class))
-                    try {
-                        RarParser candidate = new RarParser();
-                        candidate.setSource(mParser.getSource());
-                        candidate.parse();
-                        mParser = candidate;
-                        return;
-                    } catch (Exception e2) {
-                        // nice try
-                    }
-                // try zip, if it wasn't before
-                if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
-                    try {
-                        SevenZStreamParser candidate = new SevenZStreamParser();
-                        candidate.setSource(mParser.getSource());
-                        candidate.parse();
-                        mParser = candidate;
-                        return;
-                    } catch (Exception e2) {
-                        // nice try
-                    }
-
-                rethrow(e);
-            }
-        }
-
-        @Override
-        public synchronized int numPages() throws IOException {
-            try {
-                return mParser.numPages();
-            } catch (Exception e) {
-                if (mRetriedAlready || isIgnored(e))
-                    rethrow(e);
-
-                mRetriedAlready = true;
-                // try zip, if it wasn't before
-                if (!mParser.getClass().isAssignableFrom(CommonsZipParser.class))
-                    try {
-                        CommonsZipParser candidate = new CommonsZipParser();
-                        candidate.setSource(mParser.getSource());
-                        int count = candidate.numPages();
-                        mParser = candidate;
-                        return count;
-                    } catch (Exception e2) {
-                        // nice try
-                    }
-                // try zip, if it wasn't before
-                if (!mParser.getClass().isAssignableFrom(RarParser.class))
-                    try {
-                        RarParser candidate = new RarParser();
-                        candidate.setSource(mParser.getSource());
-                        int count = candidate.numPages();
-                        mParser = candidate;
-                        return count;
-                    } catch (Exception e2) {
-                        // nice try
-                    }
-                // try zip, if it wasn't before
-                if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
-                    try {
-                        SevenZStreamParser candidate = new SevenZStreamParser();
-                        candidate.setSource(mParser.getSource());
-                        int count = candidate.numPages();
-                        mParser = candidate;
-                        return count;
-                    } catch (Exception e2) {
-                        // nice try
-                    }
-
-                Log.e("LenientParser", "failed", new IOException("Parser failed. Retries too.", e));
-                rethrow(e);
-            }
-            return 0;
-        }
-
-        private void rethrow(Exception e) throws IOException {
-            if (!(e instanceof IOException))
-                throw new IOException("Parser failed. Retries too.", e);
-            else
-                throw (IOException) e;
-        }
-
-        @Override
-        public synchronized InputStream getPage(int num) throws IOException {
-            try {
-                return mParser.getPage(num);
-            } catch (Exception e) {
-                if (mRetriedAlready || isIgnored(e))
-                    rethrow(e);
-
-                mRetriedAlready = true;
-                // try zip, if it wasn't before
-                if (!mParser.getClass().isAssignableFrom(CommonsZipParser.class))
-                    try {
-                        CommonsZipParser candidate = new CommonsZipParser();
-                        candidate.setSource(mParser.getSource());
-                        InputStream is = candidate.getPage(num);
-                        mParser = candidate;
-                        return is;
-                    } catch (Exception e2) {
-                        // nice try
-                    }
-                // try zip, if it wasn't before
-                if (!mParser.getClass().isAssignableFrom(RarParser.class))
-                    try {
-                        RarParser candidate = new RarParser();
-                        candidate.setSource(mParser.getSource());
-                        InputStream is = candidate.getPage(num);
-                        mParser = candidate;
-                        return is;
-                    } catch (Exception e2) {
-                        // nice try
-                    }
-                // try zip, if it wasn't before
-                if (!mParser.getClass().isAssignableFrom(SevenZStreamParser.class))
-                    try {
-                        SevenZStreamParser candidate = new SevenZStreamParser();
-                        candidate.setSource(mParser.getSource());
-                        InputStream is = candidate.getPage(num);
-                        mParser = candidate;
-                        return is;
-                    } catch (Exception e2) {
-                        // nice try
-                    }
-
-                rethrow(e);
-                return null;
-            }
-        }
-
-        @Override
-        public Map getPageMetaData(int num) throws IOException {
-            return mParser.getPageMetaData(num);
-        }
-
-        @Override
-        public String getType() {
-            return mParser.getType();
-        }
-
-        @Override
-        public void destroy() {
-            // destroy wrapped parser
-            Utils.close(mParser);
         }
     }
 

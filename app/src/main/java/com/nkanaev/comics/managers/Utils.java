@@ -121,6 +121,34 @@ public final class Utils {
         return JP2Decoder.isJPEG2000(b);
     }
 
+    public static boolean isRarStream(InputStream is) {
+        final byte[] rarSignature = new byte[]{'R', 'a', 'r', '!', 0x1A, 0x07};
+        return inputStreamStartsWith(is, rarSignature);
+    }
+
+    public static boolean isPdfStream(InputStream is) {
+        final byte[] pdfSignature = {'%', 'P', 'D', 'F', '-'};
+        return inputStreamStartsWith(is, pdfSignature);
+    }
+
+    private static boolean inputStreamStartsWith(InputStream is, byte[] bytesIn){
+        try {
+            if (bytesIn == null)
+                throw new IllegalArgumentException("bytesIn must not be Null");
+            if (!is.markSupported())
+                throw new IllegalArgumentException("inputStream must support mark/reset");
+
+            byte[] isHeader = new byte[bytesIn.length];
+            is.mark(bytesIn.length);
+            is.read(isHeader);
+            is.reset();
+            return Arrays.equals(bytesIn,isHeader);
+        } catch (Exception e) {
+            Log.e("Utils.isRarStream","",e);
+        }
+        return false;
+    }
+
     public static boolean isPdf(String filename) {
         return filename.matches("(?i).*\\.(pdf)$" );
     }
@@ -650,7 +678,7 @@ public final class Utils {
         // android/graphics/RecordingCanvas.java
         MAXMEMORYSIZE = 100 * 1024 * 1024; // 100 MB;
         try {
-            Method method = Class.forName("android.graphics.RecordingCanvas").getDeclaredMethod("getPanelFrameSize", null);
+            Method method = Class.forName("android.graphics.RecordingCanvas").getDeclaredMethod("getPanelFrameSize", new Class[0]);
             method.setAccessible(true);
             MAXMEMORYSIZE = (int) method.invoke(null);
         } catch (Exception e) {
