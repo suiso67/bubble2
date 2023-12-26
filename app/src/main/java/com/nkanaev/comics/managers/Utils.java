@@ -131,6 +131,16 @@ public final class Utils {
         return inputStreamStartsWith(is, pdfSignature);
     }
 
+    public static boolean isSevenZStream(InputStream is) {
+        final byte[] sevenZSignature = {'7', 'z', (byte) 0xBC, (byte) 0xAF, 0x27, 0x1C};
+        return inputStreamStartsWith(is, sevenZSignature);
+    }
+
+    public static boolean isZipStream(InputStream is) {
+        final byte[] zipSignature = {'P', 'K', (byte) 0x03, (byte) 0x04};
+        return inputStreamStartsWith(is, zipSignature);
+    }
+
     private static boolean inputStreamStartsWith(InputStream is, byte[] bytesIn){
         try {
             if (bytesIn == null)

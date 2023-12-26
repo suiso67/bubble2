@@ -179,7 +179,7 @@ public class ParserFactory {
         throw new UnsupportedOperationException("No parser found for file " + file);
     }
 
-    private static Type detectFileType(InputStream is){
+    private static Type detectFileType(InputStream is) {
         if (!is.markSupported())
             is = new BufferedInputStream(is);
 
@@ -188,20 +188,26 @@ public class ParserFactory {
                 return Type.RAR;
             if (Utils.isPdfStream(is))
                 return Type.PDF;
+            if (Utils.isSevenZStream(is))
+                return Type.SEVEN_Z;
+            if (Utils.isZipStream(is))
+                return Type.ZIP;
 
-            try {
-                String commonsType = ArchiveStreamFactory.detect(is);
-                switch (commonsType) {
-                    case ArchiveStreamFactory.TAR:
-                        return Type.TAR;
-                    case ArchiveStreamFactory.ZIP:
-                        return Type.ZIP;
-                    case ArchiveStreamFactory.SEVEN_Z:
-                        return Type.SEVEN_Z;
+            // commons compress needs java.nio
+            if (Utils.isOreoOrLater())
+                try {
+                    String commonsType = ArchiveStreamFactory.detect(is);
+                    switch (commonsType) {
+                        case ArchiveStreamFactory.TAR:
+                            return Type.TAR;
+                        case ArchiveStreamFactory.ZIP:
+                            return Type.ZIP;
+                        case ArchiveStreamFactory.SEVEN_Z:
+                            return Type.SEVEN_Z;
+                    }
+                } catch (ArchiveException e) {
+                    // ignore
                 }
-            } catch (ArchiveException e) {
-                Log.e("ParserFactory", "detecttype", e);
-            }
         } finally {
             Utils.close(is);
         }
