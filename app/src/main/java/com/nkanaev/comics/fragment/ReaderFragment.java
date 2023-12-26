@@ -612,7 +612,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                         // switched page already, skip the now obsolete write
                         if (getCurrentPage() - 1 != pageNum)
                             return;
-                        if (!mIsPageInfoShown)
+                        if (!mIsPageInfoShown || mPageInfoTextView == null)
                             return;
 
                         mPageInfoTextView.setText(text);
