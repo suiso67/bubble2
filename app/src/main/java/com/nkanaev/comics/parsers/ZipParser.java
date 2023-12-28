@@ -68,7 +68,7 @@ public class ZipParser extends AbstractParser {
 
     @Override
     public String getType() {
-        return "zip";
+        return "Zip";
     }
 
     @Override

@@ -60,7 +60,7 @@ public class SevenZFileParser extends AbstractParser {
 
     @Override
     public String getType() {
-        return "7z";
+        return "7zFile";
     }
 
     @Override

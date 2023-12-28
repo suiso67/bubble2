@@ -74,7 +74,7 @@ public class CommonsZipParser extends AbstractParser {
 
     @Override
     public String getType() {
-        return "zip";
+        return "CommonsZip";
     }
 
     @Override

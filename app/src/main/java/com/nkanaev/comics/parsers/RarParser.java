@@ -153,7 +153,7 @@ public class RarParser extends AbstractParser {
 
     @Override
     public String getType() {
-        return "rar";
+        return "Rar";
     }
 
     private void initCacheDirectory(File cacheDirectory) {

@@ -178,7 +178,7 @@ public class SevenZStreamParser extends AbstractParser {
 
     @Override
     public String getType() {
-        return "7z";
+        return "7zStream";
     }
 
     @Override
