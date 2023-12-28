@@ -19,14 +19,14 @@ or
 
 * Optimized for tablets
 * Supports CBZ/ZIP, CBR/RAR, 7Z/CB7, PDF and FOLDER comics
-* TAR/CBT and Brotli/Gzip/BZ2*/LZMA*/Zstd compressed TAR files are supported too (*very slow)
+* TAR/CBT and Brotli/Bzip2/Gzip/LZMA/XZ/Zstd compressed TAR files are supported too
 * Display BMP, JPG, GIF, PNG, WebP and JP2/J2K image files in archives/from folders
 * Advanced zoom and scaling modes
 * Comics/Manga reading mode
 * Library with automatic bookmarks
 * Simple file browser
 * Best served on Android 8.0(Oreo) or later
-* Still runs on Android 4.1(JB)+ though, displaying ZIP and FOLDERs only
+* Still runs on Android 4.1(Jelly Bean)+ (no PDF, Brotli, XZ, Zstd support though)
 * Free, open-source, no ads, gluten-free
 
 ## Contributors
