@@ -555,7 +555,6 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 .toString();
         mPageNavTextView.setText(navText);
 
-        mPageInfoTextView.setVisibility(View.INVISIBLE);
         updatePageImageInfo();
     }
 
