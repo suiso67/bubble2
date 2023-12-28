@@ -7,16 +7,17 @@ import android.net.Uri;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import com.gemalto.jp2.JP2Decoder;
+import com.nkanaev.comics.BuildConfig;
 import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.managers.Utils;
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.compressors.CompressorException;
+import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
 import java.io.*;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -25,7 +26,9 @@ import java.util.regex.Pattern;
 public class ParserFactory {
 
     public static enum Type {
-        ZIP, RAR, SEVEN_Z, TAR, PDF, DIR
+        ZIP, RAR, SEVEN_Z, TAR, PDF, DIR,
+        // compressed tar streams
+        TAR_BROTLI, TAR_BZIP2, TAR_GZIP, TAR_LZMA, TAR_XZ, TAR_ZSTD
     };
 
     public static Parser create(Object o) throws Exception {
@@ -47,6 +50,9 @@ public class ParserFactory {
                 p = new CachingPageMetaDataParserWrapper(p);
                 // wrap in JP2 recoder
                 p = new CachingDecodeJP2ParserWrapper(p);
+                // wrap debug info
+                if (BuildConfig.DEBUG)
+                    p = new DebugInfoParserWrapper(p);
             }
             return p;
         } catch (Exception e) {
@@ -153,7 +159,15 @@ public class ParserFactory {
                 throw new UnsupportedOperationException("Rar only available on Oreo (API26) or later");
             }
             return RarParser.class;
-        } else if (type == Type.TAR) {
+        } else if (type != null && type.toString().startsWith("TAR")) {
+            // faster bz,gz,lzma lib-7z implementation, also pre-Oreo compatible
+            if (LibSevenZParser.isAvailable() &&
+                    // enable for pre-Oreo, ignore unsupported br,xz,zstd
+                    ( (!Utils.isOreoOrLater() && !Arrays.asList(Type.TAR_BROTLI, Type.TAR_XZ, Type.TAR_ZSTD).contains(type) ) ||
+                            // prefer for bz,gz,lzma because faster on Oreo+
+                            Arrays.asList(Type.TAR_BZIP2, Type.TAR_GZIP, Type.TAR_LZMA).contains(type)))
+                return LibSevenZParser.class;
+
             if (!Utils.isOreoOrLater()) {
                 throw new UnsupportedOperationException("Tar only available on Oreo (API26) or later");
             }
@@ -206,7 +220,26 @@ public class ParserFactory {
                             return Type.SEVEN_Z;
                     }
                 } catch (ArchiveException e) {
-                    // ignore
+                    Log.d("ParserFactory","detectFileType()",e);
+                }
+
+            if (Utils.isOreoOrLater())
+                try {
+                    String commonsCompress = CompressorStreamFactory.detect(is);
+                    switch (commonsCompress) {
+                        case CompressorStreamFactory.BZIP2:
+                            return Type.TAR_BZIP2;
+                        case CompressorStreamFactory.GZIP:
+                            return Type.TAR_GZIP;
+                        case CompressorStreamFactory.LZMA:
+                            return Type.TAR_LZMA;
+                        case CompressorStreamFactory.XZ:
+                            return Type.TAR_XZ;
+                        case CompressorStreamFactory.ZSTANDARD:
+                            return Type.TAR_ZSTD;
+                    }
+                } catch (CompressorException e) {
+                    Log.d("ParserFactory","detectFileType()",e);
                 }
         } finally {
             Utils.close(is);
@@ -222,6 +255,13 @@ public class ParserFactory {
             return Type.ZIP;
         } else if (Utils.isRar(fileName)) {
             return Type.RAR;
+        } else if (Utils.isTBR(fileName)) {
+            // brotli has no magic signature
+            return Type.TAR_BROTLI;
+        } else if (Utils.isTXZ(fileName)) {
+            return Type.TAR_XZ;
+        } else if (Utils.isTZST(fileName)) {
+            return Type.TAR_ZSTD;
         } else if (Utils.isTarball(fileName)) {
             return Type.TAR;
         } else if (Utils.isSevenZ(fileName)) {
@@ -352,6 +392,9 @@ public class ParserFactory {
             InputStream is = null;
             try {
                 is = mParser.getPage(num);
+                int limit = 5 * 1024 *1024; //5MB
+                    is = new BufferedInputStream(is, limit);
+                is.mark(limit);
                 final BitmapFactory.Options options = new BitmapFactory.Options();
                 // read bitmap metadata w/o creating another in memory copy
                 options.inJustDecodeBounds = true;
@@ -368,12 +411,11 @@ public class ParserFactory {
                 Log.e("bubble2","failed to decode/fetch metadata",e);
             }
             finally {
-                // keep memory buffer inputstreams
-                if (is instanceof ByteArrayInputStream) {
+                // keep memory buffered inputstreams
+                try {
                     is.reset();
-                }
-                // discard others, not (re)seekable properly
-                else {
+                } catch (Exception ex){
+                    // something went wrong (read over limit?)
                     Utils.close(is);
                     is = null;
                 }
@@ -787,6 +829,87 @@ public class ParserFactory {
                 mPages.clear();
                 mPages = null;
             }
+            mParser.destroy();
+        }
+    }
+
+    private static class DebugInfoParserWrapper implements Parser {
+        private Parser mParser;
+        private HashMap<Integer, Map> mPagesMetaData = new HashMap<>();
+        private LinkedHashMap<String,String> mMetaData = new LinkedHashMap();
+
+        public DebugInfoParserWrapper(Parser parser) throws Exception {
+            mParser = parser;
+        }
+
+        @Override
+        public void parse() throws IOException {
+            try {
+                long start = Utils.now();
+                mParser.parse();
+                String text = "parse() " + Utils.milliSecondsSince(start);
+                mMetaData.put("parse", text);
+            } catch (IOException e) {
+                throw e;
+            }
+        }
+
+        @Override
+        public int numPages() throws IOException {
+            int n = 0;
+            try {
+                long start = Utils.now();
+                mParser.parse();
+                n = mParser.numPages();
+                String text = "numPages() " + Utils.milliSecondsSince(start);
+                mMetaData.put("numPages", text);
+            } catch (IOException e) {
+                throw e;
+            }
+            return n;
+        }
+
+        @Override
+        public InputStream getPage(int num) throws IOException {
+            long start = Utils.now();
+            mParser.parse();
+            InputStream is = mParser.getPage(num);
+            String text = "getpage() " + Utils.milliSecondsSince(start);
+            mPagesMetaData.put(Integer.valueOf(num), Collections.singletonMap("getPage",text));
+            return is;
+        }
+
+        @Override
+        public Map getPageMetaData(int num) throws IOException {
+            Map<String, String> in = mParser.getPageMetaData(num);
+            if (in == null || in.isEmpty())
+                in = new HashMap<>();
+            Map<String, String> in2 = mPagesMetaData.get(Integer.valueOf(num));
+            // nothing to merge, leave early
+            if (in2 == null)
+                return in;
+
+            // add page debug values with slash
+            for (String key : in2.keySet()) {
+                in.put("debug-"+key, in2.get(key));
+            }
+
+            if (!mMetaData.isEmpty()) {
+                for (String key : mMetaData.keySet()) {
+                    in.put("debug-"+key, mMetaData.get(key));
+                }
+            }
+
+            return in;
+        }
+
+        @Override
+        public String getType() {
+            return mParser.getType();
+        }
+
+        @Override
+        public void destroy() {
             mParser.destroy();
         }
     }
