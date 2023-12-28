@@ -177,9 +177,9 @@ public final class Utils {
     }
 
     public static boolean isCompressedTarball(String filename) {
-        return isTGZ(filename) || isTBZ(filename) ||
-                isTXZ(filename) || isTZST(filename) ||
-                isTBR(filename);
+        return isTBR(filename) || isTBZ(filename) ||
+                isTGZ(filename) || isTLZ(filename) ||
+                isTXZ(filename) || isTZST(filename);
     }
 
     public static boolean isTGZ(String filename) {
@@ -188,6 +188,10 @@ public final class Utils {
 
     public static boolean isTBZ(String filename) {
         return filename.matches("(?i).*\\.(tar\\.bz2?|tbz2?)$");
+    }
+
+    public static boolean isTLZ(String filename) {
+        return filename.matches("(?i).*\\.(tar\\.lzma|tlz)$");
     }
 
     public static boolean isTXZ(String filename) {
