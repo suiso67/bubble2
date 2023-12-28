@@ -1,11 +1,13 @@
 package com.nkanaev.comics.parsers;
 
 
+import android.util.Log;
 import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarFile;
 import org.apache.commons.compress.compressors.CompressorException;
+import org.apache.commons.compress.compressors.CompressorInputStream;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 
 import java.io.*;
@@ -13,6 +15,7 @@ import java.util.*;
 
 public class TarFileParser extends AbstractParser {
     private File mUncompressedFile = null;
+    private String mCompression = "";
     private TarFile mTarFile = null;
     private List<TarArchiveEntry> mEntries = new ArrayList<>();
 
@@ -27,13 +30,31 @@ public class TarFileParser extends AbstractParser {
             return;
 
         File file = (File) getSource();
-        if (Utils.isCompressedTarball(file.getName())) {
-            InputStream is = toUncompressedStream(file);
+
+        // blindly try compression, assume uncompressed if that fails
+        FileInputStream fis = new FileInputStream(file);
+        BufferedInputStream bis = new BufferedInputStream(fis);
+        CompressorInputStream cis = null;
+        try {
+            // brotli has no signature, use file name
+            if (Utils.isTBR(file.getName()))
+                mCompression = CompressorStreamFactory.getBrotli();
+            else
+                mCompression = CompressorStreamFactory.detect(bis);
+            cis = CompressorStreamFactory.getSingleton().createCompressorInputStream(mCompression,bis);
+            // setup cached uncompressed file
             File folder = Utils.initCacheDirectory("tar");
             File tarFile = new File(folder, "plain.tar");
-            Utils.copyToFile(is, tarFile);
+            Utils.copyToFile(cis, tarFile);
             mUncompressedFile = tarFile;
             file = tarFile;
+        } catch (CompressorException e) {
+            Log.d("TarFileParser","parse()",e);
+        } finally {
+            // cleanup
+            Utils.close(cis);
+            Utils.close(bis);
+            Utils.close(fis);
         }
 
         mTarFile = new TarFile(file);
@@ -92,7 +113,7 @@ public class TarFileParser extends AbstractParser {
 
     @Override
     public String getType() {
-        return "tar";
+        return "TarFile"+(mCompression.isEmpty()?"":"+"+mCompression);
     }
 
     @Override
@@ -106,32 +127,6 @@ public class TarFileParser extends AbstractParser {
             mUncompressedFile = null;
         }
         mParsedAlready = false;
-    }
-
-    static private InputStream toUncompressedStream(File file) throws IOException {
-        String fileName = file.getName();
-        InputStream is = null;
-
-        is = new BufferedInputStream(new FileInputStream(file));
-        try {
-            if (Utils.isTGZ(fileName))
-                is = new CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.GZIP, is);
-            else if (Utils.isTBZ(fileName))
-                is = new CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BZIP2, is);
-            else if (Utils.isTXZ(fileName))
-                is = new CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.LZMA, is);
-            else if (Utils.isTZST(fileName))
-                is = new CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.ZSTANDARD, is);
-            else if (Utils.isTBR(fileName))
-                is = new CompressorStreamFactory().createCompressorInputStream(CompressorStreamFactory.BROTLI, is);
-            // no name, let's try to detect
-            else
-                is = new CompressorStreamFactory().createCompressorInputStream(is);
-        } catch (CompressorException e) {
-            throw new IOException(e);
-        }
-
-        return is;
     }
 
 }
