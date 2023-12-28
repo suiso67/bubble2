@@ -52,12 +52,12 @@ public class LibSevenZParser extends AbstractParser {
         }
 
         int itemCount = archive.getNumberOfItems();
-        Log.d(TAG, "Items in archive: " + itemCount);
+        //Log.d(TAG, "Items in archive: " + itemCount);
         List<ArchiveEntry> entries = new ArrayList<>();
         for (int i = 0; i < itemCount; i++) {
             String path = archive.getStringProperty(i, PropID.PATH);
             boolean isFolder = (boolean) archive.getProperty(i, PropID.IS_FOLDER);
-            Log.d(TAG, "File " + i + ": " + path + " : " + isFolder);
+            //Log.d(TAG, "File " + i + ": " + path + " : " + isFolder);
             if (isFolder || !Utils.isImage(path))
                 continue;
 
