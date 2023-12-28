@@ -13,13 +13,14 @@ public class LibSevenZParser extends AbstractParser {
     private static final String TAG = "LibSevenZParser";
     private List<ArchiveEntry> mEntries = null;
     private String mArchiveFormat = null;
+    private File mUncompressedFile = null;
 
     public LibSevenZParser() {
         super(new Class[]{File.class});
     }
 
     @Override
-    public void parse() throws IOException {
+    public synchronized void parse() throws IOException {
         if (mEntries != null)
             return;
 
@@ -30,6 +31,25 @@ public class LibSevenZParser extends AbstractParser {
 
         ArchiveFormat format = archive.getArchiveFormat();
         mArchiveFormat = format.getMethodName();
+
+        if (Arrays.asList(ArchiveFormat.GZIP,ArchiveFormat.BZIP2,ArchiveFormat.LZMA).contains(format)) {
+            File folder = Utils.initCacheDirectory("tar");
+            File tarFile = new File(folder, "plain.tar");
+            toUncompressedFile(archive,tarFile);
+
+            mUncompressedFile = tarFile;
+            // close compressed file
+            Utils.close(archive);
+            Utils.close(stream);
+            Utils.close(randomAccessFile);
+            // open uncompressed file
+            randomAccessFile = new RandomAccessFile(mUncompressedFile, "r");
+            stream = new RandomAccessFileInStream(randomAccessFile);
+            archive = SevenZip.openInArchive(null, stream);
+            // append archive format metadata
+            format = archive.getArchiveFormat();
+            mArchiveFormat += ","+format.getMethodName();
+        }
 
         int itemCount = archive.getNumberOfItems();
         Log.d(TAG, "Items in archive: " + itemCount);
@@ -60,6 +80,7 @@ public class LibSevenZParser extends AbstractParser {
         // cleanup
         Utils.close(archive);
         Utils.close(stream);
+        Utils.close(randomAccessFile);
     }
 
     @Override
@@ -83,7 +104,7 @@ public class LibSevenZParser extends AbstractParser {
         RandomAccessFileInStream stream = null;
         IInArchive archive = null;
         try {
-            File file = (File) getSource();
+            File file = mUncompressedFile!=null ? mUncompressedFile : (File) getSource();
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
             stream = new RandomAccessFileInStream(randomAccessFile);
             archive = SevenZip.openInArchive(null, stream);
@@ -109,7 +130,7 @@ public class LibSevenZParser extends AbstractParser {
 
     @Override
     public String getType() {
-        return "lib7z"+(mArchiveFormat!=null?"+"+mArchiveFormat:"");
+        return "Lib7z"+(mArchiveFormat!=null?"+"+mArchiveFormat:"");
     }
 
     @Override
@@ -123,7 +144,14 @@ public class LibSevenZParser extends AbstractParser {
     @Override
     public void destroy() {
         super.destroy();
+
+        mEntries.clear();
         mEntries = null;
+        // delete cached if exists
+        if (mUncompressedFile != null) {
+            Utils.rmDir(mUncompressedFile.getParentFile());
+            mUncompressedFile = null;
+        }
     }
 
     public static boolean isAvailable() {
@@ -173,6 +201,31 @@ public class LibSevenZParser extends AbstractParser {
             this.buf = new byte[0];
 
             return in;
+        }
+    }
+
+    static private void toUncompressedFile(IInArchive archive, File file) throws IOException {
+        OutputStream outStream = new FileOutputStream(file);
+        ExtractOperationResult result = null;
+        ISequentialOutStream sos = new ISequentialOutStream(){
+            @Override
+            public int write(byte[] data) throws SevenZipException {
+                try {
+                    outStream.write(data);
+                } catch (IOException e) {
+                    throw new SevenZipException(e);
+                }
+                return data.length;
+            }
+        };
+        try {
+            result = archive.extractSlow(0, sos);
+        } finally {
+            Utils.close(outStream);
+            Utils.close(archive);
+        }
+        if (result != ExtractOperationResult.OK) {
+            Log.e(TAG, String.valueOf(result));
         }
     }
 }
