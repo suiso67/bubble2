@@ -38,7 +38,7 @@ or
 
 ## License
 
-Source code is available under GPL-3. See the [LICENSE.md](https://github.com/edeso/bubble2/blob/master/LICENSE.md)  for more info.
+Bubble2 is licensed under [GPL-3](https://github.com/edeso/bubble2/blob/master/LICENSE.md) .
 
 ## Screenshots
 
