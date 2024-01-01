@@ -1,27 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
-    <LinearLayout
+    <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="24dp">
-        <TextView
+            android:layout_height="wrap_content">
+        <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:lines="1"
-                android:textStyle="bold"
-                android:text="@string/directory_picker_header"/>
-        <TextView
-                android:id="@+id/directory_current_text"
-                android:textSize="18sp"
-                android:layout_width="match_parent"
+                android:layout_alignParentLeft="true"
+                android:orientation="vertical"
+                android:padding="24dp">
+            <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lines="1"
+                    android:textStyle="bold"
+                    android:text="@string/directory_picker_header"/>
+            <TextView
+                    android:id="@+id/directory_current_text"
+                    android:textSize="18sp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lines="1"/>
+        </LinearLayout>
+        <ImageButton
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:lines="1"/>
-    </LinearLayout>
+                android:padding="24dp"
+                android:id="@+id/directory_picker_refresh"
+                android:contentDescription="@string/reload"
+                android:src="@drawable/ic_refresh_24"
+                android:layout_alignParentRight="true"
+                android:background="@android:color/transparent"
+                app:tint="#000"/>
+    </RelativeLayout>
 
     <!-- needs android:layout_weight or the buttons on the bottom wil not be displayed -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

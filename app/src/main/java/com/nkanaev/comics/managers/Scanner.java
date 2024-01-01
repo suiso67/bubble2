@@ -23,6 +23,7 @@ public class Scanner {
 
     private boolean mIsStopped;
     private boolean mIsRestarted;
+    private File mSubFolder = null;
 
     private Handler mRestartHandler = new RestartHandler(this);
 
@@ -68,11 +69,16 @@ public class Scanner {
     }
 
     public void forceScanLibrary() {
+        forceScanLibrary(null);
+    }
+
+    public void forceScanLibrary(File limitToSubFolder) {
         if (isRunning()) {
+            mSubFolder = limitToSubFolder;
             mIsStopped = true;
             mIsRestarted = true;
         } else {
-            scanLibrary();
+            scanLibrary(limitToSubFolder);
         }
     }
 
@@ -80,11 +86,10 @@ public class Scanner {
         scanLibrary(null);
     }
 
-    public void scanLibrary(File subFolder) {
+    public void scanLibrary(File limitToSubFolder) {
         if (mUpdateThread == null || mUpdateThread.getState() == Thread.State.TERMINATED) {
             LibraryUpdateRunnable runnable = new LibraryUpdateRunnable();
-            if (subFolder != null)
-                runnable.limitToSubFolder(subFolder);
+            mSubFolder = limitToSubFolder;
             mUpdateThread = new Thread(runnable);
             mUpdateThread.setPriority(Process.THREAD_PRIORITY_DEFAULT + Process.THREAD_PRIORITY_LESS_FAVORABLE);
             mUpdateThread.start();
@@ -126,7 +131,7 @@ public class Scanner {
     }
 
     private class LibraryUpdateRunnable implements Runnable {
-        private File mSubFolder = null;
+
 
         public void limitToSubFolder(File subFolder) {
             mSubFolder = subFolder;
@@ -179,15 +184,19 @@ public class Scanner {
                 Deque<File> directories = new ArrayDeque<>();
                 directories.add(mSubFolder != null ? mSubFolder : libDirFile);
                 while (!directories.isEmpty()) {
+                    if (mIsStopped)
+                        break;
+
                     File dir = directories.pop();
                     File[] files = dir.listFiles();
                     if (files == null)
                         continue;
-                    //Arrays.sort(files);
+
                     int i = 0;
                     for (File file : files) {
                         i++;
-                        if (mIsStopped) return;
+                        if (mIsStopped)
+                            break;
 
                         // add folder to search list, but continue (might be a dir-comic)
                         if (mSubFolder == null && file.isDirectory()) {
@@ -198,6 +207,7 @@ public class Scanner {
                         }
 
                         // skip known good comics (pages>0) to keep startup fast
+                        // unless we are limited to a subfolder, then the refresh is forced
                         if (mSubFolder == null) {
                             Comic storedComic = findComicInList(storedComics,file);
                             if (storedComic!=null && storedComic.getTotalPages()>0) {
@@ -245,10 +255,12 @@ public class Scanner {
                 }
 
                 // delete removed comics/cleanup cover cache
-                for (Comic missing : storedComics) {
-                    deleteCoverCacheFile(missing);
-                    storage.removeComic(missing.getId());
-                }
+                // unless we were rudely interrupted
+                if (!mIsStopped)
+                    for (Comic missing : storedComics) {
+                        deleteCoverCacheFile(missing);
+                        storage.removeComic(missing.getId());
+                    }
 
             } finally {
                 mIsStopped = false;

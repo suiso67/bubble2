@@ -200,6 +200,7 @@ public class LibraryFragment extends Fragment
                 Scanner.getInstance().stop();
                 return true;
             }
+
             onRefresh();
             return true;
         }
@@ -220,6 +221,8 @@ public class LibraryFragment extends Fragment
         editor.putString(Constants.SETTINGS_LIBRARY_DIR, file.getAbsolutePath());
         editor.apply();
 
+        ((MainActivity) getActivity()).setSubTitle(Utils.appendSlashIfMissing(file.getAbsolutePath()));
+
         Scanner.getInstance().forceScanLibrary();
         showEmptyMessage(false);
         setLoading(true);
@@ -234,10 +237,8 @@ public class LibraryFragment extends Fragment
 
     @Override
     public void onRefresh() {
-        if (!Scanner.getInstance().isRunning()) {
-            setLoading(true);
-            Scanner.getInstance().scanLibrary();
-        }
+        Scanner.getInstance().forceScanLibrary();
+        setLoading(true);
     }
 
     private void getComics() {

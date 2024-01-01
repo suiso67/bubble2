@@ -6,6 +6,11 @@
           android:icon="@drawable/ic_search_white_24dp"
           app:showAsAction="ifRoom"
           app:actionViewClass="androidx.appcompat.widget.SearchView"/>
+    <item android:id="@+id/menu_browser_refresh"
+          android:title="@string/reload"
+          android:icon="@drawable/ic_refresh_24"
+          app:showAsAction="ifRoom">
+    </item>
     <item android:id="@+id/filter"
           android:title="@string/menu_browser_filter"
           android:icon="@drawable/ic_filter_list_white_24dp"

@@ -18,6 +18,7 @@ import android.widget.Toast;
 import androidx.annotation.ColorInt;
 import androidx.annotation.StyleRes;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.MenuItemCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -62,6 +63,7 @@ public class LibraryBrowserFragment extends Fragment
     private RecyclerView mComicListView;
     private SwipeRefreshLayout mRefreshLayout;
     private Handler mUpdateHandler = new LibraryFragment.UpdateHandler(this);
+    private MenuItem mRefreshItem;
     private Long mCacheStamp = Long.valueOf(System.currentTimeMillis());
     private HashMap<Uri, Long> mCache = new HashMap();
 
@@ -124,16 +126,14 @@ public class LibraryBrowserFragment extends Fragment
     public void onResume() {
         getComics();
         Scanner.getInstance().addUpdateHandler(mUpdateHandler);
-        if (Scanner.getInstance().isRunning()) {
-            mRefreshLayout.setRefreshing(true);
-        }
+        setLoading(Scanner.getInstance().isRunning());
         super.onResume();
     }
 
     @Override
     public void onPause() {
         Scanner.getInstance().removeUpdateHandler(mUpdateHandler);
-        mRefreshLayout.setRefreshing(false);
+        setLoading(false);
         super.onPause();
     }
 
@@ -153,6 +153,11 @@ public class LibraryBrowserFragment extends Fragment
         updateColors();
 
         super.onCreateOptionsMenu(menu, inflater);
+
+        // memorize refresh item
+        mRefreshItem = menu.findItem(R.id.menu_browser_refresh);
+        // switch refresh icon
+        setLoading(Scanner.getInstance().isRunning());
     }
 
     @Override
@@ -174,6 +179,16 @@ public class LibraryBrowserFragment extends Fragment
                 mFilterRead = item.getItemId();
                 filterContent();
                 return true;
+            case R.id.menu_browser_refresh:
+                // if running, stop is requested
+                if (Scanner.getInstance().isRunning()) {
+                    setLoading(false);
+                    Scanner.getInstance().stop();
+                    return true;
+                } else {
+                    onRefresh();
+                    return true;
+                }
         }
 
         return super.onOptionsItemSelected(item);
@@ -344,10 +359,8 @@ public class LibraryBrowserFragment extends Fragment
 
     @Override
     public void onRefresh() {
-        if (!Scanner.getInstance().isRunning()) {
-            mRefreshLayout.setRefreshing(true);
-            Scanner.getInstance().scanLibrary(new File(mPath));
-        }
+       setLoading(true);
+       Scanner.getInstance().forceScanLibrary(new File(mPath));
     }
 
     public void refreshLibraryDelayed() {
@@ -355,7 +368,19 @@ public class LibraryBrowserFragment extends Fragment
 
     public void refreshLibraryFinished() {
         getComics();
-        mRefreshLayout.setRefreshing(false);
+        setLoading(false);
+    }
+
+    private void setLoading(boolean isLoading) {
+        if (isLoading) {
+            mRefreshLayout.setRefreshing(true);
+            if (mRefreshItem != null)
+                mRefreshItem.setIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_refresh_stop_24));
+        } else {
+            if (mRefreshItem != null)
+                mRefreshItem.setIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_refresh_24));
+            mRefreshLayout.setRefreshing(false);
+        }
     }
 
     private final class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {

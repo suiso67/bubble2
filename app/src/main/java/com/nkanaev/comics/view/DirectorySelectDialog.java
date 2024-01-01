@@ -25,6 +25,7 @@ public class DirectorySelectDialog
         implements View.OnClickListener, AdapterView.OnItemClickListener, SwipeRefreshLayout.OnRefreshListener {
     private Button mSetButton;
     private Button mCancelButton;
+    private ImageButton mRefreshButton;
     private OnDirectorySelectListener mListener;
     private ListView mListView;
     private TextView mTitleTextView;
@@ -47,11 +48,13 @@ public class DirectorySelectDialog
         setContentView(R.layout.dialog_directorypicker);
         mSetButton = (Button) findViewById(R.id.directory_picker_confirm);
         mCancelButton = (Button) findViewById(R.id.directory_picker_cancel);
+        mRefreshButton = findViewById(R.id.directory_picker_refresh);
         mListView = (ListView) findViewById(R.id.directory_listview);
         mTitleTextView = (TextView) findViewById(R.id.directory_current_text);
 
         mSetButton.setOnClickListener(this);
         mCancelButton.setOnClickListener(this);
+        mRefreshButton.setOnClickListener(this);
 
         mListView.setAdapter(new DirectoryListAdapter());
         mListView.setOnItemClickListener(this);
@@ -132,18 +135,28 @@ public class DirectorySelectDialog
     @Override
     public void onRefresh() {
         // refresh on show
-        if (mCurrentDir!=null)
+        if (mCurrentDir!=null) {
+            mRefreshLayout.setRefreshing(true);
             setCurrentDirectory(mCurrentDir);
+        }
         mRefreshLayout.setRefreshing(false);
     }
 
     @Override
     public void onClick(View v) {
+        // refresh
+        if (v == mRefreshButton) {
+            onRefresh();
+            return;
+        }
+
+        // ok, set current dir
         if (v == mSetButton) {
             if (mListener != null) {
                 mListener.onDirectorySelect(mCurrentDir);
             }
         }
+        // dismiss dialog on ok/cancel
         dismiss();
     }
 
