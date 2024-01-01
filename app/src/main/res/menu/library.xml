@@ -2,9 +2,14 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/menuLibraryRefresh"
+          android:title="@string/reload"
+          android:icon="@drawable/ic_refresh_24"
+          app:showAsAction="ifRoom">
+    </item>
     <item android:id="@+id/menuLibrarySetDir"
           android:title="@string/directory_picker_header"
           android:icon="@drawable/ic_folder_24"
-          app:showAsAction="always">
+          app:showAsAction="ifRoom">
     </item>
 </menu>

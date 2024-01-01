@@ -58,6 +58,7 @@ public class LibraryFragment extends Fragment
     private Picasso mPicasso;
     private boolean mIsRefreshPlanned = false;
     private Handler mUpdateHandler = new UpdateHandler(this);
+    private MenuItem mRefreshItem;
 
     public LibraryFragment() {
     }
@@ -176,6 +177,11 @@ public class LibraryFragment extends Fragment
         menu.clear();
         inflater.inflate(R.menu.library, menu);
         super.onCreateOptionsMenu(menu, inflater);
+
+        // memorize refresh item
+        mRefreshItem = menu.findItem(R.id.menuLibraryRefresh);
+        // switch refresh icon
+        setLoading(Scanner.getInstance().isRunning());
     }
 
     @Override
@@ -186,6 +192,15 @@ public class LibraryFragment extends Fragment
             }
 
             mDirectorySelectDialog.show();
+            return true;
+        } else if (item.getItemId() == R.id.menuLibraryRefresh){
+            // if running, stop is requested
+            if (Scanner.getInstance().isRunning()) {
+                setLoading(false);
+                Scanner.getInstance().stop();
+                return true;
+            }
+            onRefresh();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -228,7 +243,6 @@ public class LibraryFragment extends Fragment
     private void getComics() {
         List<Comic> comics = Storage.getStorage(getActivity()).listDirectoryComics();
         mComicsListManager = new DirectoryListingManager(comics, getLibraryDir());
-        Log.d("","");
     }
 
     private void refreshLibrary( boolean finished ) {
@@ -258,7 +272,11 @@ public class LibraryFragment extends Fragment
     private void setLoading(boolean isLoading) {
         if (isLoading) {
             mRefreshLayout.setRefreshing(true);
+            if (mRefreshItem != null)
+                mRefreshItem.setIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_refresh_stop_24));
         } else {
+            if (mRefreshItem != null)
+                mRefreshItem.setIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_refresh_24));
             mRefreshLayout.setRefreshing(false);
             showEmptyMessage(mComicsListManager.getCount() < 1);
         }
