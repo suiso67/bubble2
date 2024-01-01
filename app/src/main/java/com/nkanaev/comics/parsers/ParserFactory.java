@@ -206,6 +206,8 @@ public class ParserFactory {
                 return Type.SEVEN_Z;
             if (Utils.isZipStream(is))
                 return Type.ZIP;
+            if (Utils.isTarStream(is))
+                return Type.TAR;
 
             // commons compress needs java.nio
             if (Utils.isOreoOrLater())

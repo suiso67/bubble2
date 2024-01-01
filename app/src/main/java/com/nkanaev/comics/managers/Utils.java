@@ -141,7 +141,16 @@ public final class Utils {
         return inputStreamStartsWith(is, zipSignature);
     }
 
-    private static boolean inputStreamStartsWith(InputStream is, byte[] bytesIn){
+    public static boolean isTarStream(InputStream is) {
+        final byte[] tarSignature = {'u', 's', 't', 'a', 'r'};
+        return inputStreamStartsWith(is, tarSignature, 257);
+    }
+
+    private static boolean inputStreamStartsWith(InputStream is, byte[] bytesIn) {
+        return inputStreamStartsWith(is, bytesIn, 0);
+    }
+
+    private static boolean inputStreamStartsWith(InputStream is, byte[] bytesIn, int offset){
         try {
             if (bytesIn == null)
                 throw new IllegalArgumentException("bytesIn must not be Null");
@@ -149,7 +158,8 @@ public final class Utils {
                 throw new IllegalArgumentException("inputStream must support mark/reset");
 
             byte[] isHeader = new byte[bytesIn.length];
-            is.mark(bytesIn.length);
+            is.mark(offset + bytesIn.length);
+            is.skip(offset);
             is.read(isHeader);
             is.reset();
             return Arrays.equals(bytesIn,isHeader);
