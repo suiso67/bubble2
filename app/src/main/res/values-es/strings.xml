@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_description">Lector de cómics para android</string>
-
+    <string name="about_version"></string>
     <string name="about_libraries"></string>
     <string name="about_thanks"></string>
 

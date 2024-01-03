@@ -26,7 +26,8 @@
                     android:layout_gravity="center"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:paddingRight="4dp">
 
                 <!-- stupid, but true. only fitXY renders a non-blocky/smooth graphic
                      needs the squared logo then though, when giving w=h dimensions -->
@@ -51,24 +52,25 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
-                            android:orientation="horizontal" android:layout_marginBottom="8dp">
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="8dp">
 
                         <TextView
                                 android:id="@+id/aboutName"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:textSize="20sp"
                                 android:textStyle="normal"
                                 android:singleLine="true"
                                 android:text="@string/app_name"/>
-
                         <TextView
                                 android:id="@+id/aboutDescription"
                                 app:layout_constraintStart_toEndOf="@id/aboutName"
                                 app:layout_constraintBaseline_toBaselineOf="@id/aboutName"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginLeft="6dp"
                                 android:textSize="14sp"
                                 android:textStyle="normal"
                                 android:textColor="#666"
@@ -77,18 +79,31 @@
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
-                    <TextView
-                            android:id="@+id/aboutVersion"
+                    <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:ellipsize="end"
-                            android:layout_gravity="center_horizontal"
-                            android:textSize="@dimen/about_text_small"
-                            android:textColor="#666"
-                            android:singleLine="true"
-                            android:text="just a dummy version text to be replaced and just some more text"/>
-
+                            android:layout_gravity="center"
+                            android:orientation="horizontal">
+                        <TextView
+                                android:id="@+id/aboutVersionHeader"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="@dimen/about_text_small"
+                                android:textColor="#666"
+                                android:singleLine="true"
+                                android:text="@string/about_version"/>
+                        <TextView
+                                android:id="@+id/aboutVersion"
+                                android:layout_height="wrap_content"
+                                android:layout_width="wrap_content"
+                                android:textSize="@dimen/about_text_small"
+                                android:textColor="#666"
+                                android:singleLine="true"
+                                android:ellipsize="marquee"
+                                android:marqueeRepeatLimit="marquee_forever"
+                                android:scrollHorizontally="true"
+                                android:text="just a dummy version text to be replaced and just some more text"/>
+                    </LinearLayout>
                     <TextView
                             android:id="@+id/aboutLink"
                             android:layout_width="wrap_content"

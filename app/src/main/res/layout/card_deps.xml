@@ -20,34 +20,34 @@
         <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
+                android:gravity="fill_vertical"
                 android:orientation="horizontal"
                 android:paddingLeft="8dp"
                 android:paddingRight="8dp">
 
             <TextView
                     android:id="@+id/libraryName"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="5"
                     android:ellipsize="end"
-                    android:gravity="start"
+                    android:gravity="left"
                     android:maxLines="1"
                     android:textSize="@dimen/about_text_large"
                     android:textStyle="normal"
-                    tools:text="" />
+                    tools:text="Some Library Name" />
 
             <TextView
                     android:id="@+id/libraryCreator"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:layout_weight="2"
+                    android:paddingTop="6sp"
+                    android:paddingLeft="24dp"
                     android:gravity="end"
-                    android:maxLines="2"
+                    android:ellipsize="end"
+                    android:maxLines="4"
                     android:textSize="@dimen/about_text_small"
                     android:textStyle="normal"
-                    tools:text="" />
+                    tools:text="Jeffrey Lebowski, Walter Sobchak, Theodore Donald „Donny“ Kerabatsos, The Stranger, Jesus Quintana, Jackie Treehorn, " />
         </LinearLayout>
 
         <View
@@ -65,7 +65,7 @@
                 android:padding="8dp"
                 android:textSize="@dimen/about_text_small"
                 android:textStyle="normal"
-                tools:text="">
+                tools:text="Some Description explaining what the library does and so forth.">
         </TextView>
 
         <View
@@ -94,7 +94,7 @@
                     android:maxLines="1"
                     android:textSize="@dimen/about_text_small"
                     android:textStyle="normal"
-                    tools:text="License" />
+                    tools:text="License information" />
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

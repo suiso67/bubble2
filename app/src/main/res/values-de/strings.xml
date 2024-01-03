@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_description">Comic-Reader für Android</string>
+    <string name="about_version"></string>
     <string name="about_libraries">Diese App nutzt die folgenden Komponenten zu den angegebenen Lizenzbedingungen. Ohne
         diese gäbe es diese App nicht!
     </string>

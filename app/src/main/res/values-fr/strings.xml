@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<!--
-		Copyright (C) 2015, Nicola Spanti (also known as RyDroid) <dev@nicola-spanti.info>
-		
-		Copying and distribution of this file, with or without modification,
-		are permitted in any medium without royalty provided the copyright
-		notice and this notice are preserved.  This file is offered as-is,
-		without any warrant
-	-->
-	
-    <string name="app_description">Lecteur de BDs pour Android</string>
 
+    <string name="app_description">Lecteur de BDs pour Android</string>
+    <string name="about_version"></string>
     <string name="about_libraries"></string>
     <string name="about_thanks"></string>
 

@@ -39,7 +39,7 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
 
     private static CharSequence lib7zDetails() {
         SevenZip.Version version = SevenZip.getSevenZipVersion();
-        CharSequence out = "\n" +
+        CharSequence out =
                 "7-zip version: " + version.version + ", " + version.date + "\n" +
                 "7-Zip-JBinding version: " + SevenZip.getSevenZipJBindingVersion() + "\n" +
                 "Native library initialized: " + SevenZip.isInitializedSuccessfully();
@@ -79,7 +79,7 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
             ),
             new LibraryDescription(
                     "7-Zip-JBinding-4Android",
-                    TextUtils.concat("Android library version of 7-Zip-JBinding java wrapper.", lib7zDetails()),
+                    TextUtils.concat("Android library version of 7-Zip-JBinding java wrapper.\n\n", lib7zDetails()),
                     "GNU LGPL 2.1 or later + unRAR restriction",
                     "Igor Pavlov, Boris Brodski, Fredrik Claesson",
                     "https://github.com/omicronapps/7-Zip-JBinding-4Android"
@@ -132,11 +132,17 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_about, container, false);
 
-        ((TextView) view.findViewById(R.id.aboutVersion)).setText(getVersionString());
+        TextView aboutVersionHeaderTextView = view.findViewById(R.id.aboutVersionHeader);
+        aboutVersionHeaderTextView.setText(aboutVersionHeaderTextView.getText()+": ");
+
+        TextView aboutVersionTextView = view.findViewById(R.id.aboutVersion);
+        aboutVersionTextView.setText(getVersionString());
+        aboutVersionTextView.setSelected(true);
+
         View appLayout = view.findViewById(R.id.about_application);
         appLayout.setTag(getString(R.string.app_link));
         TextView descView = view.findViewById(R.id.aboutDescription);
-        descView.setText("- "+getString(R.string.app_description));
+        descView.setText(" - "+descView.getText());
         appLayout.setOnClickListener(this);
 
         LinearLayout libsLayout = (LinearLayout) view.findViewById(R.id.about_libraries);
@@ -163,7 +169,7 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
             PackageInfo pi = getActivity()
                     .getPackageManager()
                     .getPackageInfo(getActivity().getPackageName(), 0);
-            return "Version " + pi.versionName + " (" + Integer.toString(pi.versionCode) + ")";
+            return pi.versionName + " (" + Integer.toString(pi.versionCode) + ")";
         } catch (Exception e) {
             Log.e("AboutFragment#117","getVersionString()",e);
             return "";

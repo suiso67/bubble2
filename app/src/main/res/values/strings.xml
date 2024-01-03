@@ -6,6 +6,7 @@
     <string name="app_link" translatable="false">https://github.com/edeso/bubble2</string>
     <string name="app_license" translatable="false">GPL-3.0</string>
 
+    <string name="about_version">Version</string>
     <string name="about_libraries">This application integrates the following libraries under the licenses mentioned. It wouldn\'t exist without them!</string>
     <string name="about_thanks">Thank you!</string>
 
