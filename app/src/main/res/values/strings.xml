@@ -50,6 +50,10 @@
     <string name="browser_search_hint">Please enter a search term</string>
 
     <string name="reload">Reload</string>
+    <string name="theme">Theme</string>
+    <string name="theme_auto">Auto</string>
+    <string name="theme_day">Day</string>
+    <string name="theme_night">Night</string>
 
     <string name="alert_action_positive">Yes</string>
     <string name="alert_action_negative">No</string>

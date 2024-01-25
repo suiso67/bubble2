@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_description">Lector de cómics para android</string>
-    <string name="about_version"></string>
-    <string name="about_libraries"></string>
-    <string name="about_thanks"></string>
 
     <string name="action_refresh">Actualizar</string>
     <string name="action_settings">Configuración</string>
-
-    <string name="action_view_rotate"></string>
 
     <string name="action_view_mode">Modo de visualización</string>
     <string name="action_view_mode_aspect_fill">Llenar aspecto</string>

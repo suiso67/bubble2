@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_description">Comic-Reader für Android</string>
-    <string name="about_version"></string>
     <string name="about_libraries">Diese App nutzt die folgenden Komponenten zu den angegebenen Lizenzbedingungen. Ohne
         diese gäbe es diese App nicht!
     </string>
@@ -35,6 +34,10 @@
     <string name="search">Suchen</string>
     <string name="browser_search_hint">Suchbegriff eingeben</string>
     <string name="reload">Erneut Laden</string>
+    <string name="theme">Farbschema</string>
+    <string name="theme_auto">Auto</string>
+    <string name="theme_day">Hell</string>
+    <string name="theme_night">Dunkel</string>
     <string name="alert_action_positive">Ja</string>
     <string name="alert_action_negative">Nein</string>
     <string name="alert_action_neutral">Ok</string>
