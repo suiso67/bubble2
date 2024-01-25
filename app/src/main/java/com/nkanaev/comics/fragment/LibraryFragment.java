@@ -165,7 +165,7 @@ public class LibraryFragment extends Fragment
 
         mEmptyView = view.findViewById(R.id.library_empty);
 
-        showEmptyMessage(mComicsListManager.getCount() == 0);
+        showEmptyMessageIfNeeded();
         getActivity().setTitle(R.string.menu_library);
         String folder = getLibraryDir();
         ((MainActivity) getActivity()).setSubTitle(Utils.appendSlashIfMissing(folder));
@@ -283,10 +283,12 @@ public class LibraryFragment extends Fragment
         editor.putString(Constants.SETTINGS_LIBRARY_DIR, file.getAbsolutePath());
         editor.apply();
 
+        // enable refresh button
+        ActivityCompat.invalidateOptionsMenu(getActivity());
+
         ((MainActivity) getActivity()).setSubTitle(Utils.appendSlashIfMissing(file.getAbsolutePath()));
 
         Scanner.getInstance().forceScanLibrary();
-        showEmptyMessage(false);
         setLoading(true);
     }
 
@@ -316,6 +318,7 @@ public class LibraryFragment extends Fragment
                     getComics();
                     mFolderListView.getAdapter().notifyDataSetChanged();
                     mIsRefreshPlanned = false;
+                    showEmptyMessageIfNeeded();
                 }
             };
             mIsRefreshPlanned = true;
@@ -341,7 +344,7 @@ public class LibraryFragment extends Fragment
             if (mRefreshItem != null)
                 mRefreshItem.setIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_refresh_24));
             mRefreshLayout.setRefreshing(false);
-            showEmptyMessage(mComicsListManager.getCount() < 1);
+            showEmptyMessageIfNeeded();
         }
     }
 
@@ -351,7 +354,8 @@ public class LibraryFragment extends Fragment
                 .getString(Constants.SETTINGS_LIBRARY_DIR, "");
     }
 
-    private void showEmptyMessage(boolean show) {
+    private void showEmptyMessageIfNeeded() {
+        boolean show = mComicsListManager.getCount() < 1;
         mEmptyView.setVisibility(show ? View.VISIBLE : View.GONE);
         mRefreshLayout.setEnabled(!show);
     }
