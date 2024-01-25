@@ -81,13 +81,13 @@ public class LocalCoverHandler extends RequestHandler {
             int height = result.getHeight();
             int width = result.getWidth();
             int hLimit = (int) (width * (1 / CoverImageView.FACTOR));
-            int wLimit = (int) (height * (2 * CoverImageView.FACTOR));
+            int wLimit = (int) (height * (2.5 * CoverImageView.FACTOR));
             Bitmap oldResult = result;
             if (height > width && height > hLimit) {
                 result = Bitmap.createBitmap(result, 0, 0, width, hLimit);
                 oldResult.recycle();
             } else if (width > height && width > wLimit) {
-                result = Bitmap.createBitmap(result, 0, 0, wLimit, height);
+                result = Bitmap.createBitmap(result, width-wLimit-1, 0, wLimit, height);
                 oldResult.recycle();
             }
 
