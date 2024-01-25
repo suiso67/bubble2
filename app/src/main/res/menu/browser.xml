@@ -4,18 +4,49 @@
     <item android:id="@+id/search"
           android:title="@string/search"
           android:icon="@drawable/ic_search_white_24dp"
-          app:showAsAction="ifRoom"
+          app:showAsAction="always"
           app:actionViewClass="androidx.appcompat.widget.SearchView"/>
+
     <item android:id="@+id/menu_browser_refresh"
           android:title="@string/reload"
           android:icon="@drawable/ic_refresh_24"
           app:showAsAction="ifRoom">
     </item>
-    <item android:id="@+id/filter"
+    <item android:id="@+id/sort"
+          android:title="Sort"
+          android:icon="@drawable/ic_sort_24"
+          app:showAsAction="ifRoom">
+        <menu/>
+        <!--menu android:id="@+id/menu_browser_sort">
+            <group android:checkableBehavior="single"
+                   android:id="@+id/sort_group">
+                <item android:id="@+id/menu_browser_name_asc"
+                      android:icon="@drawable/ic_sort_24"
+                      android:title="Name ↓"
+                      android:checked="true"/>
+                <item android:id="@+id/menu_browser_name_desc"
+                      android:icon="@drawable/ic_sort_24"
+                      android:title="Name ↑"/>
+                <item android:id="@+id/menu_browser_time_asc"
+                      android:icon="@drawable/sort_asc"
+                      android:title="Date ⇩"/>
+                <item android:id="@+id/menu_browser_time_desc"
+                      android:icon="@drawable/sort_desc"
+                      android:title="Date ⇧"/>
+                <item android:id="@+id/menu_browser_size_asc"
+                      android:icon="@drawable/sort_asc"
+                      android:title="Size ↧"/>
+                <item android:id="@+id/menu_browser_size_desc"
+                      android:icon="@drawable/sort_desc"
+                      android:title="Size ↥"/>
+            </group>
+        </menu-->
+    </item>
+    <item android:id="@+id/menu_browser_filter"
           android:title="@string/menu_browser_filter"
           android:icon="@drawable/ic_filter_list_white_24dp"
           app:showAsAction="ifRoom">
-        <menu android:id="@+id/menu_browser_filter">
+        <menu>
             <group android:checkableBehavior="single">
                 <item android:id="@+id/menu_browser_filter_all"
                       android:title="@string/menu_browser_filter_all"
@@ -25,7 +56,7 @@
                 <item android:id="@+id/menu_browser_filter_reading"
                       android:title="@string/menu_browser_filter_reading"/>
                 <item android:id="@+id/menu_browser_filter_unfinished"
-                    android:title="@string/menu_browser_filter_unfinished"/>
+                      android:title="@string/menu_browser_filter_unfinished"/>
                 <item android:id="@+id/menu_browser_filter_read"
                       android:title="@string/menu_browser_filter_read"/>
             </group>

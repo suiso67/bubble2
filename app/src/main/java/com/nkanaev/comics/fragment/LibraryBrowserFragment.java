@@ -1,29 +1,38 @@
 package com.nkanaev.comics.fragment;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.style.AlignmentSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.view.*;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 import androidx.annotation.ColorInt;
 import androidx.annotation.StyleRes;
+import androidx.appcompat.view.menu.MenuBuilder;
+import androidx.appcompat.view.menu.MenuItemImpl;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.MenuCompat;
 import androidx.core.view.MenuItemCompat;
+import androidx.core.widget.ImageViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import com.nkanaev.comics.BuildConfig;
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.MainActivity;
@@ -56,9 +65,10 @@ public class LibraryBrowserFragment extends Fragment
     private List<Comic> mRecentItems = new ArrayList<>();
 
     private String mPath;
-    private String mFilterSearch = "";
     private Picasso mPicasso;
+    private String mFilterSearch = "";
     private int mFilterRead = R.id.menu_browser_filter_all;
+    private int mSortId = R.id.sort_name_asc;
 
     private RecyclerView mComicListView;
     private SwipeRefreshLayout mRefreshLayout;
@@ -137,19 +147,38 @@ public class LibraryBrowserFragment extends Fragment
         super.onPause();
     }
 
-    private Menu mFilterMenu = null;
+    private Menu mFilterMenu, mSortMenu;
 
+    @Override
+    public void onPrepareOptionsMenu(Menu menu){
+        super.onPrepareOptionsMenu(menu);
+
+        // disable sort menu item for now
+        // TODO: implement and remove this
+        if (!BuildConfig.DEBUG)
+            menu.findItem(R.id.sort).setVisible(false);
+    }
+
+    SearchView mSearchView;
+
+    @SuppressLint("RestrictedApi")
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
         inflater.inflate(R.menu.browser, menu);
+        // hack to enable icons in overflow menu
+        if(menu instanceof MenuBuilder){
+            ((MenuBuilder)menu).setOptionalIconsVisible(true);
+        }
 
         MenuItem searchItem = menu.findItem(R.id.search);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
-        searchView.setOnQueryTextListener(this);
+        mSearchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        mSearchView.setOnQueryTextListener(this);
 
-        MenuItem filterItem = menu.findItem(R.id.filter);
-        mFilterMenu = (Menu) filterItem.getSubMenu();
+        MenuItem filterItem = menu.findItem(R.id.menu_browser_filter);
+        mFilterMenu = filterItem.getSubMenu();
+
+        // fixup menu formatting
         updateColors();
 
         super.onCreateOptionsMenu(menu, inflater);
@@ -158,8 +187,14 @@ public class LibraryBrowserFragment extends Fragment
         mRefreshItem = menu.findItem(R.id.menu_browser_refresh);
         // switch refresh icon
         setLoading(Scanner.getInstance().isRunning());
+
+        // align header title of generated sub menu right
+        SpannableString title = new SpannableString(getResources().getString(R.string.menu_browser_filter));
+        title.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_OPPOSITE),0,title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        menu.findItem(R.id.menu_browser_filter).getSubMenu().setHeaderTitle(title);
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item == null)
@@ -184,24 +219,87 @@ public class LibraryBrowserFragment extends Fragment
                 if (Scanner.getInstance().isRunning()) {
                     setLoading(false);
                     Scanner.getInstance().stop();
-                    return true;
                 } else {
                     onRefresh();
-                    return true;
                 }
+                return true;
+            case R.id.sort:
+                View popupView = getLayoutInflater().inflate(R.layout.layout_sort, null);
+                if (((MenuItemImpl)item).isActionButton()) {
+                    popupView.findViewById(R.id.sort_header).setVisibility(View.GONE);
+                    popupView.findViewById(R.id.sort_header_divider).setVisibility(View.GONE);
+                }
+
+                @StyleRes int theme = ((MainActivity) getActivity()).getToolbar().getPopupTheme();
+                //Drawable bg = ContextCompat.getDrawable(getContext(),Utils.getThemeResourceId(android.R.attr.background, theme));
+                @ColorInt int normal = Utils.getThemeColor(androidx.appcompat.R.attr.colorControlNormal, theme);
+                @ColorInt int active = Utils.getThemeColor(androidx.appcompat.R.attr.colorControlActivated, theme);
+
+                PopupWindow popupWindow = new PopupWindow(popupView,RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT, true);
+                // weirdly needed on preAPI21 to dismiss on tap outside
+                popupWindow.setBackgroundDrawable(new ColorDrawable(androidx.appcompat.R.attr.colorPrimary));
+
+                int[] ids = new int[]{R.id.sort_date_asc, R.id.sort_date_desc,
+                        R.id.sort_name_asc, R.id.sort_name_desc,
+                        R.id.sort_size_asc, R.id.sort_size_desc};
+                for (int id: ids ) {
+                    ImageView v = popupView.findViewById(id);
+                    int tint = id == mSortId ? active : normal;
+                    ImageViewCompat.setImageTintList(v, ColorStateList.valueOf(tint));
+                    v.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onSortItemSelected(id);
+                            popupWindow.dismiss();
+                        }
+                    });
+                }
+
+                float dp = getResources().getDisplayMetrics().density;
+                // place popup window top right
+                int xOffset, yOffset;
+                xOffset=Math.round(4*dp);
+                yOffset=Math.round(30*dp);
+                // API21+ place submenu popups below actionbar
+                if (Utils.isLollipopOrLater()) {
+                    yOffset = Math.round(17 * dp) + ((MainActivity) getActivity()).getToolbar().getHeight();
+                    popupWindow.setElevation(16);
+                }
+                // show at location
+                popupWindow.showAtLocation(getActivity().getWindow().getDecorView(),Gravity.TOP|Gravity.RIGHT,xOffset,yOffset);
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    private void updateColors() {
-        if (mFilterMenu == null) return;
+    public void onSortItemSelected(int id) {
+        // TODO: implement
+        Toast.makeText(
+                getActivity(),
+                "sort "+id,
+                Toast.LENGTH_SHORT).show();
+        mSortId = id;
+    }
 
+    private void updateColors() {
+        if (false) return;
+
+        // fetch styling
         @StyleRes int theme = ((MainActivity) getActivity()).getToolbar().getPopupTheme();
         @ColorInt int normal = Utils.getThemeColor(androidx.appcompat.R.attr.colorControlNormal, theme);
         @ColorInt int active = Utils.getThemeColor(androidx.appcompat.R.attr.colorControlActivated, theme);
-        for (int i = 0; i < mFilterMenu.size(); i++) {
+
+        for (int i = 0; mFilterMenu != null && i < mFilterMenu.size(); i++) {
             MenuItem item = mFilterMenu.getItem(i);
+            if (item.isChecked())
+                styleItem(item, active, true);
+            else
+                styleItem(item, normal, false);
+        }
+
+        for (int i = 0; mSortMenu != null && i < mSortMenu.size(); i++) {
+            MenuItem item = mSortMenu.getItem(i);
             if (item.isChecked())
                 styleItem(item, active, true);
             else
