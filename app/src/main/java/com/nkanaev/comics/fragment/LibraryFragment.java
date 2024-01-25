@@ -1,16 +1,15 @@
 package com.nkanaev.comics.fragment;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
+import android.os.*;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.*;
@@ -18,6 +17,8 @@ import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -172,11 +173,17 @@ public class LibraryFragment extends Fragment
         return view;
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
         inflater.inflate(R.menu.library, menu);
         super.onCreateOptionsMenu(menu, inflater);
+
+        // hack to enable icons in overflow menu
+        if(menu instanceof MenuBuilder){
+            ((MenuBuilder)menu).setOptionalIconsVisible(true);
+        }
 
         // memorize refresh item
         mRefreshItem = menu.findItem(R.id.menuLibraryRefresh);
@@ -185,25 +192,80 @@ public class LibraryFragment extends Fragment
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menuLibrarySetDir) {
-            if (Scanner.getInstance().isRunning()) {
-                Scanner.getInstance().stop();
-            }
+    public void onPrepareOptionsMenu(@NonNull Menu menu) {
+        super.onPrepareOptionsMenu(menu);
 
-            mDirectorySelectDialog.show();
-            return true;
-        } else if (item.getItemId() == R.id.menuLibraryRefresh){
-            // if running, stop is requested
-            if (Scanner.getInstance().isRunning()) {
-                setLoading(false);
-                Scanner.getInstance().stop();
-                return true;
-            }
+        // disable refresh if no folder selected so far
+        String dir = getLibraryDir();
+        menu.findItem(R.id.menuLibraryRefresh).setVisible(!getLibraryDir().isEmpty());
 
-            onRefresh();
-            return true;
+        Drawable icon;
+        int mode = AppCompatDelegate.getDefaultNightMode();
+        int item;
+        switch(mode) {
+            case AppCompatDelegate.MODE_NIGHT_NO:
+                icon = ContextCompat.getDrawable(getContext(),R.drawable.ui_light_mode_24);
+                item = R.id.menuLibrarySetThemeDay;
+                break;
+            case AppCompatDelegate.MODE_NIGHT_YES:
+                icon = ContextCompat.getDrawable(getContext(),R.drawable.ui_dark_mode_24);
+                item = R.id.menuLibrarySetThemeNight;
+                break;
+            default:
+                icon = ContextCompat.getDrawable(getContext(),R.drawable.ui_system_mode_24);
+                item = R.id.menuLibrarySetThemeAuto;
+                break;
         }
+        menu.findItem(R.id.menuLibrarySetTheme).setIcon(icon);
+        menu.findItem(item).setChecked(true);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.menuLibrarySetDir:
+                if (Scanner.getInstance().isRunning()) {
+                    Scanner.getInstance().stop();
+                }
+
+                mDirectorySelectDialog.show();
+                return true;
+            case R.id.menuLibraryRefresh:
+                // if running, stop is requested
+                if (Scanner.getInstance().isRunning()) {
+                    setLoading(false);
+                    Scanner.getInstance().stop();
+                    return true;
+                }
+
+                onRefresh();
+                return true;
+            case R.id.menuLibrarySetThemeAuto:
+            case R.id.menuLibrarySetThemeDay:
+            case R.id.menuLibrarySetThemeNight:
+                final int mode;
+                if (item.getItemId() == R.id.menuLibrarySetThemeNight)
+                    mode = AppCompatDelegate.MODE_NIGHT_YES;
+                else if (item.getItemId() == R.id.menuLibrarySetThemeDay)
+                    mode = AppCompatDelegate.MODE_NIGHT_NO;
+                else
+                    mode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+                // save to settings
+                SharedPreferences preferences = MainApplication.getPreferences();
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putInt(Constants.SETTINGS_THEME, mode);
+                editor.apply();
+                // apply
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        // crashes on Android9 if executed immediately
+                        AppCompatDelegate.setDefaultNightMode(mode);
+                    }
+                },500);
+                return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 

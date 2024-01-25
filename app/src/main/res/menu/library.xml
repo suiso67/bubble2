@@ -12,4 +12,23 @@
           android:icon="@drawable/ic_folder_24"
           app:showAsAction="ifRoom">
     </item>
+    <item android:id="@+id/menuLibrarySetTheme"
+          android:title="Theme"
+          android:icon="@drawable/ui_system_mode_24"
+          app:showAsAction="never">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item android:id="@+id/menuLibrarySetThemeAuto"
+                      android:icon="@drawable/ui_system_mode_24"
+                      android:title="Auto"
+                      android:checked="true"/>
+                <item android:id="@+id/menuLibrarySetThemeDay"
+                      android:icon="@drawable/ui_light_mode_24"
+                      android:title="Day"/>
+                <item android:id="@+id/menuLibrarySetThemeNight"
+                      android:icon="@drawable/ui_dark_mode_24"
+                      android:title="Night"/>
+            </group>
+        </menu>
+    </item>
 </menu>

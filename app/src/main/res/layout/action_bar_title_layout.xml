@@ -4,6 +4,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
+        android:theme="@style/MyToolbarTheme"
+        android:background="@android:color/transparent"
         android:padding="4dp">
 <!--
     <HorizontalScrollView
@@ -14,7 +16,6 @@
         <!-- wrapping is always done by word boundaries, ellipsize, lineBreak attribs don't do sh*t, dunno why -->
         <TextView
                 android:id="@+id/action_bar_title"
-                style="@style/TextAppearance.AppCompat.Title"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"
                 android:gravity="fill_horizontal"
@@ -23,18 +24,20 @@
 
                 android:ellipsize="none"
                 android:lineBreakStyle="none"
-                android:lineBreakWordStyle="none"/>
+                android:lineBreakWordStyle="none"
+                android:textSize="20sp"
+                android:text="Title"/>
 <!--
     </HorizontalScrollView>
 -->
         <TextView
             android:id="@+id/action_bar_subtitle"
-            style="@style/TextAppearance.AppCompat.Subhead"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:gravity="fill_horizontal"
             android:singleLine="false"
             android:scrollHorizontally="false"
             android:textSize="12sp"
-            android:visibility="gone"/>
+            android:text="Subtitle"
+            android:visibility="visible"/>
 </LinearLayout>

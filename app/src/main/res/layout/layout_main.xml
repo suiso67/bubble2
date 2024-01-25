@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- tools:openDrawer="start" -->
 <androidx.drawerlayout.widget.DrawerLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/drawer_layout"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:background="@color/lighter">
+        android:layout_height="fill_parent">
     <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -13,24 +14,23 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?attr/colorPrimary"
                 android:minHeight="?attr/actionBarSize"
                 android:theme="@style/MyToolbarTheme"
-                app:popupTheme="@style/MyPopupMenu"
+                app:popupTheme="@style/MyPopupMenuTheme"
                 app:contentInsetLeft="@dimen/toolbar_inset"
                 app:contentInsetStart="@dimen/toolbar_inset"/>
         <FrameLayout
                 android:id="@+id/content_frame"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                android:background="@color/lighter"/>
+                android:background="@color/background"/>
     </com.google.android.material.appbar.AppBarLayout>
 
     <RelativeLayout
             android:layout_gravity="start"
             android:layout_width="250dp"
             android:layout_height="match_parent"
-            android:background="@color/primary"
+            android:background="@color/primaryDark"
             android:clickable="true">
         <ImageView
                 android:id="@+id/drawer_bg_icon"
@@ -63,10 +63,10 @@
                 android:background="@android:color/transparent"
                 android:clickable="true"/>
         <androidx.constraintlayout.widget.ConstraintLayout
-                xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:visibility="visible">
             <androidx.constraintlayout.widget.Guideline
                     android:id="@+id/guideline"
                     android:layout_width="wrap_content"
@@ -78,14 +78,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:layout_constraintTop_toTopOf="@+id/guideline"
-                    android:background="@color/white_trans75"
                     app:elevation="0dp"
                     app:menu="@menu/drawer"
+                    style="@style/MyDrawerMenu"
                     android:theme="@style/MyDrawerMenu"
-                    app:itemTextAppearance="@style/NavigationViewTextStyle"
-                    app:itemTextColor="@drawable/nav_item"
-                    app:itemIconTint="@drawable/nav_item"
-                    app:itemBackground="@drawable/nav_item_bg"
+                    android:background="@color/white_trans75"
                     android:visibility="visible"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </RelativeLayout>

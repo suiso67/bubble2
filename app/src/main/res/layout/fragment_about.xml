@@ -4,7 +4,8 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/grey50">
+        android:theme="@style/AboutStyle"
+        android:background="@color/about_trans_bg">
     <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -14,19 +15,20 @@
             android:alpha=".3"/>
     <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/white_trans75">
+            android:layout_height="wrap_content">
         <LinearLayout
                 android:id="@+id/about_application"
                 android:clickable="true"
                 android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:background="@color/about_trans_row_bg">
             <LinearLayout
                     android:layout_gravity="center"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
+                    android:background="@android:color/transparent"
                     android:paddingRight="4dp">
 
                 <!-- stupid, but true. only fitXY renders a non-blocky/smooth graphic
@@ -62,7 +64,6 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:textSize="20sp"
-                                android:textStyle="normal"
                                 android:singleLine="true"
                                 android:text="@string/app_name"/>
                         <TextView
@@ -71,9 +72,6 @@
                                 app:layout_constraintBaseline_toBaselineOf="@id/aboutName"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:textSize="14sp"
-                                android:textStyle="normal"
-                                android:textColor="#666"
                                 android:singleLine="true"
                                 android:text="@string/app_description"/>
 
@@ -88,16 +86,12 @@
                                 android:id="@+id/aboutVersionHeader"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:textSize="@dimen/about_text_small"
-                                android:textColor="#666"
                                 android:singleLine="true"
                                 android:text="@string/about_version"/>
                         <TextView
                                 android:id="@+id/aboutVersion"
                                 android:layout_height="wrap_content"
                                 android:layout_width="wrap_content"
-                                android:textSize="@dimen/about_text_small"
-                                android:textColor="#666"
                                 android:singleLine="true"
                                 android:ellipsize="marquee"
                                 android:marqueeRepeatLimit="marquee_forever"
@@ -111,9 +105,6 @@
                             android:layout_gravity="center_horizontal"
                             android:layout_weight="1"
                             android:ellipsize="end"
-                            android:textSize="@dimen/about_text_small"
-                            android:textStyle="normal"
-                            android:textColor="@color/grey40"
                             android:singleLine="true"
                             android:text="@string/app_link"/>
 
@@ -124,9 +115,6 @@
                             android:layout_weight="1"
                             android:ellipsize="end"
                             android:layout_gravity="center_horizontal"
-                            android:textSize="@dimen/about_text_small"
-                            android:textStyle="normal"
-                            android:textColor="@color/grey40"
                             android:singleLine="true"
                             android:text="@string/app_license"/>
                 </LinearLayout>
@@ -144,9 +132,6 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
                     android:layout_margin="4dp"
-                    android:textSize="@dimen/about_text_small"
-                    android:textStyle="normal"
-                    android:textColor="@color/grey40"
                     android:text="@string/about_libraries"/>
             <TextView
                     android:id="@+id/aboutThanks"
@@ -155,7 +140,6 @@
                     android:gravity="center_horizontal"
                     android:layout_marginBottom="12dp"
                     android:textSize="@dimen/about_text_large"
-                    android:textStyle="normal"
                     android:text="@string/about_thanks"/>
 
             <LinearLayout

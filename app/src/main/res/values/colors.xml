@@ -1,39 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="primary">#DB5162</color>
-    <color name="primaryDark13">#c84a59</color>
-    <color name="primaryDark25">#b44350</color>
-    <color name="primaryDark37">#9e3b46</color>
-    <color name="primaryDark50">#88333b</color>
     <color name="primaryDark">@color/primaryDark13</color>
     <color name="accent">#ff466e87</color>
 
-    <color name="darkest_trans25">#40222222</color>
-    <color name="darkest_trans50">#80222222</color>
-    <color name="darkest_trans55">#8C222222</color>
-    <color name="darkest_trans60">#99222222</color>
-    <color name="darkest_trans65">#a6222222</color>
-    <color name="darkest_trans70">#b3222222</color>
-    <color name="darkest_trans75">#bf222222</color>
-    <color name="darkest_trans80">#cc222222</color>
-    <color name="darkest_trans85">#d9222222</color>
-    <color name="darkest_trans90">#e6222222</color>
-    <color name="darkest_trans95">#f2222222</color>
-    <color name="darkest">#222222</color>
-    <color name="darkest_semitransparent">@color/darkest_trans80</color>
     <color name="darker">#333333</color>
+    <color name="darkest">#222222</color>
+    <color name="darkest2">#111111</color>
+    <color name="darkest_semitransparent">@color/darkest_trans80</color>
 
     <color name="lightest">#ffffff</color>
     <color name="lighter">#dddddd</color>
     <color name="light">#bbb</color>
 
-    <color name="grey25">#404040</color>
-    <color name="grey40">#666666</color>
-    <color name="grey50">#808080</color>
-    <color name="grey75">#bfbfbf</color>
-    <color name="grey80">#cccccc</color>
-    <color name="grey90">#e6e6e6</color>
-    <color name="grey95">#f2f2f2</color>
+    <color name="background">@color/lighter</color>
+
+    <!-- values for card gradient backgrounds -->
+    <color name="card_gradient_start">@color/white_trans80</color>
+    <color name="card_gradient_center">@color/white_trans95</color>
+    <color name="card_gradient_end">@color/white</color>
+
+    <color name="about_trans_bg">@color/grey50</color>
+    <color name="about_trans_row_bg">@color/white_trans75</color>
+
+    <color name="primaryDark13">#c84a59</color>
+    <color name="primaryDark25">#b44350</color>
+    <color name="primaryDark37">#9e3b46</color>
+    <color name="primaryDark50">#88333b</color>
 
     <color name="white_trans25">#40ffffff</color>
     <color name="white_trans50">#80ffffff</color>
@@ -49,6 +42,8 @@
     <color name="white">#fff</color>
 
     <color name="black_trans25">#40000000</color>
+    <color name="black_trans30">#4D000000</color>
+    <color name="black_trans40">#4D000000</color>
     <color name="black_trans50">#80000000</color>
     <color name="black_trans55">#8C000000</color>
     <color name="black_trans60">#99000000</color>
@@ -60,14 +55,41 @@
     <color name="black_trans90">#e6000000</color>
     <color name="black_trans95">#f2000000</color>
     <color name="black">#000</color>
+
+    <color name="darkest_trans5">#0D222222</color>
+    <color name="darkest_trans10">#1A222222</color>
+    <color name="darkest_trans15">#26222222</color>
+    <color name="darkest_trans20">#33222222</color>
+    <color name="darkest_trans25">#40222222</color>
+    <color name="darkest_trans30">#4D222222</color>
+    <color name="darkest_trans35">#59222222</color>
+    <color name="darkest_trans40">#66222222</color>
+    <color name="darkest_trans50">#80222222</color>
+    <color name="darkest_trans55">#8C222222</color>
+    <color name="darkest_trans60">#99222222</color>
+    <color name="darkest_trans65">#a6222222</color>
+    <color name="darkest_trans70">#b3222222</color>
+    <color name="darkest_trans75">#bf222222</color>
+    <color name="darkest_trans80">#cc222222</color>
+    <color name="darkest_trans85">#d9222222</color>
+    <color name="darkest_trans90">#e6222222</color>
+    <color name="darkest_trans95">#f2222222</color>
+
+    <color name="grey5">#0D0D0D</color>
+    <color name="grey10">#1A1A1A</color>
+    <color name="grey15">#262626</color>
+    <color name="grey20">#333333</color>
+    <color name="grey25">#404040</color>
+    <color name="grey30">#4D4D4D</color>
+    <color name="grey35">#595959</color>
+    <color name="grey40">#666666</color>
+    <color name="grey50">#808080</color>
+    <color name="grey75">#bfbfbf</color>
+    <color name="grey80">#cccccc</color>
+    <color name="grey90">#e6e6e6</color>
+    <color name="grey95">#f2f2f2</color>
+
     <color name="circle_grey">#9d9d9d</color>
-<!--
-    <color name="circle_red">#F44336</color>
-    <color name="circle_green">#4CAF50</color>
-    <color name="circle_blue">#0bbcc9</color>
-    <color name="circle_orange">#F56D0C</color>
-    <color name="circle_yellow">#E2F54E</color>
--->
     <color name="circle_red">#F94144</color>
     <color name="circle_orange">#F8961E</color>
     <color name="circle_yellow">#F9C74F</color>

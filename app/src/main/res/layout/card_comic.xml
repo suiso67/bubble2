@@ -8,17 +8,18 @@
         android:clickable="true"
         android:focusable="true"
         android:foreground="?android:attr/selectableItemBackground"
+        cardview:cardBackgroundColor="@color/card_gradient_end"
         cardview:cardCornerRadius="2dp"
-        cardview:cardElevation="2dp">
-
+        cardview:cardElevation="4dp">
     <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:visibility="visible">
         <com.nkanaev.comics.view.CoverImageView
                 android:id="@+id/comicImageView"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:scaleType="fitStart"
+                android:scaleType="fitEnd"
                 app:layout_constraintTop_toTopOf="parent"/>
         <LinearLayout
                 android:id="@+id/comicLayout"
@@ -31,6 +32,7 @@
                     android:id="@+id/comicTitleTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp"
                     android:paddingTop="8dp"
@@ -42,12 +44,13 @@
                     android:id="@+id/comicPagerTextView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp"
                     android:paddingTop="1dp"
                     android:paddingBottom="4dp"
                     android:singleLine="true"
-                    android:gravity="bottom|start"
+                    android:visibility="visible"
                     style="@style/CardSubTitle"/>
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

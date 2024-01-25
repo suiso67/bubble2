@@ -11,11 +11,12 @@ public class CoverImageView extends AppCompatImageView {
     public static final double FACTOR = 6.875/10.438;
 
     public CoverImageView(Context context) {
-        super(context);
+        this(context,null);
     }
 
     public CoverImageView(Context context, AttributeSet attributeSet) {
         super(context, attributeSet);
+        setScaleType(ScaleType.MATRIX);
     }
 
     @Override
@@ -58,7 +59,6 @@ public class CoverImageView extends AppCompatImageView {
         // portrait, just fit to width
         else {
             scale = (float) vwidth / (float) dwidth;
-            //dy = (vheight - dheight * scale) * 0.5f;
         }
 
         matrix.setScale(scale, scale);

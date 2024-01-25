@@ -1,54 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppThemeDayNight" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primaryDark</item>
-
         <item name="android:navigationBarColor" tools:targetApi="lollipop">@color/primaryDark</item>
 
-        <item name="colorAccent">@color/primaryDark</item>
-        <!--
-        <item name="colorControlNormal">@color/lightest</item>
-        -->
-        <item name="colorControlHighlight">@color/ripple_material_light</item>
-
-        <item name="android:textColorPrimary">@color/lightest</item>
+        <!-- colors actionbar items on API16 -->
         <item name="android:textColorSecondary">@color/lightest</item>
-        <item name="android:textColor">@color/darkest</item>
 
-        <item name="android:background">@android:color/transparent</item>
+        <item name="actionBarWidgetTheme">@style/MyToolbarTheme</item>
+        <item name="android:actionBarWidgetTheme">@style/MyToolbarTheme</item>
     </style>
 
-    <style name="MyToolbarTheme" parent="AppTheme">
-        <item name="android:textColorPrimary">@color/lightest</item>
-        <item name="android:textColorSecondary">@color/lightest</item>
-        <item name="android:textColor">@color/lightest</item>
+    <style name="MyToolbarTheme" parent="AppThemeDayNight">
+        <!--item name="android:background">?attr/colorPrimary</item-->
+
+        <item name="android:textViewStyle">@style/MyToolbarTextAppearance</item>
+
+        <item name="actionOverflowMenuStyle">@style/MyPopupMenuTheme</item>
+
+        <item name="popupTheme">@style/MyPopupMenuTheme</item>
+        <item name="android:popupTheme" tools:targetApi="lollipop">@style/MyPopupMenuTheme</item>
+
+        <item name="popupMenuStyle">@style/MyPopupMenuTheme</item>
+        <item name="android:popupMenuStyle">@style/MyPopupMenuTheme</item>
     </style>
 
-    <style name="MyPopupMenu" parent="AppTheme">
-        <item name="android:background">@color/primaryDark</item>
-        <item name="android:listPreferredItemHeightSmall">36dp</item>
+    <style name="MyPopupMenuTheme" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:background">?attr/colorPrimary</item>
 
-        <item name="android:textSize">20sp</item>
-        <item name="colorControlNormal">@color/white_trans75</item>
+        <item name="colorControlNormal">@color/white_trans50</item>
         <item name="colorControlActivated">@color/white</item>
-        <!--
-        <item name="android:itemTextAppearance">@style/itemTextStyle.AppTheme</item>
-        -->
+        <item name="android:radioButtonStyle">@style/MyRadioButtonStyle</item>
+
+        <!-- overflow popup menu header text -->
+        <item name="textAppearancePopupMenuHeader">@style/MyToolbarTextAppearance</item>
+        <!-- popup menu items -->
+        <item name="dropDownListViewStyle">@style/MyPopupMenuListView</item>
+
+        <item name="android:textViewStyle">@style/MyToolbarTextAppearance</item>
+
+        <item name="textAppearanceLargePopupMenu">@style/MyToolbarTextAppearance</item>
+        <item name="android:textAppearanceLargePopupMenu">@style/MyToolbarTextAppearance</item>
+
+        <item name="textAppearanceSmallPopupMenu">@style/MyToolbarTextAppearance</item>
+        <item name="android:textAppearanceSmallPopupMenu">@style/MyToolbarTextAppearance</item>
+
+        <item name="popupMenuStyle">@style/MyPopupMenuListView</item>
+        <item name="android:popupMenuStyle">@style/MyPopupMenuListView</item>
+    </style>
+    <style name="MyRadioButtonStyle" parent="Widget.AppCompat.CompoundButton.RadioButton">
+        <item name="android:button">@drawable/radiobutton</item>
+        <!--item name="android:background">@color/black</item-->
+    </style>
+    <style name="MyPopupMenuListView" parent="Widget.AppCompat.ListView">
+        <item name="android:divider">@color/white</item>
+        <item name="android:dividerHeight">1dp</item>
+        <item name="android:textAppearance">@style/MyToolbarTextAppearance</item>
+    </style>
+    <style name="MyToolbarTextAppearance" parent="AppThemeDayNight">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="background">@android:color/transparent</item>
     </style>
 
-    <style name="MyDrawerMenu" parent="AppTheme">
+    <style name="NavigationViewTextStyle" parent="AppThemeDayNight">
         <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <!--item name="android:textFontWeight" tools:targetApi="p">800</item-->
+    </style>
+    <style name="MyDrawerMenu" parent="AppThemeDayNight">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="itemTextAppearance">@style/NavigationViewTextStyle</item>
+        <item name="itemTextColor">@drawable/nav_item</item>
+        <item name="itemIconTint">@drawable/nav_item</item>
+        <item name="iconTint">@drawable/nav_item</item>
+        <item name="itemBackground">@drawable/nav_item_bg</item>
     </style>
 
-    <style name="NavigationViewTextStyle" parent="AppTheme">
-        <item name="android:textStyle">normal</item>
-        <item name="android:textFontWeight" tools:targetApi="p">600</item>
-        <item name="android:fontStyle" tools:targetApi="o">normal</item>
-    </style>
-
-    <style name="CardTitle" parent="AppTheme">
-        <item name="android:textColor">@color/black</item>
+    <style name="CardTitle" parent="AppThemeDayNight">
         <item name="android:textSize">18sp</item>
         <item name="android:text">CardTitle</item>
     </style>
@@ -61,5 +91,11 @@
         <item name="android:textSize">20sp</item>
         <item name="android:textStyle">normal</item>
         <item name="android:text">Header</item>
+    </style>
+    <style name="AboutStyle" parent="AppThemeDayNight">
+        <item name="android:background">@null</item>
+        <item name="android:textColor">?android:attr/textColor</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">normal</item>
     </style>
 </resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">@color/black</color>
+
+    <!-- values for card gradient backgrounds -->
+    <color name="card_gradient_start">@color/darkest_trans50</color>
+    <color name="card_gradient_center">@color/darkest_trans80</color>
+    <color name="card_gradient_end">@color/darkest</color>
+
+    <color name="about_trans_bg">@color/grey25</color>
+    <color name="about_trans_row_bg">@color/black_trans50</color>
+</resources>

@@ -7,7 +7,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:clickable="true"
-        card_view:cardBackgroundColor="@color/white_trans70"
+        android:theme="@style/AboutStyle"
+        card_view:cardBackgroundColor="@color/about_trans_row_bg"
         card_view:cardElevation="0dp"
         android:layoutDirection="ltr">
 
@@ -47,7 +48,7 @@
                     android:maxLines="4"
                     android:textSize="@dimen/about_text_small"
                     android:textStyle="normal"
-                    tools:text="Jeffrey Lebowski, Walter Sobchak, Theodore Donald „Donny“ Kerabatsos, The Stranger, Jesus Quintana, Jackie Treehorn, " />
+                    tools:text="Jeffrey Lebowski, Walter Sobchak, Theodore Donald „Donny“ Kerabatsos, The Stranger, Jesus Quintana, Jackie Treehorn" />
         </LinearLayout>
 
         <View
