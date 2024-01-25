@@ -29,14 +29,19 @@ public class CoverImageView extends AppCompatImageView {
     @Override
     public void setImageDrawable(Drawable drawable) {
         super.setImageDrawable(drawable);
+        scale();
     }
 
     @Override
-    protected boolean setFrame(int l, int t, int r, int b) {
-        final boolean changed = super.setFrame(l, t, r, b);
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        scale();
+    }
+
+    private void scale () {
         Drawable drawable = getDrawable();
         if (drawable==null)
-            return changed;
+            return;
 
         Matrix matrix = getImageMatrix();
         matrix.reset();
@@ -65,7 +70,5 @@ public class CoverImageView extends AppCompatImageView {
         matrix.postTranslate(Math.round(dx), Math.round(dy));
 
         setImageMatrix(matrix);
-
-        return changed;
     }
 }
