@@ -2,20 +2,19 @@ package com.nkanaev.comics.activity;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import com.google.android.material.navigation.NavigationView;
-import com.google.android.material.navigation.NavigationView.OnNavigationItemSelectedListener;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import android.view.MenuItem;
-
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.navigation.NavigationView.OnNavigationItemSelectedListener;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.fragment.AboutFragment;
 import com.nkanaev.comics.fragment.BrowserFragment;
@@ -107,7 +106,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public Toolbar getToolbar(){
-        return (Toolbar) findViewById(R.id.toolbar);
+        return findViewById(R.id.toolbar);
     }
 
     @Override
@@ -225,6 +224,9 @@ public class MainActivity extends AppCompatActivity
         if (!popFragment()) {
             finish();
         }
+        // activating it will disable back button in library browser
+        // so yeah, even if IntelliJ sugests it, keep the super call disabled
+        //super.onBackPressed();
     }
 
     @Override
