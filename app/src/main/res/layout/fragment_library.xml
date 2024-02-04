@@ -12,7 +12,11 @@
                 android:id="@+id/groupGridView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:scrollbars="vertical"/>
+                android:scrollbars="vertical"
+                android:fadeScrollbars="true"
+                android:scrollbarSize="4dp"
+                android:scrollbarStyle="insideOverlay"
+                android:scrollbarThumbVertical="@color/primaryDark"/>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     <RelativeLayout
             android:id="@+id/library_empty"
