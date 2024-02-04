@@ -110,5 +110,5 @@ dependencies {
     implementation 'org.brotli:dec:0.1.2'
     implementation 'com.gemalto.jp2:jp2-android:1.0.3'
     // workaround fix 'Duplicate class kotlin.collections.jdk8.CollectionsJDK8Kt found in modules ...'
-    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.9.10"))
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.9.22"))
 }
