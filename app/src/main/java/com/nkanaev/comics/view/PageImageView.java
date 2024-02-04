@@ -72,9 +72,11 @@ public class PageImageView extends androidx.appcompat.widget.AppCompatImageView 
         super.setOnTouchListener(new OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                mScaleGestureDetector.onTouchEvent(event);
-                mDragGestureDetector.onTouchEvent(event);
-                if (mOuterTouchListener != null) mOuterTouchListener.onTouch(v, event);
+                boolean b1 = mScaleGestureDetector.onTouchEvent(event);
+                boolean b2 = mDragGestureDetector.onTouchEvent(event);
+                boolean b3 = false;
+                if (mOuterTouchListener != null)
+                    b3 = mOuterTouchListener.onTouch(v, event);
                 return true;
             }
         });
@@ -146,6 +148,20 @@ public class PageImageView extends androidx.appcompat.widget.AppCompatImageView 
         setImageMatrix(mMatrix);
         mOriginalScale = getCurrentScale();
         mSkipScaling = true;
+    }
+
+    // TODO: unused, kept as reference code
+    public void rotate(float degrees) {
+        animate().rotation(degrees).setDuration(1000);
+        super.invalidate();
+        if (true) return;
+
+        Drawable drawable = getDrawable();
+        if (drawable == null) return;
+
+        mMatrix.postRotate(90);
+        super.setImageMatrix(mMatrix);
+        super.postInvalidate();
     }
 
     private class PrivateScaleDetector extends ScaleGestureDetector.SimpleOnScaleGestureListener {
