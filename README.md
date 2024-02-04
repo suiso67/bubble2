@@ -1,6 +1,6 @@
 # Bubble2        ![Bubble2 logo](https://raw.githubusercontent.com/edeso/bubble2/master/art/icon-2022.svg)
 
-Simple yet comfy android comic book reader/image archive viewer. Based on Bubble v1.6.0 by Nazar Kanaev.<br>
+Android comic book reader/Image archive viewer. Simple yet comfy. Based on Bubble v1.6.0 by Nazar Kanaev.<br>
 Upgraded dependencies, enhancements as felt needed. 
 
 **Feel free to open an [issue](https://github.com/edeso/bubble2/issues) or even better contribute with a pull request.**
