@@ -21,6 +21,12 @@ public abstract class IgnoreCaseComparator implements Comparator<Object> {
         return NaturalSort.compareIgnoreCase(strA,strB);
     }
 
+    public static abstract class Reverse extends IgnoreCaseComparator {
+        public int compare(Object a, Object b) {
+            return super.compare(b, a);
+        }
+    }
+
     // remove file extensions if we want to compare *file names* only
     public static abstract class FileNameComparator extends IgnoreCaseComparator{
 
