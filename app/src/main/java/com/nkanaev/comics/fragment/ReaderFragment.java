@@ -600,7 +600,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                         if (ignoredKeys.contains(key))
                             continue;
                         metaText += (metaText.isEmpty() ? "" : "\n") +
-                                key + ": " + entry.getValue();
+                                key + ": " + String.valueOf(entry.getValue());
                     }
                 }
                 final String text = metaText;
