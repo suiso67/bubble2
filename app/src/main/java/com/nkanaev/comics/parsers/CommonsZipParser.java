@@ -69,6 +69,7 @@ public class CommonsZipParser extends AbstractParser {
         parse();
         Map m = new HashMap();
         m.put(Parser.PAGEMETADATA_KEY_NAME,mEntries.get(num).getName());
+        m.put(Parser.PAGEMETADATA_KEY_SIZE,mEntries.get(num).getSize());
         return m;
     }
 
