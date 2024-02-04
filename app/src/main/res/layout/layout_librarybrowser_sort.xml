@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingRight="2dp"
+            android:fadeScrollbars="false"
+            android:scrollbars="vertical"
+            android:theme="@style/MyPopupMenuTheme"
+            android:elevation="?android:attr/popupElevation">
+    <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="10dp"
+            android:paddingRight="4dp"
+            android:paddingBottom="2dp">
+        <TableLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+            <!-- header -->
+            <TableRow android:id="@+id/sort_header">
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="6dp"
+                        android:layout_gravity="right"
+                        android:layout_span="3"
+                        android:text="@string/menu_sort_by"/>
+            </TableRow>
+            <TableRow android:id="@+id/sort_header_divider"
+                      android:background="@drawable/divider"/>
+            <!-- Name -->
+            <TableRow>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingRight="10dp"
+                        android:layout_gravity="center|left"
+                        android:text="@string/menu_browser_sort_name"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_name_asc"
+                        android:src="@drawable/ic_sort_name_asc_24"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_name_desc"
+                        android:src="@drawable/ic_sort_name_desc_24"/>
+            </TableRow>
+            <TableRow android:background="@drawable/divider"/>
+            <!-- Last access -->
+            <TableRow>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center|left"
+                        android:text="@string/menu_browser_sort_access"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_access_asc"
+                        android:src="@drawable/ic_sort_time_asc_24"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_access_desc"
+                        android:src="@drawable/ic_sort_time_desc_24"/>
+            </TableRow>
+            <TableRow android:background="@drawable/divider"/>
+            <!-- size -->
+            <TableRow>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center|left"
+                        android:text="@string/menu_browser_sort_size"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/sort_size_asc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_sort_size_asc_24"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/sort_size_desc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        app:tint="#66ffffff"
+                        android:src="@drawable/ic_sort_size_desc_24"/>
+            </TableRow>
+            <TableRow android:background="@drawable/divider"/>
+            <!-- creation -->
+            <TableRow android:id="@+id/sort_creation">
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center|left"
+                        android:text="@string/menu_sort_creation"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_creation_asc"
+                        android:src="@drawable/ic_sort_time_asc_24"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_creation_desc"
+                        android:src="@drawable/ic_sort_time_desc_24"/>
+            </TableRow>
+            <TableRow android:background="@drawable/divider"
+                      android:id="@+id/sort_creation_divider"/>
+            <TableRow>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center|left"
+                        android:text="@string/menu_sort_modified"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_modified_asc"
+                        android:src="@drawable/ic_sort_time_asc_24"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_modified_desc"
+                        android:src="@drawable/ic_sort_time_desc_24"/>
+            </TableRow>
+
+            <TableRow android:paddingTop="8dp"/>
+
+            <!-- Pages -->
+            <TableRow>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center|left"
+                        android:text="@string/menu_browser_sort_pages_total"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_pages_asc"
+                        android:src="@drawable/ic_sort_0_9"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_pages_desc"
+                        android:src="@drawable/ic_sort_9_0"/>
+            </TableRow>
+            <TableRow android:background="@drawable/divider"/>
+            <TableRow>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center|left"
+                        android:text="@string/menu_browser_sort_pages_read"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_pages_read_asc"
+                        android:src="@drawable/ic_sort_0_9"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_pages_read_desc"
+                        android:src="@drawable/ic_sort_9_0"/>
+            </TableRow>
+            <TableRow android:background="@drawable/divider"/>
+            <TableRow>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center|left"
+                        android:text="@string/menu_browser_sort_pages_left"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_pages_left_asc"
+                        android:src="@drawable/ic_sort_0_9"/>
+                <androidx.appcompat.widget.AppCompatImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:id="@+id/sort_pages_left_desc"
+                        android:src="@drawable/ic_sort_9_0"/>
+            </TableRow>
+        </TableLayout>
+
+    </LinearLayout>
+</ScrollView>

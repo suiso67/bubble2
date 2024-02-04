@@ -10,7 +10,7 @@ public class Comic implements Comparable {
     private int mId;
     private String mType;
     private File mFile;
-    public final long updatedAt;
+    private final long mUpdatedAt;
 
     public Comic(Storage shelf, int id, String filepath, String filename,
                  String type, int numPages, int currentPage, long updatedAt) {
@@ -20,7 +20,7 @@ public class Comic implements Comparable {
         mCurrentPage = currentPage;
         mFile = new File(filepath, filename);
         mType = type;
-        this.updatedAt = updatedAt;
+        mUpdatedAt = updatedAt;
     }
 
     public int getId() {
@@ -48,6 +48,10 @@ public class Comic implements Comparable {
         return mType;
     }
 
+    public Long getUpdatedAt() {
+        return mUpdatedAt;
+    }
+
     public int compareTo(Object another) {
         return mFile.getAbsolutePath().toLowerCase().compareTo(((Comic) another).getFile().getAbsolutePath().toLowerCase());
     }
@@ -55,5 +59,10 @@ public class Comic implements Comparable {
     @Override
     public boolean equals(Object o) {
         return (o instanceof Comic) && getId() == ((Comic)o).getId();
+    }
+
+    @Override
+    public String toString() {
+        return mFile.getName();
     }
 }

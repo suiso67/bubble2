@@ -6,10 +6,13 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
+import android.util.Log;
+import com.nkanaev.comics.managers.IgnoreCaseComparator;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Comparator;
+import java.util.HashMap;
 
 import static android.database.DatabaseUtils.sqlEscapeString;
 
@@ -124,22 +127,36 @@ public class Storage {
                 null, null,
                 SORT_ORDER);
 
-        ArrayList<Comic> comics = new ArrayList<>();
-        if (c.getCount() == 0) return comics;
 
-        HashSet<String> group = new HashSet<>();
+        if (c.getCount() == 0)
+            return new ArrayList<>();
+
+        HashMap<String,Comic> dirComics = new HashMap<>();
+        Comparator comparator = new IgnoreCaseComparator() {
+            @Override
+            public String stringValue(Object o) {
+                return o.toString();
+            }
+        };
         c.moveToFirst();
         do {
             String filepath = c.getString(c.getColumnIndex(Book.COLUMN_NAME_FILEPATH));
-            if (group.contains(filepath))
+            // initial entry
+            if (!dirComics.containsKey(filepath)) {
+                dirComics.put(filepath,comicFromCursor(c));
                 continue;
-            group.add(filepath);
-            comics.add(comicFromCursor(c));
+            }
+;
+            // find first with more accurate natural sort comparator
+            String fileNameOld = dirComics.get(filepath).getFile().getName();
+            String fileNameNew = c.getString(c.getColumnIndex(Book.COLUMN_NAME_FILENAME));
+            if (comparator.compare(fileNameOld,fileNameNew) > 0)
+                dirComics.put(filepath,comicFromCursor(c));
         } while (c.moveToNext());
 
         c.close();
 
-        return comics;
+        return new ArrayList(dirComics.values());
     }
 
     public ArrayList<Comic> listComics() {
@@ -174,6 +191,25 @@ public class Storage {
         c.close();
 
         return comics;
+    }
+
+    public long getPathLatestUpdatedAt(String path){
+
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        String selection = Book.COLUMN_NAME_FILEPATH + "=\"" + path +  "\"";
+        Cursor c = db.query(Book.TABLE_NAME, Book.columns, selection, null,
+                null, null, Book.COLUMN_NAME_UPDATED_AT + " DESC", "0,1");
+        c.moveToFirst();
+
+        long time = 0;
+        if (c.getCount() > 0) {
+            time = c.getLong(c.getColumnIndex(Book.COLUMN_NAME_UPDATED_AT));
+            Comic comic = comicFromCursor(c);
+            Log.d("",""+time);
+        }
+        c.close();
+
+        return time;
     }
 
     public Comic getComic(int comicId) {

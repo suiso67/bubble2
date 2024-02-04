@@ -15,6 +15,8 @@
 
     <string name="action_view_rotate">Rotate</string>
 
+    <string name="action_view_export">Export page</string>
+
     <string name="action_view_mode">View Mode</string>
     <string name="action_view_mode_aspect_fill">Aspect Fill</string>
     <string name="action_view_mode_aspect_fit">Aspect Fit</string>
@@ -30,6 +32,16 @@
     <string name="menu_browser_filter_reading">Currently reading</string>
     <string name="menu_browser_filter_unread">Unread</string>
     <string name="menu_browser_filter_unfinished">Unfinished</string>
+
+    <string name="menu_sort_by">Sort by</string>
+    <string name="menu_browser_sort_name">Name</string>
+    <string name="menu_browser_sort_access">Last accessed</string>
+    <string name="menu_sort_creation">Time added</string>
+    <string name="menu_sort_modified">Time modified</string>
+    <string name="menu_browser_sort_size">Size</string>
+    <string name="menu_browser_sort_pages_total">Pages total</string>
+    <string name="menu_browser_sort_pages_read">Pages read</string>
+    <string name="menu_browser_sort_pages_left">Pages left</string>
 
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>

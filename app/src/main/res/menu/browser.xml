@@ -13,7 +13,7 @@
           app:showAsAction="ifRoom">
     </item>
     <item android:id="@+id/sort"
-          android:title="Sort"
+          android:title="@string/menu_sort_by"
           android:icon="@drawable/ic_sort_24"
           app:showAsAction="ifRoom">
         <menu/>

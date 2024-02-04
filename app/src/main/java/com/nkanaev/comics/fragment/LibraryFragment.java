@@ -6,24 +6,29 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.*;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.*;
-import android.widget.AdapterView;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.*;
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
+import androidx.annotation.StyleRes;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.view.menu.MenuBuilder;
+import androidx.appcompat.view.menu.MenuItemImpl;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.ImageViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import com.nkanaev.comics.BuildConfig;
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.R;
@@ -40,6 +45,7 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
+import java.util.Comparator;
 import java.util.List;
 
 
@@ -60,6 +66,7 @@ public class LibraryFragment extends Fragment
     private boolean mIsRefreshPlanned = false;
     private Handler mUpdateHandler = new UpdateHandler(this);
     private MenuItem mRefreshItem;
+    private int mSort = R.id.sort_name_asc;
 
     public LibraryFragment() {
     }
@@ -198,9 +205,13 @@ public class LibraryFragment extends Fragment
         // disable refresh if no folder selected so far
         String dir = getLibraryDir();
         menu.findItem(R.id.menuLibraryRefresh).setVisible(!getLibraryDir().isEmpty());
+        menu.findItem(R.id.menuLibrarySort).setVisible(!getLibraryDir().isEmpty());
+        // place select-folder item in overflow if already selected
+        if (!getLibraryDir().isEmpty())
+            menu.findItem(R.id.menuLibrarySetDir).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
 
-        Drawable icon;
         int mode = AppCompatDelegate.getDefaultNightMode();
+        Drawable icon;
         int item;
         switch(mode) {
             case AppCompatDelegate.MODE_NIGHT_NO:
@@ -220,6 +231,7 @@ public class LibraryFragment extends Fragment
         menu.findItem(item).setChecked(true);
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
@@ -264,9 +276,82 @@ public class LibraryFragment extends Fragment
                     }
                 },500);
                 return true;
+            case R.id.menuLibrarySort:
+                // apparently you need to implement custom layout submenus yourself
+                View popupView = getLayoutInflater().inflate(R.layout.layout_library_sort, null);
+                // show header conditionally
+                if (((MenuItemImpl)item).isActionButton()) {
+                    popupView.findViewById(R.id.sort_header).setVisibility(View.GONE);
+                    popupView.findViewById(R.id.sort_header_divider).setVisibility(View.GONE);
+                }
+                // creation time needs java.nio only avail on API26+
+                // disabled for now, folders give the same stamp for creation/lastmod why izzat?
+                if (true || !Utils.isOreoOrLater()) {
+                    popupView.findViewById(R.id.sort_creation).setVisibility(View.GONE);
+                    popupView.findViewById(R.id.sort_creation_divider).setVisibility(View.GONE);
+                }
+
+                @StyleRes int theme = ((MainActivity) getActivity()).getToolbar().getPopupTheme();
+                @ColorInt int normal = Utils.getThemeColor(androidx.appcompat.R.attr.colorControlNormal, theme);
+                @ColorInt int active = Utils.getThemeColor(androidx.appcompat.R.attr.colorControlActivated, theme);
+
+                PopupWindow popupWindow = new PopupWindow(popupView, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT, true);
+                // weirdly needed on preAPI21 to dismiss on tap outside
+                popupWindow.setBackgroundDrawable(new ColorDrawable(androidx.appcompat.R.attr.colorPrimary));
+
+                int[] ids = new int[]{
+                        R.id.sort_modified_asc, R.id.sort_modified_desc,
+                        R.id.sort_name_asc, R.id.sort_name_desc,
+                        R.id.sort_size_asc, R.id.sort_size_desc,
+                        R.id.sort_access_asc, R.id.sort_access_desc,
+                };
+                for (int id: ids ) {
+                    ImageView v = popupView.findViewById(id);
+                    int tint = id == mSort ? active : normal;
+                    ImageViewCompat.setImageTintList(v, ColorStateList.valueOf(tint));
+                    v.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onSortItemSelected(id);
+                            popupWindow.dismiss();
+                        }
+                    });
+                }
+
+                float dp = getResources().getDisplayMetrics().density;
+                // place popup window top right
+                int xOffset, yOffset;
+                // lil space on the right side
+                xOffset=Math.round(4*dp);
+                // below status bar
+                yOffset=Math.round(30*dp);
+                // API21+ place submenu popups below status+actionbar
+                if (Utils.isLollipopOrLater()) {
+                    yOffset = Math.round(17 * dp) + ((MainActivity) getActivity()).getToolbar().getHeight();
+                    popupWindow.setElevation(16);
+                }
+                // show at location
+                popupWindow.showAtLocation(getActivity().getWindow().getDecorView(),Gravity.TOP|Gravity.RIGHT,xOffset,yOffset);
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onSortItemSelected(int id) {
+        if (BuildConfig.DEBUG)
+            Toast.makeText(
+                    getActivity(),
+                    "sort "+id,
+                    Toast.LENGTH_SHORT).show();
+        mSort = id;
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                sortContent();
+                mFolderListView.getAdapter().notifyDataSetChanged();
+            }
+        });
     }
 
     @Override
@@ -308,6 +393,44 @@ public class LibraryFragment extends Fragment
     private void getComics() {
         List<Comic> comics = Storage.getStorage(getActivity()).listDirectoryComics();
         mComicsListManager = new DirectoryListingManager(comics, getLibraryDir());
+        sortContent();
+        if (mFolderListView!=null && mFolderListView.getAdapter()!=null)
+            mFolderListView.getAdapter().notifyDataSetChanged();
+    }
+
+    private void sortContent(){
+        if (mComicsListManager== null || mComicsListManager.getCount() < 1)
+            return;
+
+        Comparator comparator;
+        switch (mSort){
+            case R.id.sort_name_desc:
+                comparator = new DirectoryListingManager.NameComparator.Reverse();
+                break;
+            case R.id.sort_size_asc:
+                comparator = new DirectoryListingManager.SizeComparator();
+                break;
+            case R.id.sort_size_desc:
+                comparator = new DirectoryListingManager.SizeComparator.Reverse();
+                break;
+            case R.id.sort_modified_asc:
+                comparator = new DirectoryListingManager.ModifiedComparator();
+                break;
+            case R.id.sort_modified_desc:
+                comparator = new DirectoryListingManager.ModifiedComparator.Reverse();
+                break;
+            case R.id.sort_access_asc:
+                comparator = new DirectoryListingManager.AccessedComparator();
+                break;
+            case R.id.sort_access_desc:
+                comparator = new DirectoryListingManager.AccessedComparator.Reverse();
+                break;
+            default:
+                comparator = new DirectoryListingManager.NameComparator();
+                break;
+        }
+
+        mComicsListManager.sort(comparator);
     }
 
     private void refreshLibrary( boolean finished ) {
