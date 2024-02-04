@@ -9,6 +9,7 @@ public interface Parser {
     static String PAGEMETADATA_KEY_MIME= "mime";
     static String PAGEMETADATA_KEY_WIDTH = "width";
     static String PAGEMETADATA_KEY_HEIGHT = "height";
+    static String PAGEMETADATA_KEY_SIZE = "size";
 
     void parse() throws IOException;
 

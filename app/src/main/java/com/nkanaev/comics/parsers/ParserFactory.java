@@ -391,21 +391,35 @@ public class ParserFactory {
         private synchronized InputStream initPageMetaData(int num) throws IOException {
             Integer key = key(num);
             Map pageData = new HashMap();
-            InputStream is = null;
+            CountingBufferedInputStream cbis = null;
             try {
-                is = mParser.getPage(num);
-                int limit = 5 * 1024 *1024; //5MB
-                    is = new BufferedInputStream(is, limit);
-                is.mark(limit);
+                InputStream is = mParser.getPage(num);
+                int limit = 5 * 1024 * 1024; //5MB
+                cbis = new CountingBufferedInputStream(is, limit);
+                cbis.mark(limit);
                 final BitmapFactory.Options options = new BitmapFactory.Options();
                 // read bitmap metadata w/o creating another in memory copy
                 options.inJustDecodeBounds = true;
-                BitmapFactory.decodeStream(is, null, options);
+                BitmapFactory.decodeStream(cbis, null, options);
 
                 if (options.outMimeType != null) {
                     pageData.put(Parser.PAGEMETADATA_KEY_MIME, options.outMimeType);
                     pageData.put(Parser.PAGEMETADATA_KEY_WIDTH, options.outWidth);
                     pageData.put(Parser.PAGEMETADATA_KEY_HEIGHT, options.outHeight);
+                }
+
+                Object size = mParser.getPageMetaData(num).get(Parser.PAGEMETADATA_KEY_SIZE);
+                // if no size set already, read til is end to determine size
+                if (size == null) {
+                    int skipped;
+                    long total = 0;
+                    byte[] dummy = new byte[4096];
+                    // just skipping doesn't work, need to read, fast anyway it seems
+                    while ((skipped = cbis.read(dummy)) > 0){
+                        total += skipped;
+                        //Log.d(""+num,""+total);
+                    }
+                    pageData.put(Parser.PAGEMETADATA_KEY_SIZE, cbis.getCount());
                 }
             }
             catch (Exception e) {
@@ -415,14 +429,14 @@ public class ParserFactory {
             finally {
                 // keep memory buffered inputstreams
                 try {
-                    is.reset();
+                    cbis.reset();
                 } catch (Exception ex){
                     // something went wrong (read over limit?)
-                    Utils.close(is);
-                    is = null;
+                    Utils.close(cbis);
+                    cbis = null;
                 }
                 mPagesMetaData.put(key, pageData);
-                return is;
+                return cbis;
             }
         }
 
@@ -913,6 +927,52 @@ public class ParserFactory {
         @Override
         public void destroy() {
             mParser.destroy();
+        }
+    }
+
+    private static class CountingBufferedInputStream extends BufferedInputStream{
+        private long count;
+
+        public CountingBufferedInputStream(InputStream in) {
+            super(in);
+        }
+
+        public CountingBufferedInputStream(InputStream in, int size) {
+            super(in, size);
+        }
+
+        @Override
+        public synchronized int read() throws IOException {
+            int read = super.read();
+            if (read > 0)
+                count += read;
+            return read;
+        }
+
+        @Override
+        public synchronized int read(byte[] b, int off, int len) throws IOException {
+            int read = super.read(b, off, len);
+            if (read > 0)
+                count += read;
+            return read;
+        }
+
+        @Override
+        public synchronized long skip(long n) throws IOException {
+            long read = super.skip(n);
+            if (read > 0)
+                count += read;
+            return read;
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+            super.reset();
+            count = 0;
+        }
+
+        public synchronized long getCount() {
+            return count;
         }
     }
 }
