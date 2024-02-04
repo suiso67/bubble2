@@ -710,4 +710,20 @@ public final class Utils {
         }
         return MAXMEMORYSIZE;
     }
+
+    public static long getFolderSize(File folder, boolean recursive) {
+        long length = 0;
+        File[] files = folder.listFiles();
+
+        for (int i = 0; files !=null && i < files.length; i++) {
+            if (files[i].isFile()) {
+                length += files[i].length();
+            }
+            else if (recursive) {
+                length += getFolderSize(files[i],recursive);
+            }
+        }
+        return length;
+    }
+
 }
