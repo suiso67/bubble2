@@ -1,7 +1,8 @@
 # Bubble2        ![Bubble2 logo](https://raw.githubusercontent.com/edeso/bubble2/master/art/icon-2022.svg)
 
-Android comic book reader/Image archive viewer. Simple yet comfy. Based on Bubble v1.6.0 by Nazar Kanaev.<br>
-Upgraded dependencies, enhancements as felt needed. 
+Android comic book reader/Image archive viewer. Simple yet comfy. 
+Open PDF, RAR, ZIP, 7Z, TAR files. Display BMP, JPG, GIF, PNG, WebP and JP2/J2K images.
+Based on Bubble v1.6.0 by Nazar Kanaev. Upgraded dependencies, enhancements as felt needed. 
 
 **Feel free to open an [issue](https://github.com/edeso/bubble2/issues) or even better contribute with a pull request.**
 
