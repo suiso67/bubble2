@@ -1,9 +1,11 @@
 package com.nkanaev.comics.fragment;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
@@ -11,21 +13,22 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.*;
 import android.view.animation.Animation;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.SeekBar;
-import android.widget.TextView;
+import android.widget.*;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.viewpager.widget.PagerAdapter;
@@ -49,9 +52,13 @@ import com.squareup.picasso.RequestCreator;
 import com.squareup.picasso.Target;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.util.*;
 
 
@@ -59,7 +66,6 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     public static final String PARAM_HANDLER = "PARAM_HANDLER";
     public static final String PARAM_URI = "PARAM_URI";
     public static final String PARAM_MODE = "PARAM_MODE";
-
     public static final String STATE_FULLSCREEN = "STATE_FULLSCREEN";
     public static final String STATE_PAGEINFO = "STATE_PAGEINFO";
     public static final String STATE_NEW_COMIC = "STATE_NEW_COMIC";
@@ -111,6 +117,17 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         RESOURCE_VIEW_MODE.put(R.id.view_mode_aspect_fit, Constants.PageViewMode.ASPECT_FIT);
         RESOURCE_VIEW_MODE.put(R.id.view_mode_fit_width, Constants.PageViewMode.FIT_WIDTH);
     }
+
+    /*
+    private ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    Toast.makeText(getContext(), "Permission is accepted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Permission is denied", Toast.LENGTH_SHORT).show();
+                }
+            });
+    */
 
     public static ReaderFragment create(int comicId) {
         ReaderFragment fragment = new ReaderFragment();
@@ -240,22 +257,6 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 Constants.PageViewMode.ASPECT_FIT.native_int);
         mPageViewMode = Constants.PageViewMode.values()[viewModeInt];
         mIsLeftToRight = mPreferences.getBoolean(Constants.SETTINGS_READING_LEFT_TO_RIGHT, true);
-
-        // workaround: extract rar achive
-        /*
-        if (mParser instanceof RarParser) {
-            File cacheDir = new File(getActivity().getExternalCacheDir(), "c");
-            if (!cacheDir.exists()) {
-                cacheDir.mkdir();
-            }
-            else {
-                for (File f : cacheDir.listFiles()) {
-                    f.delete();
-                }
-            }
-            ((RarParser)mParser).setCacheDirectory(cacheDir);
-        }
-        */
 
         setHasOptionsMenu(true);
     }
@@ -405,6 +406,14 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     }
 
     @Override
+    public void onPrepareOptionsMenu(@NonNull Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+
+        // TODO: fix up page export permission bs
+        menu.findItem(R.id.menu_reader_export).setVisible(BuildConfig.DEBUG);
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.reader, menu);
 
@@ -521,11 +530,31 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                     degrees = 0;
                 degrees += 90;
                 mRotations.put(pos,degrees);
-                //apply rotation
+                // apply rotation during (re)load
                 mViewPager.getAdapter().notifyDataSetChanged();
+                //updatePageViews(mViewPager,pos,true);
+                // work in progress,
+                // rotating imageview does not reset boundings unfortunately, dunno howto fix for now
+                // also touch events are registered to the imageview and rotate with the image, not good
+                //rotatePage(pos, degrees);
+                break;
+            case R.id.menu_reader_export:
+                exportCurrentPage();
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void rotatePage(int pos, int degrees){
+        try {
+            MyTarget t = mTargets.get(pos);
+            View v = t.mLayout.get();
+            PageImageView piv = v.findViewById(R.id.pageImageView);
+            piv.rotate(degrees);
+        } catch (NullPointerException ne) {
+            // huh, wasn't there, need to reload it
+            mViewPager.getAdapter().notifyDataSetChanged();
+        }
     }
 
     private void setCurrentPage(int page) {
@@ -570,7 +599,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Map<String, String> metadata = null;
+                Map<String, Object> metadata = null;
                 try {
                     metadata = mParser.getPageMetaData(pageNum);
                 } catch (IOException e) {
@@ -578,26 +607,40 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 }
                 String metaText = "";
                 if (metadata != null && !metadata.isEmpty()) {
-                    String name = metadata.get(Parser.PAGEMETADATA_KEY_NAME);
+                    String name = (String) metadata.get(Parser.PAGEMETADATA_KEY_NAME);
                     if (name != null)
                         metaText += name;
-                    String t = metadata.get(Parser.PAGEMETADATA_KEY_MIME);
-                    String w = metadata.get(Parser.PAGEMETADATA_KEY_WIDTH);
-                    String h = metadata.get(Parser.PAGEMETADATA_KEY_HEIGHT);
+                    Object t = metadata.get(Parser.PAGEMETADATA_KEY_MIME);
+                    Object w = metadata.get(Parser.PAGEMETADATA_KEY_WIDTH);
+                    Object h = metadata.get(Parser.PAGEMETADATA_KEY_HEIGHT);
                     if (t != null)
                         metaText += (metaText.isEmpty() ? "" : "\n")
                                 + String.valueOf(t) + ", "
                                 + String.valueOf(w) + "x" + String.valueOf(h) + "px";
+                    // append Byte size
+                    Object size = metadata.get(Parser.PAGEMETADATA_KEY_SIZE);
+                    if (size != null) {
+                        DecimalFormat formatter = (DecimalFormat) NumberFormat.getInstance(Locale.US);
+                        DecimalFormatSymbols symbols = formatter.getDecimalFormatSymbols();
+                        symbols.setGroupingSeparator('.');
+                        formatter.setDecimalFormatSymbols(symbols);
+                        try {
+                            metaText += (t != null ? ", " : "") + formatter.format(Long.valueOf(size.toString())) + " Bytes";
+                        } catch (Exception e) {
+                            // eat it
+                        }
+                    }
                     // append the rest, ignore the already added from above
-                    List<String> ignoredKeys =
+                    List<String> keysToIgnore =
                             Arrays.asList(new String[]{
                                     Parser.PAGEMETADATA_KEY_NAME,
                                     Parser.PAGEMETADATA_KEY_MIME,
                                     Parser.PAGEMETADATA_KEY_WIDTH,
-                                    Parser.PAGEMETADATA_KEY_HEIGHT});
-                    for (Map.Entry<String, String> entry : metadata.entrySet()) {
+                                    Parser.PAGEMETADATA_KEY_HEIGHT,
+                                    Parser.PAGEMETADATA_KEY_SIZE});
+                    for (Map.Entry<String, Object> entry : metadata.entrySet()) {
                         String key = entry.getKey();
-                        if (ignoredKeys.contains(key))
+                        if (keysToIgnore.contains(key))
                             continue;
                         metaText += (metaText.isEmpty() ? "" : "\n") +
                                 key + ": " + String.valueOf(entry.getValue());
@@ -658,6 +701,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             loadImage(t);
             mTargets.put(position, t);
 
+            layout.setTag(Integer.valueOf(position));
             return layout;
         }
 
@@ -1044,4 +1088,78 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         mPageSeekBar.getProgressDrawable().setBounds(bounds);
     }
 
+    private void exportCurrentPage() {
+        int pageNum = getCurrentPage();
+        int index = pageNum-1;
+        File folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        FileOutputStream fOut = null;
+        Bitmap bitmap = null;
+        try {
+            if (folder==null)
+                throw new Exception("Cannot determine Downloads folder.");
+            else if (!folder.isDirectory() && !folder.mkdirs())
+                throw new Exception("Couldn't create Downloads folder.");
+            else if (mFile==null)
+                throw new Exception("Not a file");
+
+            String permission = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+
+            /*
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    requestPermissionLauncher.launch(permission, ActivityOptionsCompat.makeBasic());
+                }
+            });
+            */
+
+            //if (true) return;
+
+            if (ContextCompat.checkSelfPermission(getActivity(), permission)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{permission},
+                        1);
+                // still no permission?
+                if (ContextCompat.checkSelfPermission(getActivity(), permission)
+                        != PackageManager.PERMISSION_GRANTED)
+                    throw new Exception("No write permission.");
+            }
+
+            Map metadata = mParser.getPageMetaData(index);
+            String mime = (String) metadata.get(Parser.PAGEMETADATA_KEY_MIME);
+            File file = new File(folder,
+                    (mFile.isDirectory()?mFile.getName():Utils.removeExtensionIfAny(mFile.getName()))+
+                            ".page"+pageNum+".jpg");
+            if (mime!=null && mime.endsWith("/jpeg")) {
+                InputStream is = mParser.getPage(index);
+                Utils.copyToFile(is, file);
+            }
+            else {
+                bitmap = null; //BitmapFactory.decodeStream(is);
+                if (bitmap == null){
+                    MyTarget t = mTargets.get(index);
+                    View v = t.mLayout.get();
+                    PageImageView piv = v.findViewById(R.id.pageImageView);
+                    bitmap = ((BitmapDrawable)piv.getDrawable()).getBitmap();
+                }
+                fOut = new FileOutputStream(file);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 95, fOut);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            Utils.close(fOut);
+            //Utils.close(bitmap);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == 1) {
+            if (permissions[0].equals(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("granted","profit+1");
+            }
+        }
+    }
 }
