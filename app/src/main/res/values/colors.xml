@@ -4,6 +4,9 @@
     <color name="primaryDark">@color/primaryDark13</color>
     <color name="accent">#ff466e87</color>
 
+    <color name="refreshProgress">@color/white</color>
+    <color name="refreshProgressBackground">#E6DB5162</color>
+
     <color name="darker">#333333</color>
     <color name="darkest">#222222</color>
     <color name="darkest2">#111111</color>

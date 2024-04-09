@@ -148,8 +148,10 @@ public class LibraryFragment extends Fragment
         mPicasso = ((MainActivity) getActivity()).getPicasso();
 
         mRefreshLayout = view.findViewById(R.id.fragmentLibraryRefreshLayout);
-        mRefreshLayout.setColorSchemeResources(R.color.primary);
-        //mRefreshLayout.setProgressBackgroundColorSchemeColor(Color.BLACK);
+
+        mRefreshLayout.setColorSchemeResources(R.color.refreshProgress);
+        mRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.refreshProgressBackground);
+
         mRefreshLayout.setOnRefreshListener(this);
         mRefreshLayout.setEnabled(true);
 

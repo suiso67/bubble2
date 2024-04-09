@@ -122,7 +122,8 @@ public class LibraryBrowserFragment extends Fragment
         mComicListView.addItemDecoration(new GridSpacingItemDecoration(numColumns, spacing));
 
         mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.fragmentLibraryBrowserRefreshLayout);
-        mRefreshLayout.setColorSchemeResources(R.color.primary);
+        mRefreshLayout.setColorSchemeResources(R.color.refreshProgress);
+        mRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.refreshProgressBackground);
         mRefreshLayout.setOnRefreshListener(this);
         mRefreshLayout.setEnabled(true);
 
