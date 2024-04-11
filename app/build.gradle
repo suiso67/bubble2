@@ -49,12 +49,21 @@ android {
 
         versionName getVersionName()
         versionCode getVersionCode()
-        setProperty("archivesBaseName", applicationId + "-v" + versionCode + "(" + versionName + ")")
+        //setProperty("archivesBaseName", applicationId + "-v" + versionCode + "(" + versionName + ")")
+        setProperty("archivesBaseName", "Bubble2-" + versionName )
 
         manifestPlaceholders = [
                 appIcon: "@drawable/icon_squared"
         ]
    }
+
+    applicationVariants.all { variant ->
+        if (variant.buildType.name.equals("release")) {
+            variant.outputs.all {
+                outputFileName = "${archivesBaseName}.apk"
+            }
+        }
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
