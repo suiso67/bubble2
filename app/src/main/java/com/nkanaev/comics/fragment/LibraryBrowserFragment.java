@@ -108,13 +108,13 @@ public class LibraryBrowserFragment extends Fragment
         PreCachingGridLayoutManager layoutManager = new PreCachingGridLayoutManager(getActivity(), numColumns);
         layoutManager.setSpanSizeLookup(createSpanSizeLookup());
         int height = Utils.getDeviceHeightPixels();
-        layoutManager.setExtraLayoutSpace(height*2);
+        layoutManager.setExtraLayoutSpace(height * 2);
 
         mComicListView = (RecyclerView) view.findViewById(R.id.library_grid);
         // some preformance optimizations
         mComicListView.setHasFixedSize(true);
         // raise default cache values (number of cards) from a very low DEFAULT_CACHE_SIZE=2
-        mComicListView.setItemViewCacheSize(Math.max(4 * numColumns,40));
+        mComicListView.setItemViewCacheSize(Math.max(4 * numColumns, 40));
         //mComicListView.getRecycledViewPool().setMaxRecycledViews(ITEM_VIEW_TYPE_COMIC,20);
 
         mComicListView.setLayoutManager(layoutManager);
@@ -153,7 +153,7 @@ public class LibraryBrowserFragment extends Fragment
     private Menu mFilterMenu, mSortMenu;
 
     @Override
-    public void onPrepareOptionsMenu(Menu menu){
+    public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
     }
 
@@ -165,8 +165,8 @@ public class LibraryBrowserFragment extends Fragment
         menu.clear();
         inflater.inflate(R.menu.browser, menu);
         // hack to enable icons in overflow menu
-        if(menu instanceof MenuBuilder){
-            ((MenuBuilder)menu).setOptionalIconsVisible(true);
+        if (menu instanceof MenuBuilder) {
+            ((MenuBuilder) menu).setOptionalIconsVisible(true);
         }
 
         MenuItem searchItem = menu.findItem(R.id.search);
@@ -188,8 +188,21 @@ public class LibraryBrowserFragment extends Fragment
 
         // align header title of generated sub menu right
         SpannableString title = new SpannableString(getResources().getString(R.string.menu_browser_filter));
-        title.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_OPPOSITE),0,title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        title.setSpan(new AlignmentSpan.Standard(Layout.Alignment.ALIGN_OPPOSITE), 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         menu.findItem(R.id.menu_browser_filter).getSubMenu().setHeaderTitle(title);
+    }
+
+    private static final HashMap<Integer, List<Integer>> sortIds = new HashMap<>();
+    // sort menu entry ids (label, button ids with default first)
+    static {
+        sortIds.put(R.id.sort_name_label, Arrays.asList(new Integer[]{R.id.sort_name_asc, R.id.sort_name_desc}));
+        sortIds.put(R.id.sort_access_label, Arrays.asList(new Integer[]{R.id.sort_access_desc, R.id.sort_access_asc}));
+        sortIds.put(R.id.sort_size_label, Arrays.asList(new Integer[]{R.id.sort_size_asc, R.id.sort_size_desc}));
+        sortIds.put(R.id.sort_creation_label, Arrays.asList(new Integer[]{R.id.sort_creation_desc, R.id.sort_creation_asc}));
+        sortIds.put(R.id.sort_modified_label, Arrays.asList(new Integer[]{R.id.sort_modified_desc, R.id.sort_modified_asc}));
+        sortIds.put(R.id.sort_pages_label, Arrays.asList(new Integer[]{R.id.sort_pages_asc, R.id.sort_pages_desc}));
+        sortIds.put(R.id.sort_pages_read_label, Arrays.asList(new Integer[]{R.id.sort_pages_read_asc, R.id.sort_pages_read_desc}));
+        sortIds.put(R.id.sort_pages_left_label, Arrays.asList(new Integer[]{R.id.sort_pages_left_asc, R.id.sort_pages_left_desc}));
     }
 
     @SuppressLint("RestrictedApi")
@@ -226,7 +239,7 @@ public class LibraryBrowserFragment extends Fragment
                 // apparently you need to implement custom layout submenus yourself
                 View popupView = getLayoutInflater().inflate(R.layout.layout_librarybrowser_sort, null);
                 // show header conditionally
-                if (((MenuItemImpl)item).isActionButton()) {
+                if (((MenuItemImpl) item).isActionButton()) {
                     popupView.findViewById(R.id.sort_header).setVisibility(View.GONE);
                     popupView.findViewById(R.id.sort_header_divider).setVisibility(View.GONE);
                 }
@@ -240,47 +253,66 @@ public class LibraryBrowserFragment extends Fragment
                 @ColorInt int normal = Utils.getThemeColor(androidx.appcompat.R.attr.colorControlNormal, theme);
                 @ColorInt int active = Utils.getThemeColor(androidx.appcompat.R.attr.colorControlActivated, theme);
 
-                PopupWindow popupWindow = new PopupWindow(popupView,RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT, true);
+                PopupWindow popupWindow = new PopupWindow(popupView, RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT, true);
                 // weirdly needed on preAPI21 to dismiss on tap outside
                 popupWindow.setBackgroundDrawable(new ColorDrawable(androidx.appcompat.R.attr.colorPrimary));
 
-                int[] ids = new int[]{
-                        R.id.sort_modified_asc, R.id.sort_modified_desc,
-                        R.id.sort_creation_asc, R.id.sort_creation_desc,
-                        R.id.sort_name_asc, R.id.sort_name_desc,
-                        R.id.sort_size_asc, R.id.sort_size_desc,
-                        R.id.sort_pages_asc, R.id.sort_pages_desc,
-                        R.id.sort_pages_read_asc, R.id.sort_pages_read_desc,
-                        R.id.sort_pages_left_asc, R.id.sort_pages_left_desc,
-                        R.id.sort_access_asc, R.id.sort_access_desc,
-                };
-                for (int id: ids ) {
-                    ImageView v = popupView.findViewById(id);
-                    int tint = id == mSort ? active : normal;
-                    ImageViewCompat.setImageTintList(v, ColorStateList.valueOf(tint));
-                    v.setOnClickListener(new View.OnClickListener() {
+                // add click listener/apply styling according to selected sort mode
+                for (int labelId : sortIds.keySet()) {
+                    TextView tv = popupView.findViewById(labelId);
+                    // attach clicklistener
+                    tv.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            onSortItemSelected(id);
+                            onSortItemSelected(labelId);
                             popupWindow.dismiss();
                         }
                     });
+
+                    List<Integer> buttonIds = sortIds.get(labelId);
+                    // is it selected?
+                    boolean label_active = buttonIds.contains(mSort);
+                    int label_tint = label_active ? active : normal;
+                    // reset formatting
+                    CharSequence text = tv.getText();
+                    SpannableString s = new SpannableString(text);
+                    // style away
+                    s.setSpan(new ForegroundColorSpan(label_tint), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    s.setSpan(new StyleSpan(label_active ? Typeface.BOLD : Typeface.NORMAL), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    tv.setText(s);
+
+                    // handle buttons
+                    for (int buttonId : buttonIds) {
+                        ImageView iv = popupView.findViewById(buttonId);
+                        // attach clicklistener
+                        iv.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                onSortItemSelected(buttonId);
+                                popupWindow.dismiss();
+                            }
+                        });
+
+                        // switch button colors, for buttons only
+                        int tint = buttonId == mSort ? active : normal;
+                        ImageViewCompat.setImageTintList(iv, ColorStateList.valueOf(tint));
+                    }
                 }
 
                 float dp = getResources().getDisplayMetrics().density;
                 // place popup window top right
                 int xOffset, yOffset;
                 // lil space on the right side
-                xOffset=Math.round(4*dp);
+                xOffset = Math.round(4 * dp);
                 // below status bar
-                yOffset=Math.round(30*dp);
+                yOffset = Math.round(30 * dp);
                 // API21+ place submenu popups below status+actionbar
                 if (Utils.isLollipopOrLater()) {
                     yOffset = Math.round(17 * dp) + ((MainActivity) getActivity()).getToolbar().getHeight();
                     popupWindow.setElevation(16);
                 }
                 // show at location
-                popupWindow.showAtLocation(getActivity().getWindow().getDecorView(),Gravity.TOP|Gravity.RIGHT,xOffset,yOffset);
+                popupWindow.showAtLocation(getActivity().getWindow().getDecorView(), Gravity.TOP | Gravity.RIGHT, xOffset, yOffset);
                 return true;
         }
 
@@ -291,9 +323,17 @@ public class LibraryBrowserFragment extends Fragment
         if (false && BuildConfig.DEBUG)
             Toast.makeText(
                     getActivity(),
-                    "sort "+id,
+                    "sort " + id,
                     Toast.LENGTH_SHORT).show();
-        mSort = id;
+
+        // filter label clicks
+        if (sortIds.containsKey(id)) {
+            int defaultId = sortIds.get(id).get(0);
+            int alternateId = sortIds.get(id).get(1);
+            mSort = mSort == defaultId ? alternateId : defaultId;
+        } else
+            mSort = id;
+
         sortContent();
         libraryChanged();
     }
@@ -387,7 +427,7 @@ public class LibraryBrowserFragment extends Fragment
             Collections.sort(mRecentItems, new Comparator<Comic>() {
                 @Override
                 public int compare(Comic lhs, Comic rhs) {
-                    return Long.compare(rhs.getUpdatedAt(),lhs.getUpdatedAt());
+                    return Long.compare(rhs.getUpdatedAt(), lhs.getUpdatedAt());
                 }
             });
         }
@@ -420,12 +460,12 @@ public class LibraryBrowserFragment extends Fragment
         }
     }
 
-    private void sortContent(){
+    private void sortContent() {
         if (mAllItems == null || mAllItems.isEmpty())
             return;
 
         Comparator comparator;
-        switch (mSort){
+        switch (mSort) {
             case R.id.sort_name_desc:
                 comparator = new IgnoreCaseComparator.Reverse() {
                     @Override
@@ -482,7 +522,7 @@ public class LibraryBrowserFragment extends Fragment
                         return Long.compare(aTime, bTime);
                     }
 
-                    private long creationTime(File f){
+                    private long creationTime(File f) {
                         try {
                             FileTime creationTime = (FileTime) Files.getAttribute(f.toPath(), "creationTime");
                             return creationTime.toMillis();
@@ -501,7 +541,7 @@ public class LibraryBrowserFragment extends Fragment
                         return Long.compare(aTime, bTime);
                     }
 
-                    private long creationTime(File f){
+                    private long creationTime(File f) {
                         try {
                             FileTime creationTime = (FileTime) Files.getAttribute(f.toPath(), "creationTime");
                             return creationTime.toMillis();
@@ -567,8 +607,8 @@ public class LibraryBrowserFragment extends Fragment
                 comparator = new Comparator<Comic>() {
                     @Override
                     public int compare(Comic a, Comic b) {
-                        return (a.getTotalPages()-a.getCurrentPage()) -
-                                (b.getTotalPages()-b.getCurrentPage());
+                        return (a.getTotalPages() - a.getCurrentPage()) -
+                                (b.getTotalPages() - b.getCurrentPage());
                     }
                 };
                 break;
@@ -576,8 +616,8 @@ public class LibraryBrowserFragment extends Fragment
                 comparator = new Comparator<Comic>() {
                     @Override
                     public int compare(Comic a, Comic b) {
-                        return (b.getTotalPages()-b.getCurrentPage()) -
-                                (a.getTotalPages()-a.getCurrentPage());
+                        return (b.getTotalPages() - b.getCurrentPage()) -
+                                (a.getTotalPages() - a.getCurrentPage());
                     }
                 };
                 break;
@@ -585,7 +625,7 @@ public class LibraryBrowserFragment extends Fragment
                 comparator = new Comparator<Comic>() {
                     @Override
                     public int compare(Comic a, Comic b) {
-                        return Long.compare(a.getUpdatedAt(),b.getUpdatedAt());
+                        return Long.compare(a.getUpdatedAt(), b.getUpdatedAt());
                     }
                 };
                 break;
@@ -593,7 +633,7 @@ public class LibraryBrowserFragment extends Fragment
                 comparator = new Comparator<Comic>() {
                     @Override
                     public int compare(Comic a, Comic b) {
-                        return Long.compare(b.getUpdatedAt(),a.getUpdatedAt());
+                        return Long.compare(b.getUpdatedAt(), a.getUpdatedAt());
                     }
                 };
                 break;
@@ -661,11 +701,11 @@ public class LibraryBrowserFragment extends Fragment
 
     @Override
     public void onRefresh() {
-       setLoading(true);
-       Scanner.getInstance().forceScanLibrary(new File(mPath));
+        setLoading(true);
+        Scanner.getInstance().forceScanLibrary(new File(mPath));
     }
 
-    private void libraryChanged(){
+    private void libraryChanged() {
         // we modified items list, notify the grid adapter accordingly
         if (mComicListView == null) return;
 
