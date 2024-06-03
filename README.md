@@ -19,9 +19,9 @@ or
 ## Features
 
 * Optimized for tablets
-* Supports CBZ/ZIP, CBR/RAR, 7Z/CB7, PDF and FOLDER comics
-* TAR/CBT and Brotli/Bzip2/Gzip/LZMA/XZ/Zstd compressed TAR files are supported too
-* Display BMP, JPG, GIF, PNG, WebP and JP2/J2K image files in archives/from folders
+* Supports ZIP/CBZ, RAR/CBR, 7Z/CB7, PDF and FOLDER comics
+* TAR/CBT files with Brotli/Bzip2/Gzip/LZMA/XZ/Zstd compression
+* Display BMP, JPG, GIF, PNG, WebP and JP2/J2K(as used by archive.org) image files in archives/from folders
 * Advanced zoom and scaling modes
 * Comics/Manga reading mode
 * Library with automatic bookmarks
