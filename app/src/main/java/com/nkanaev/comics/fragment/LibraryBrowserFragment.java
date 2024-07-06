@@ -409,6 +409,7 @@ public class LibraryBrowserFragment extends Fragment
         mCacheStamp = Long.valueOf(System.currentTimeMillis());
         mComics = Storage.getStorage(getActivity()).listComics(mPath);
         findRecents();
+        limitRecents( calculateNumColumns() );
         filterContent();
         sortContent();
         libraryChanged();
@@ -431,10 +432,22 @@ public class LibraryBrowserFragment extends Fragment
                 }
             });
         }
+    }
 
-        if (mRecentItems.size() > Constants.MAX_RECENT_COUNT) {
+    private void limitRecents( final int numColumns ){
+        if (mRecentItems == null || mRecentItems.isEmpty())
+            return;
+
+        // we default to 2 columns unless min recent count is bigger
+        int recentsNum = 2*numColumns;
+        while ( Constants.MIN_RECENT_COUNT > recentsNum ) {
+            recentsNum += numColumns;
+        }
+
+        // cut to two cols max
+        if (mRecentItems.size() > recentsNum) {
             mRecentItems
-                    .subList(Constants.MAX_RECENT_COUNT, mRecentItems.size())
+                    .subList(recentsNum, mRecentItems.size())
                     .clear();
         }
     }
@@ -683,7 +696,8 @@ public class LibraryBrowserFragment extends Fragment
         int deviceWidth = Utils.getDeviceWidth(getActivity());
         int columnWidth = getActivity().getResources().getInteger(R.integer.grid_comic_column_width);
 
-        return Math.round((float) deviceWidth / columnWidth);
+        int cols = Math.round((float) deviceWidth / columnWidth);
+        return cols > 0 ? cols : 1;
     }
 
     private GridLayoutManager.SpanSizeLookup createSpanSizeLookup() {
