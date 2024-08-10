@@ -24,6 +24,7 @@ public class Scanner {
     private boolean mIsStopped;
     private boolean mIsRestarted;
     private File mSubFolder = null;
+    private boolean mRefreshAll = false;
 
     private Handler mRestartHandler = new RestartHandler(this);
 
@@ -68,28 +69,24 @@ public class Scanner {
         mIsStopped = true;
     }
 
-    public void forceScanLibrary() {
-        forceScanLibrary(null);
+    public void scanLibrary() {
+        scanLibrary(null,false);
     }
 
-    public void forceScanLibrary(File limitToSubFolder) {
+    public void scanLibrary(File limitToSubFolder, boolean refreshAll) {
+        // already running instances are informed to stop and restart with new parameters
         if (isRunning()) {
             mSubFolder = limitToSubFolder;
+            mRefreshAll = refreshAll;
             mIsStopped = true;
             mIsRestarted = true;
-        } else {
-            scanLibrary(limitToSubFolder);
+            return;
         }
-    }
 
-    public void scanLibrary() {
-        scanLibrary(null);
-    }
-
-    public void scanLibrary(File limitToSubFolder) {
         if (mUpdateThread == null || mUpdateThread.getState() == Thread.State.TERMINATED) {
             LibraryUpdateRunnable runnable = new LibraryUpdateRunnable();
             mSubFolder = limitToSubFolder;
+            mRefreshAll = refreshAll;
             mUpdateThread = new Thread(runnable);
             mUpdateThread.setPriority(Process.THREAD_PRIORITY_DEFAULT + Process.THREAD_PRIORITY_LESS_FAVORABLE);
             mUpdateThread.start();
@@ -132,6 +129,9 @@ public class Scanner {
 
     private class LibraryUpdateRunnable implements Runnable {
 
+        public void refreshAll(boolean refreshAll) {
+            mRefreshAll = refreshAll;
+        }
 
         public void limitToSubFolder(File subFolder) {
             mSubFolder = subFolder;
@@ -208,7 +208,7 @@ public class Scanner {
 
                         // skip known good comics (pages>0) to keep startup fast
                         // unless we are limited to a subfolder, then the refresh is forced
-                        if (mSubFolder == null) {
+                        if (!mRefreshAll) {
                             Comic storedComic = findComicInList(storedComics,file);
                             if (storedComic!=null && storedComic.getTotalPages()>0) {
                                 storedComics.remove(storedComic);

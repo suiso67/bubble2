@@ -375,7 +375,7 @@ public class LibraryFragment extends Fragment
 
         ((MainActivity) getActivity()).setSubTitle(Utils.appendSlashIfMissing(file.getAbsolutePath()));
 
-        Scanner.getInstance().forceScanLibrary();
+        Scanner.getInstance().scanLibrary();
         setLoading(true);
     }
 
@@ -388,7 +388,7 @@ public class LibraryFragment extends Fragment
 
     @Override
     public void onRefresh() {
-        Scanner.getInstance().forceScanLibrary();
+        Scanner.getInstance().scanLibrary();
         setLoading(true);
     }
 
