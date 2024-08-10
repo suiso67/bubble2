@@ -3,7 +3,6 @@
 
     <string name="app_description">Lecteur de BDs pour Android</string>
 
-    <string name="action_refresh">Rafraichir</string>
     <string name="action_settings">Paramètres</string>
 
     <string name="action_view_mode">Vue</string>

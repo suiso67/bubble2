@@ -10,7 +10,6 @@
     <string name="about_libraries">This application integrates the following libraries under the licenses mentioned. It wouldn\'t exist without them!</string>
     <string name="about_thanks">Thank you!</string>
 
-    <string name="action_refresh">Refresh</string>
     <string name="action_settings">Settings</string>
 
     <string name="action_view_rotate">Rotate</string>
@@ -61,7 +60,10 @@
 
     <string name="browser_search_hint">Please enter a search term</string>
 
-    <string name="reload">Reload</string>
+    <string name="reload">Update library</string>
+    <string name="reload_msg_fast">Quick library update</string>
+    <string name="reload_msg_slow">Reload all library files</string>
+
     <string name="theme">Theme</string>
     <string name="theme_auto">Auto</string>
     <string name="theme_day">Day</string>

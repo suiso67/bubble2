@@ -5,7 +5,7 @@
         diese gäbe es diese App nicht!
     </string>
     <string name="about_thanks">Danke!</string>
-    <string name="action_refresh">Erneut laden</string>
+
     <string name="action_settings">Einstellungen</string>
     <string name="action_view_rotate">Drehen</string>
     <string name="action_view_mode">Ansichtsmodus</string>
@@ -33,7 +33,11 @@
     <string name="directory_picker_cancel">Abbrechen</string>
     <string name="search">Suchen</string>
     <string name="browser_search_hint">Suchbegriff eingeben</string>
-    <string name="reload">Erneut Laden</string>
+
+    <string name="reload">Bibliothek aktualisieren</string>
+    <string name="reload_msg_fast">Neue Comics suchen</string>
+    <string name="reload_msg_slow">Alle Comics neu laden</string>
+
     <string name="theme">Farbschema</string>
     <string name="theme_auto">Auto</string>
     <string name="theme_day">Hell</string>
@@ -45,4 +49,14 @@
     <string name="switch_prev_comic">Vorherigen Comic anzeigen?</string>
     <string name="library_empty">Die Bibliothek scheint leer zu sein. Ordner-Symbol nutzen um Bibliotheksordner festzulgen.</string>
     <string name="warning_missing_file">Datei fehlt. Bitte Bibliothek aktualisieren.</string>
+    <string name="action_view_export">Seite exportieren</string>
+    <string name="menu_sort_by">Sortieren nach</string>
+    <string name="menu_browser_sort_name">Name</string>
+    <string name="menu_browser_sort_access">Zugriff</string>
+    <string name="menu_sort_creation">Erstellung</string>
+    <string name="menu_sort_modified">Letzte Änderung</string>
+    <string name="menu_browser_sort_size">Dateigrösse</string>
+    <string name="menu_browser_sort_pages_total">Seitenanzahl</string>
+    <string name="menu_browser_sort_pages_read">Seiten gelesen</string>
+    <string name="menu_browser_sort_pages_left">Seiten ungelesen</string>
 </resources>

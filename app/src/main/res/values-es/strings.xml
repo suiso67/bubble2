@@ -2,7 +2,6 @@
 <resources>
     <string name="app_description">Lector de cómics para android</string>
 
-    <string name="action_refresh">Actualizar</string>
     <string name="action_settings">Configuración</string>
 
     <string name="action_view_mode">Modo de visualización</string>
