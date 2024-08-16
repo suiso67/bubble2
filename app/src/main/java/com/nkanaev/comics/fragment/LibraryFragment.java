@@ -8,11 +8,16 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.*;
 import android.provider.Settings;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
@@ -45,7 +50,9 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -114,6 +121,18 @@ public class LibraryFragment extends Fragment
         File[] externalStorageFiles = Utils.listExternalStorageDirs();
         for (File f : externalStorageFiles) {
             Log.d(getClass().getCanonicalName(), "External Storage -> " + f.toString());
+        }
+
+        // restore saved sorting
+        int savedSortMode = MainApplication.getPreferences().getInt(
+                Constants.SETTINGS_LIBRARY_SORT,
+                Constants.SortMode.NAME_ASC.id);
+        mSort = R.id.sort_name_asc;
+        for (Constants.SortMode mode: Constants.SortMode.values()) {
+            if (savedSortMode != mode.id)
+                continue;
+            mSort = mode.resId;
+            break;
         }
 
         mDirectorySelectDialog = new DirectorySelectDialog(getActivity(), externalStorageFiles);
@@ -267,6 +286,16 @@ public class LibraryFragment extends Fragment
         menu.findItem(item).setChecked(true);
     }
 
+    private static final HashMap<Integer, List<Integer>> sortIds = new HashMap<>();
+    // sort menu entry ids (label, button ids with default first)
+    static {
+        sortIds.put(R.id.sort_name_label, Arrays.asList(new Integer[]{R.id.sort_name_asc, R.id.sort_name_desc}));
+        sortIds.put(R.id.sort_access_label, Arrays.asList(new Integer[]{R.id.sort_access_desc, R.id.sort_access_asc}));
+        sortIds.put(R.id.sort_size_label, Arrays.asList(new Integer[]{R.id.sort_size_asc, R.id.sort_size_desc}));
+        sortIds.put(R.id.sort_creation_label, Arrays.asList(new Integer[]{R.id.sort_creation_desc, R.id.sort_creation_asc}));
+        sortIds.put(R.id.sort_modified_label, Arrays.asList(new Integer[]{R.id.sort_modified_desc, R.id.sort_modified_asc}));
+    }
+
     @SuppressLint("RestrictedApi")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -335,23 +364,47 @@ public class LibraryFragment extends Fragment
                 // weirdly needed on preAPI21 to dismiss on tap outside
                 popupWindow.setBackgroundDrawable(new ColorDrawable(androidx.appcompat.R.attr.colorPrimary));
 
-                int[] ids = new int[]{
-                        R.id.sort_modified_asc, R.id.sort_modified_desc,
-                        R.id.sort_name_asc, R.id.sort_name_desc,
-                        R.id.sort_size_asc, R.id.sort_size_desc,
-                        R.id.sort_access_asc, R.id.sort_access_desc,
-                };
-                for (int id: ids ) {
-                    ImageView v = popupView.findViewById(id);
-                    int tint = id == mSort ? active : normal;
-                    ImageViewCompat.setImageTintList(v, ColorStateList.valueOf(tint));
-                    v.setOnClickListener(new View.OnClickListener() {
+                // add click listener/apply styling according to selected sort mode
+                for (int labelId : sortIds.keySet()) {
+                    TextView tv = popupView.findViewById(labelId);
+                    // attach clicklistener
+                    tv.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            onSortItemSelected(id);
+                            onSortItemSelected(labelId);
                             popupWindow.dismiss();
                         }
                     });
+
+                    List<Integer> buttonIds = sortIds.get(labelId);
+                    // is it selected?
+                    boolean label_active = buttonIds.contains(mSort);
+                    int label_tint = label_active ? active : normal;
+                    // reset formatting
+                    CharSequence text = tv.getText();
+                    SpannableString s = new SpannableString(text);
+                    // style away
+                    s.setSpan(new ForegroundColorSpan(label_tint), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    s.setSpan(new StyleSpan(label_active ? Typeface.BOLD : Typeface.NORMAL), 0, s.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    tv.setText(s);
+
+                    // handle buttons
+                    for (int buttonId : buttonIds) {
+                        ImageView iv = popupView.findViewById(buttonId);
+                        // attach clicklistener
+                        iv.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                onSortItemSelected(buttonId);
+                                popupWindow.dismiss();
+                            }
+                        });
+
+                        // switch button colors, for buttons only
+                        int tint = buttonId == mSort ? active : normal;
+                        ImageViewCompat.setImageTintList(iv, ColorStateList.valueOf(tint));
+                    }
+
                 }
 
                 float dp = getResources().getDisplayMetrics().density;
@@ -375,19 +428,32 @@ public class LibraryFragment extends Fragment
     }
 
     public void onSortItemSelected(int id) {
-        if (BuildConfig.DEBUG)
+        if (false && BuildConfig.DEBUG)
             Toast.makeText(
                     getActivity(),
-                    "sort "+id,
+                    "sort " + id,
                     Toast.LENGTH_SHORT).show();
-        mSort = id;
-        new Handler().post(new Runnable() {
-            @Override
-            public void run() {
-                sortContent();
-                mFolderListView.getAdapter().notifyDataSetChanged();
-            }
-        });
+
+        // filter label clicks
+        if (sortIds.containsKey(id)) {
+            int defaultId = sortIds.get(id).get(0);
+            int alternateId = sortIds.get(id).get(1);
+            mSort = mSort == defaultId ? alternateId : defaultId;
+        } else
+            mSort = id;
+
+        // save sortMode
+        for (Constants.SortMode mode: Constants.SortMode.values()) {
+            if (mSort != mode.resId)
+                continue;
+            SharedPreferences.Editor editor = MainApplication.getPreferences().edit();
+            editor.putInt(Constants.SETTINGS_LIBRARY_SORT, mode.id);
+            editor.apply();
+            break;
+        }
+
+        sortContent();
+        mFolderListView.getAdapter().notifyDataSetChanged();
     }
 
     @Override
@@ -476,6 +542,8 @@ public class LibraryFragment extends Fragment
     }
 
     private void refreshLibrary( boolean finished ) {
+        if (mFolderListView == null) return;
+
         if (!mIsRefreshPlanned || finished) {
             final Runnable updateRunnable = new Runnable() {
                 @Override
@@ -514,8 +582,7 @@ public class LibraryFragment extends Fragment
     }
 
     private String getLibraryDir() {
-        return getActivity()
-                .getSharedPreferences(Constants.SETTINGS_NAME, 0)
+        return MainApplication.getPreferences()
                 .getString(Constants.SETTINGS_LIBRARY_DIR, "");
     }
 
