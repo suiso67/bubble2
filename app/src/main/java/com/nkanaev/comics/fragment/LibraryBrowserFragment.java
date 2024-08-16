@@ -3,6 +3,7 @@ package com.nkanaev.comics.fragment;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -32,6 +33,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.nkanaev.comics.BuildConfig;
 import com.nkanaev.comics.Constants;
+import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.MainActivity;
 import com.nkanaev.comics.activity.ReaderActivity;
@@ -94,6 +96,19 @@ public class LibraryBrowserFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mPath = getArguments().getString(PARAM_PATH);
+
+        // restore saved sorting
+        int savedSortMode = MainApplication.getPreferences().getInt(
+                Constants.SETTINGS_LIBRARY_BROWSER_SORT,
+                Constants.SortMode.NAME_ASC.id);
+        mSort = R.id.sort_name_asc;
+        for (Constants.SortMode mode: Constants.SortMode.values()) {
+            if (savedSortMode != mode.id)
+                continue;
+            mSort = mode.resId;
+            break;
+        }
+
         getComics();
         setHasOptionsMenu(true);
     }
@@ -368,6 +383,16 @@ public class LibraryBrowserFragment extends Fragment
         } else
             mSort = id;
 
+        // save sortMode
+        for (Constants.SortMode mode: Constants.SortMode.values()) {
+            if (mSort != mode.resId)
+                continue;
+            SharedPreferences.Editor editor = MainApplication.getPreferences().edit();
+            editor.putInt(Constants.SETTINGS_LIBRARY_BROWSER_SORT, mode.id);
+            editor.apply();
+            break;
+        }
+
         sortContent();
         libraryChanged();
     }
@@ -472,8 +497,8 @@ public class LibraryBrowserFragment extends Fragment
         if (mRecentItems == null || mRecentItems.isEmpty())
             return;
 
-        // we default to 2 columns unless min recent count is bigger
-        int recentsNum = 2*numColumns;
+        // we default to 2 columns -1 unless min recent count is bigger
+        int recentsNum = 2*numColumns-1;
         while ( Constants.MIN_RECENT_COUNT > recentsNum ) {
             recentsNum += numColumns;
         }
@@ -723,6 +748,7 @@ public class LibraryBrowserFragment extends Fragment
     private boolean hasRecent() {
         return mFilterSearch.length() == 0
                 && mFilterRead == R.id.menu_browser_filter_all
+                && mSort != R.id.sort_access_desc
                 && mRecentItems.size() > 0;
     }
 
