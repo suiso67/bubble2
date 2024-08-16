@@ -20,9 +20,10 @@ import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.*;
 import android.view.animation.Animation;
-import android.widget.*;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -35,6 +36,7 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 import com.nkanaev.comics.BuildConfig;
 import com.nkanaev.comics.Constants;
+import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.ReaderActivity;
 import com.nkanaev.comics.managers.LocalComicHandler;
@@ -79,7 +81,6 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     private TextView mPageInfoTextView;
     private View mPageInfoButton;
 
-    private SharedPreferences mPreferences;
     private GestureDetector mGestureDetector;
 
     private final static HashMap<Integer, Constants.PageViewMode> RESOURCE_VIEW_MODE;
@@ -251,12 +252,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
         mGestureDetector = new GestureDetector(getActivity(), new MyTouchListener());
 
-        mPreferences = getActivity().getSharedPreferences(Constants.SETTINGS_NAME, 0);
-        int viewModeInt = mPreferences.getInt(
+        SharedPreferences preferences = MainApplication.getPreferences();
+        int viewModeInt = preferences.getInt(
                 Constants.SETTINGS_PAGE_VIEW_MODE,
                 Constants.PageViewMode.ASPECT_FIT.native_int);
         mPageViewMode = Constants.PageViewMode.values()[viewModeInt];
-        mIsLeftToRight = mPreferences.getBoolean(Constants.SETTINGS_READING_LEFT_TO_RIGHT, true);
+        mIsLeftToRight = preferences.getBoolean(Constants.SETTINGS_READING_LEFT_TO_RIGHT, true);
 
         setHasOptionsMenu(true);
     }
@@ -500,7 +501,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        SharedPreferences.Editor editor = mPreferences.edit();
+        SharedPreferences.Editor editor = MainApplication.getPreferences().edit();
         switch (item.getItemId()) {
             case R.id.view_mode_aspect_fill:
             case R.id.view_mode_aspect_fit:
