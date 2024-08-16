@@ -34,7 +34,7 @@ repositories {
 }
 
 android {
-    compileSdk 34
+    compileSdk 35
     //compileSdkPreview "VanillaIceCream"
     //buildToolsVersion '28.0.3'
 
