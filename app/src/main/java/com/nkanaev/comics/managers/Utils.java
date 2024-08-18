@@ -726,4 +726,8 @@ public final class Utils {
         return length;
     }
 
+    public static void disablePendingTransition(Activity activity){
+        if (activity!=null)
+            activity.overridePendingTransition(0,0);
+    }
 }

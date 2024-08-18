@@ -452,6 +452,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         if (mComic != null) {
             mComic.setCurrentPage(getCurrentPage());
         }
+        Utils.disablePendingTransition(getActivity());
         super.onPause();
     }
 

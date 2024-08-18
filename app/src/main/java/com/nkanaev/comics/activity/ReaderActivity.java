@@ -2,6 +2,7 @@ package com.nkanaev.comics.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -9,6 +10,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+import com.nkanaev.comics.BuildConfig;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.fragment.ReaderFragment;
 import androidx.annotation.NonNull;
@@ -20,6 +22,27 @@ public class ReaderActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        if (false && BuildConfig.DEBUG) {
+            StrictMode.setThreadPolicy(
+                    new StrictMode.ThreadPolicy.Builder()
+                            //.detectDiskReads()
+                            //.detectDiskWrites()
+                            //.detectNetwork()
+                            // or for all detectable problems
+                            .detectAll()
+                            .penaltyFlashScreen()
+                            .penaltyLog()
+                            .build()
+            );
+            StrictMode.setVmPolicy(
+                    new StrictMode.VmPolicy.Builder()
+                            .detectLeakedSqlLiteObjects()
+                            .detectLeakedClosableObjects()
+                            .penaltyLog()
+                            .penaltyDeath()
+                            .build()
+            );
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layout_reader);
 

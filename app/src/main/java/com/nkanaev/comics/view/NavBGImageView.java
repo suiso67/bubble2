@@ -9,6 +9,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -136,7 +137,12 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
     }
 
     public void reset() {
-        createBitmap();
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                createBitmap();
+            }
+        });
     }
 
     private class HalftonerTask extends AsyncTask<Void, Void, Bitmap> {

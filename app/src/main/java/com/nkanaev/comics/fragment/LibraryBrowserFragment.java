@@ -462,6 +462,7 @@ public class LibraryBrowserFragment extends Fragment
         intent.putExtra(ReaderFragment.PARAM_HANDLER, comic.getId());
         intent.putExtra(ReaderFragment.PARAM_MODE, ReaderFragment.Mode.MODE_LIBRARY);
         startActivity(intent);
+        Utils.disablePendingTransition(getActivity());
     }
 
     private void getComics() {
