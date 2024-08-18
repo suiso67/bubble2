@@ -43,7 +43,7 @@ android {
         namespace "com.nkanaev.comics"
 
         minSdk 16
-        targetSdk 34
+        targetSdk 35
         //targetSdkPreview "VanillaIceCream"
         multiDexEnabled true
 
