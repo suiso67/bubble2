@@ -376,6 +376,11 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 if (mParserException == null)
                     try {
                         mPageCount = mParser.numPages();
+                        // update page count if it changed inbetween
+                        // (e.g. refresh when file is still incomplete due to ongoing copy process)
+                        if (mComic != null && mPageCount != mComic.getTotalPages()){
+                            Storage.getStorage(getActivity()).updateBook(mComic.getId(),null,mPageCount);
+                        }
                     } catch (IOException e) {
                         Log.e("", "", e);
                     }

@@ -95,14 +95,19 @@ public class Storage {
         db.delete(Book.TABLE_NAME, null, null);
     }
 
-    private ContentValues buildContentValues(File filepath, String type, int numPages){
+    private ContentValues buildContentValues(File filepath, String type, Integer numPages){
         ContentValues cv = new ContentValues();
         if (filepath!=null) {
             cv.put(Book.COLUMN_NAME_FILEPATH, filepath.getParentFile().getAbsolutePath());
             cv.put(Book.COLUMN_NAME_FILENAME, filepath.getName());
         }
-        cv.put(Book.COLUMN_NAME_NUM_PAGES, String.valueOf(numPages));
-        cv.put(Book.COLUMN_NAME_TYPE, type);
+
+        if (type != null)
+            cv.put(Book.COLUMN_NAME_TYPE, type);
+
+        if (numPages != null)
+            cv.put(Book.COLUMN_NAME_NUM_PAGES, String.valueOf(numPages));
+
         return cv;
     }
 
@@ -114,6 +119,9 @@ public class Storage {
 
     public void updateBook(int comicId, String type, int numPages) {
         ContentValues cv = buildContentValues(null,type,numPages);
+        // protect from empty changesets, db.update() would throw exception
+        if (cv == null || cv.size()<1)
+            return;
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         String whereClause = Book.COLUMN_NAME_ID + '=' + sqlEscapeString(Integer.toString(comicId));
         db.update(Book.TABLE_NAME,cv,whereClause,null);
