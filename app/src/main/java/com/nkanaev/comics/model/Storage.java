@@ -11,6 +11,7 @@ import com.nkanaev.comics.managers.IgnoreCaseComparator;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 
@@ -265,18 +266,33 @@ public class Storage {
     }
 
     public Comic getPrevComic(Comic comic) {
-        ArrayList<Comic> comics = listComics(comic.getFile().getParent());
-        int idx = comics.indexOf(comic);
-        if (idx != 0)
-            return comics.get(idx-1);
-        return null;
+        return getNextComic(comic, new IgnoreCaseComparator.Reverse() {
+            @Override
+            public String stringValue(Object o) {
+                return ((Comic) o).getFile().getName();
+            }
+        });
     }
 
     public Comic getNextComic(Comic comic) {
+        return getNextComic(comic, new IgnoreCaseComparator() {
+            @Override
+            public String stringValue(Object o) {
+                return ((Comic) o).getFile().getName();
+            }
+        });
+    }
+
+    // return next Comic or null, if comic was last
+    // according to Comparator order
+    private Comic getNextComic(Comic comic, Comparator comparator) {
+        Comic next = null;
         ArrayList<Comic> comics = listComics(comic.getFile().getParent());
-        int idx = comics.indexOf(comic);
-        if (idx != (comics.size() - 1))
-            return comics.get(idx+1);
-        return null;
+        for (Comic candidate : comics) {
+            if (comparator.compare(candidate,comic ) > 0 &&
+                    (next == null || comparator.compare(candidate, next) < 0))
+                next = candidate;
+        }
+        return next;
     }
 }
