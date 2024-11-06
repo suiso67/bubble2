@@ -1042,14 +1042,19 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         }
     }
 
+    AlertDialog alertDialog = null;
+
     private void confirmSwitch(Comic newComic, int titleRes) {
         if (newComic == null)
+            return;
+
+        if (alertDialog != null && alertDialog.isShowing())
             return;
 
         mNewComic = newComic;
         mNewComicTitle = titleRes;
 
-        AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.AppCompatAlertDialogStyle)
+        alertDialog = new AlertDialog.Builder(getActivity(), R.style.AppCompatAlertDialogStyle)
                 .setTitle(titleRes)
                 .setMessage(newComic.getFile().getName())
                 .setPositiveButton(R.string.alert_action_positive, new DialogInterface.OnClickListener() {
@@ -1068,10 +1073,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 .create();
         // apply systembars hidden/shown status to dialog's window from activity's window
         // fixes "statusbar is and stays enabled when dialog is shown" on Android9
-        Window dialogWindow = dialog.getWindow();
+        Window dialogWindow = alertDialog.getWindow();
         dialogWindow.setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
         dialogWindow.getDecorView().setSystemUiVisibility(getActivity().getWindow().getDecorView().getSystemUiVisibility());
-        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
             public void onShow(DialogInterface di) {
                 //Clear the not focusable flag from the window
@@ -1081,7 +1086,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 wm.updateViewLayout(dialogWindow.getDecorView(), dialogWindow.getAttributes());
             }
         });
-        dialog.show();
+        alertDialog.show();
     }
 
     private void updateSeekBar() {
