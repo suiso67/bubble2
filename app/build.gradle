@@ -1,21 +1,21 @@
 apply plugin: 'com.android.application'
 
+// count tags and use as Android versionCode
+// https://developer.android.com/studio/publish/versioning
 def getVersionCode = { ->
-    def code = new ByteArrayOutputStream()
-    exec {
+    def stream = providers.exec {
         commandLine 'git', 'tag', '--list'
-        standardOutput = code
-    }
-    return code.toString().split("\n").size()
+    }.standardOutput
+    return stream.asText.get().split("\n").size()
 }
 
+// use git describe to generate somthing like
+// "<tag>-<number of commits since tag>-<8 char abbreviated commit name>"
 def getVersionName = { ->
-    def stdout = new ByteArrayOutputStream()
-    exec {
+    def stream = providers.exec {
         commandLine "git", "describe", "--tags", "--long"
-        standardOutput = stdout
-    }
-    return stdout.toString('UTF-8').trim() //.replaceAll("[^\\x00-\\x7F]", "")
+    }.standardOutput
+    return stream.asText.get().trim() //.replaceAll("[^\\x00-\\x7F]", "")
 }
 
 repositories {
