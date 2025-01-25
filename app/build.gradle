@@ -9,7 +9,7 @@ def getVersionCode = { ->
     return stream.asText.get().split("\n").size()
 }
 
-// use git describe to generate somthing like
+// use git describe to generate a version name looking like
 // "<tag>-<number of commits since tag>-<8 char abbreviated commit name>"
 def getVersionName = { ->
     def stream = providers.exec {
