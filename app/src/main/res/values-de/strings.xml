@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_description">Comic-Reader für Android</string>
+    <string name="about_version">Version</string>
     <string name="about_libraries">Diese App nutzt die folgenden Komponenten zu den angegebenen Lizenzbedingungen. Ohne
         diese gäbe es diese App nicht!
     </string>
@@ -21,6 +22,7 @@
     <string name="menu_browser_filter_reading">Mittendrin</string>
     <string name="menu_browser_filter_unread">Ungelesen</string>
     <string name="menu_browser_filter_unfinished">Nicht beendet</string>
+    <string name="menu_browser_context_reset">Reset</string>
     <string name="drawer_open">Menü öffnen</string>
     <string name="drawer_close">Menü schließen</string>
     <string name="menu_library">Bibliothek</string>
@@ -50,6 +52,7 @@
     <string name="library_empty">Die Bibliothek scheint leer zu sein. Ordner-Symbol nutzen um Bibliotheksordner festzulgen.</string>
     <string name="warning_missing_file">Datei fehlt. Bitte Bibliothek aktualisieren.</string>
     <string name="action_view_export">Seite exportieren</string>
+
     <string name="menu_sort_by">Sortieren nach</string>
     <string name="menu_browser_sort_name">Name</string>
     <string name="menu_browser_sort_access">Zugriff</string>

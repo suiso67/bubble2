@@ -20,6 +20,7 @@ import android.text.style.StyleSpan;
 import android.view.*;
 import android.widget.*;
 import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
 import androidx.annotation.StyleRes;
 import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.view.menu.MenuItemImpl;
@@ -45,6 +46,7 @@ import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
 import com.nkanaev.comics.view.PreCachingGridLayoutManager;
 import com.squareup.picasso.Picasso;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -135,6 +137,7 @@ public class LibraryBrowserFragment extends Fragment
         mComicListView.setLayoutManager(layoutManager);
         mComicListView.setAdapter(new ComicGridAdapter());
         mComicListView.addItemDecoration(new GridSpacingItemDecoration(numColumns, spacing));
+        registerForContextMenu(mComicListView);
 
         mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.fragmentLibraryBrowserRefreshLayout);
         mRefreshLayout.setColorSchemeResources(R.color.refreshProgress);
@@ -273,7 +276,7 @@ public class LibraryBrowserFragment extends Fragment
                 updateColors();
                 mFilterRead = item.getItemId();
                 filterContent();
-                libraryChanged();
+                refreshAdapter();
                 return true;
             case R.id.menu_browser_refresh:
                 // if running, stop is requested
@@ -394,7 +397,7 @@ public class LibraryBrowserFragment extends Fragment
         }
 
         sortContent();
-        libraryChanged();
+        refreshAdapter();
     }
 
     private void updateColors() {
@@ -440,7 +443,7 @@ public class LibraryBrowserFragment extends Fragment
     public boolean onQueryTextChange(String s) {
         mFilterSearch = s;
         filterContent();
-        libraryChanged();
+        refreshAdapter();
         return true;
     }
 
@@ -465,6 +468,13 @@ public class LibraryBrowserFragment extends Fragment
         Utils.disablePendingTransition(getActivity());
     }
 
+    private void refreshAdapter(){
+        if (mComicListView == null)
+            return;
+
+        mComicListView.getAdapter().notifyDataSetChanged();
+    }
+
     private void getComics() {
         mCacheStamp = Long.valueOf(System.currentTimeMillis());
         mComics = Storage.getStorage(getActivity()).listComics(mPath);
@@ -472,7 +482,7 @@ public class LibraryBrowserFragment extends Fragment
         limitRecents( calculateNumColumns() );
         filterContent();
         sortContent();
-        libraryChanged();
+        refreshAdapter();
     }
 
     private void findRecents() {
@@ -786,13 +796,6 @@ public class LibraryBrowserFragment extends Fragment
         Scanner.getInstance().scanLibrary(new File(mPath), refreshAll);
     }
 
-    private void libraryChanged() {
-        // we modified items list, notify the grid adapter accordingly
-        if (mComicListView == null) return;
-
-        mComicListView.getAdapter().notifyDataSetChanged();
-    }
-
     public void refreshLibraryDelayed() {
     }
 
@@ -930,10 +933,14 @@ public class LibraryBrowserFragment extends Fragment
         }
     }
 
-    private class ComicViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    private class ComicViewHolder extends RecyclerView.ViewHolder
+            implements View.OnClickListener,
+            View.OnCreateContextMenuListener,
+            MenuItem.OnMenuItemClickListener {
         private ImageView mCoverView;
         private TextView mTitleTextView;
         private TextView mPagesTextView;
+        private Comic mComic = null;
 
         public ComicViewHolder(View itemView) {
             super(itemView);
@@ -942,10 +949,13 @@ public class LibraryBrowserFragment extends Fragment
             mPagesTextView = (TextView) itemView.findViewById(R.id.comicPagerTextView);
 
             itemView.setClickable(true);
+            itemView.setOnCreateContextMenuListener(this);
             itemView.setOnClickListener(this);
         }
 
         public void setupComic(Comic comic) {
+            mComic = comic;
+
             mTitleTextView.setText(comic.getFile().getName());
             mPagesTextView.setText(Integer.toString(comic.getCurrentPage()) + '/' + Integer.toString(comic.getTotalPages()));
 
@@ -959,10 +969,34 @@ public class LibraryBrowserFragment extends Fragment
         }
 
         @Override
+        public void onCreateContextMenu(ContextMenu menu,
+                                        View v,
+                                        ContextMenu.ContextMenuInfo menuInfo) {
+            getActivity().getMenuInflater().inflate(R.menu.browser_context, menu);
+            menu.findItem(R.id.reset).setOnMenuItemClickListener(this);
+        }
+
+        @Override
+        public boolean onMenuItemClick(@NonNull MenuItem item) {
+            if (mComic == null)
+                return false;
+
+            // just one menu item reset just now
+            Storage.getStorage(getContext()).resetBook(mComic.getId());
+            Utils.deleteCoverCacheFile(mComic);
+            // complete reload (recents, sorting etc.)
+            getComics();
+            return true;
+        }
+
+        @Override
         public void onClick(View v) {
-            int i = getAdapterPosition();
-            Comic comic = getComicAtPosition(i);
-            openComic(comic);
+            //int i = getAdapterPosition();
+            //Comic comic = getComicAtPosition(i);
+            if (mComic == null)
+                return;
+
+            openComic(mComic);
         }
     }
 }

@@ -128,6 +128,22 @@ public class Storage {
         db.update(Book.TABLE_NAME,cv,whereClause,null);
     }
 
+    public void resetBook(int comicId) {
+        Comic c = getComic(comicId);
+        // prevent NPE if id does not exist
+        if (c == null)
+            return;
+
+        removeComic(comicId);
+        addBook(c.getFile(), c.getType(), c.getTotalPages());
+    }
+
+    public void removeComic(int comicId) {
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        String whereClause = Book.COLUMN_NAME_ID + '=' + Integer.toString(comicId);
+        int i = db.delete(Book.TABLE_NAME, whereClause, null);
+    }
+
     public ArrayList<Comic> listDirectoryComics() {
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
@@ -257,12 +273,6 @@ public class Storage {
         String filter = Book.COLUMN_NAME_ID + "=" + Integer.toString(comicId);
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         db.update(Book.TABLE_NAME, values, filter, null);
-    }
-
-    public void removeComic(int comicId) {
-        SQLiteDatabase db = mDbHelper.getWritableDatabase();
-        String whereClause = Book.COLUMN_NAME_ID + '=' + Integer.toString(comicId);
-        int i = db.delete(Book.TABLE_NAME, whereClause, null);
     }
 
     public Comic getPrevComic(Comic comic) {

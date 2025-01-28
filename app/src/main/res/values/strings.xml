@@ -32,6 +32,8 @@
     <string name="menu_browser_filter_unread">Unread</string>
     <string name="menu_browser_filter_unfinished">Unfinished</string>
 
+    <string name="menu_browser_context_reset">Reset</string>
+
     <string name="menu_sort_by">Sort by</string>
     <string name="menu_browser_sort_name">Name</string>
     <string name="menu_browser_sort_access">Last accessed</string>

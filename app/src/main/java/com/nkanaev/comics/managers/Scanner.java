@@ -113,11 +113,6 @@ public class Scanner {
         }
     }
 
-    private static void deleteCoverCacheFile(Comic comic) {
-        File coverCacheFile = Utils.getCoverCacheFile(comic.getFile().getAbsolutePath(), "jpg");
-        coverCacheFile.delete();
-    }
-
     private static Comic findComicInList(List<Comic> comics, File file) {
         if (file != null && comics != null)
             for (Comic comic : comics) {
@@ -242,7 +237,7 @@ public class Scanner {
                             if (storedComic!=null) {
                                 storage.updateBook(storedComic.getId(), parser.getType(), count);
                                 storedComics.remove(storedComic);
-                                deleteCoverCacheFile(storedComic);
+                                Utils.deleteCoverCacheFile(storedComic);
                             } else {
                                 storage.addBook(file, parser.getType(), count);
                             }
@@ -258,7 +253,7 @@ public class Scanner {
                 // unless we were rudely interrupted
                 if (!mIsStopped)
                     for (Comic missing : storedComics) {
-                        deleteCoverCacheFile(missing);
+                        Utils.deleteCoverCacheFile(missing);
                         storage.removeComic(missing.getId());
                     }
 

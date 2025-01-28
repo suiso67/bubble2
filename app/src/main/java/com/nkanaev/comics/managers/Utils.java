@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat;
 import com.gemalto.jp2.JP2Decoder;
 import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.R;
+import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.parsers.Parser;
 
 import javax.microedition.khronos.egl.EGL10;
@@ -342,6 +343,11 @@ public final class Utils {
     public static File getCoverCacheFile(String identifier, String extension) {
         File dir = getCacheFolder();
         return new File(dir, "cover-"+Utils.MD5(identifier)+(extension!=null?"."+extension:""));
+    }
+
+    public static void deleteCoverCacheFile(Comic comic) {
+        File coverCacheFile = getCoverCacheFile(comic.getFile().getAbsolutePath(), "jpg");
+        coverCacheFile.delete();
     }
 
     public static ByteArrayInputStream toByteArrayInputStream(InputStream is) throws IOException {
