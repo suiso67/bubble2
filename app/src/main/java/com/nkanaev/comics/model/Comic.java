@@ -58,11 +58,11 @@ public class Comic implements Comparable {
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof Comic) && getId() == ((Comic)o).getId();
+        return (o instanceof Comic) && getId() == ((Comic) o).getId();
     }
 
     @Override
     public String toString() {
-        return mFile.getName();
+        return mFile != null ? mFile.getPath() : "no file";
     }
 }
