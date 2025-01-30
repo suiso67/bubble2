@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.renderscript.Allocation;
@@ -108,10 +107,10 @@ public class NavBGImageView extends androidx.appcompat.widget.AppCompatImageView
         ArrayList<Comic> comics = Storage.getStorage(getActivity()).listComics();
         if (comics.size() > 0) {
             Comic c = comics.get(new Random().nextInt(comics.size()));
-            //Picasso mPicasso = ((MainActivity) getActivity()).getPicasso();
-            Uri uri = LocalCoverHandler.getComicCoverUri(c);
+            //Picasso picasso = ((MainActivity) getActivity()).getPicasso();
+            //Uri uri = LocalCoverHandler.getComicCoverUri(c);
             try {
-                Bitmap bitmap = LocalCoverHandler.getCover(uri);
+                Bitmap bitmap = LocalCoverHandler.getCover(c);
                 if (bitmap == null)
                     return;
                 HalftonerTask task = new HalftonerTask(bitmap);
