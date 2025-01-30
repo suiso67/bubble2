@@ -475,7 +475,7 @@ public class LibraryBrowserFragment extends Fragment
     }
 
     private void getComics() {
-        mCacheStamp = Long.valueOf(System.currentTimeMillis());
+        //mCacheStamp = Long.valueOf(System.currentTimeMillis());
         mComics = Storage.getStorage(getActivity()).listComics(mPath);
         findRecents();
         limitRecents( calculateNumColumns() );
