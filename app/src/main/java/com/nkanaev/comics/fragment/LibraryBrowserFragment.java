@@ -46,7 +46,6 @@ import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
 import com.nkanaev.comics.view.PreCachingGridLayoutManager;
 import com.squareup.picasso.Picasso;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,8 +79,8 @@ public class LibraryBrowserFragment extends Fragment
     private SwipeRefreshLayout mRefreshLayout;
     private Handler mUpdateHandler = new LibraryFragment.UpdateHandler(this);
     private MenuItem mRefreshItem;
-    private Long mCacheStamp = Long.valueOf(System.currentTimeMillis());
-    private HashMap<Uri, Long> mCache = new HashMap();
+    //private Long mCacheStamp = Long.valueOf(System.currentTimeMillis());
+    //private HashMap<Uri, Long> mCache = new HashMap();
 
     public static LibraryBrowserFragment create(String path) {
         LibraryBrowserFragment fragment = new LibraryBrowserFragment();
@@ -937,14 +936,14 @@ public class LibraryBrowserFragment extends Fragment
             implements View.OnClickListener,
             View.OnCreateContextMenuListener,
             MenuItem.OnMenuItemClickListener {
-        private ImageView mCoverView;
+        private ImageView mComicImageView;
         private TextView mTitleTextView;
         private TextView mPagesTextView;
         private Comic mComic = null;
 
         public ComicViewHolder(View itemView) {
             super(itemView);
-            mCoverView = (ImageView) itemView.findViewById(R.id.comicImageView);
+            mComicImageView = (ImageView) itemView.findViewById(R.id.comicImageView);
             mTitleTextView = (TextView) itemView.findViewById(R.id.comicTitleTextView);
             mPagesTextView = (TextView) itemView.findViewById(R.id.comicPagerTextView);
 
@@ -955,17 +954,18 @@ public class LibraryBrowserFragment extends Fragment
 
         public void setupComic(Comic comic) {
             mComic = comic;
-
-            mTitleTextView.setText(comic.getFile().getName());
-            mPagesTextView.setText(Integer.toString(comic.getCurrentPage()) + '/' + Integer.toString(comic.getTotalPages()));
-
             Uri uri = LocalCoverHandler.getComicCoverUri(comic);
-            Long lastCacheStamp = mCache.get(uri);
-            if (lastCacheStamp != null && !lastCacheStamp.equals(mCacheStamp))
-                mPicasso.invalidate(uri);
-            mPicasso.load(uri)
-                    .into(mCoverView);
-            mCache.put(uri, mCacheStamp);
+            //Long lastCacheStamp = mCache.get(uri);
+            //if (lastCacheStamp != null && !lastCacheStamp.equals(mCacheStamp))
+            //   mPicasso.invalidate(uri);
+            mPicasso.load(uri).into(mComicImageView);
+           //mCache.put(uri, mCacheStamp);
+
+            // reload comic (in case it was updated by the cover loading)
+            comic = Storage.getStorage(getContext()).getComic(comic.getId());
+            mTitleTextView.setText(comic.getFile().getName());
+            String totalPages = comic.getTotalPages() < 1 ? "?" : Integer.toString(comic.getTotalPages());
+            mPagesTextView.setText(Integer.toString(comic.getCurrentPage()) + '/' + totalPages);
         }
 
         @Override
