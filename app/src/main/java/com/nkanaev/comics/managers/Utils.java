@@ -27,16 +27,15 @@ import com.gemalto.jp2.JP2Decoder;
 import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.model.Comic;
+import com.nkanaev.comics.model.Storage;
 import com.nkanaev.comics.parsers.Parser;
 
 import javax.microedition.khronos.egl.EGL10;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.zip.CRC32;
 import java.util.zip.ZipFile;
 
 import static android.content.Context.ACTIVITY_SERVICE;
@@ -167,6 +166,23 @@ public final class Utils {
         } catch (Exception e) {
             Log.e("Utils.isRarStream","",e);
         }
+        return false;
+    }
+
+    public static boolean isDir(String filename) {
+        File dir = new File(filename);
+        if (!dir.isDirectory())
+            return false;
+
+        // find an image, image folder
+        File[] files = dir.listFiles();
+        if (files != null)
+            for (File f : dir.listFiles()) {
+                if (f.isFile() && Utils.isImage(f.getName())) {
+                    return true;
+                }
+            }
+
         return false;
     }
 
@@ -340,9 +356,15 @@ public final class Utils {
         return dir;
     }
 
-    public static File getCoverCacheFile(String identifier, String extension) {
+    public static File getCoverCacheFile(Comic c) {
+        CRC32 crc = new CRC32();
+        crc.update(c.getFile().toString().getBytes());
+        return getCoverCacheFile(String.format("%08X", crc.getValue()),"jpg");
+    }
+
+    private static File getCoverCacheFile(String identifier, String extension) {
         File dir = getCacheFolder();
-        return new File(dir, "cover-"+Utils.MD5(identifier)+(extension!=null?"."+extension:""));
+        return new File(dir, "cover-" + identifier + (extension != null && !extension.isEmpty() ? "." + extension : ""));
     }
 
     public static void deleteCoverCacheFile(Comic comic) {
@@ -434,16 +456,28 @@ public final class Utils {
 
     // remove probably stale folders, exempt files (covers)
     public static void cleanCacheDir(){
+        final List<Comic> comics = Storage.getStorage(MainApplication.getAppContext()).listComics();
         new Thread(){
             @Override
             public void run() {
+                Set covers = new HashSet<String>(comics.size());
+                for (Comic c : comics ) {
+                    covers.add(Utils.getCoverCacheFile(c).getName());
+                }
+                comics.clear();
                 File cacheDir = getCacheFolder();
                 File[] files = cacheDir.listFiles();
                 if (files!=null)
                     for (File f: files) {
+                        // leftover unpacked comics
                         if (f.isDirectory())
                             rmDir(f,true);
+                        // covers without matching db book entry
+                        else if (!covers.contains(f.getName())) {
+                            f.delete();
+                        }
                     }
+                covers.clear();
             }
         }.run();
     }
