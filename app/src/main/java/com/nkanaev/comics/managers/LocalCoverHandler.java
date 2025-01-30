@@ -6,7 +6,9 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
 import com.nkanaev.comics.Constants;
+import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.model.Comic;
+import com.nkanaev.comics.model.Storage;
 import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
 import com.nkanaev.comics.view.CoverImageView;
@@ -33,13 +35,30 @@ public class LocalCoverHandler extends RequestHandler {
 
     @Override
     public Result load(Request data, int networkPolicy) throws IOException {
-        Bitmap cover = getCover(data.uri);
+        Bitmap cover = getCover(data.uri, null);
         return new Result(cover, Picasso.LoadedFrom.DISK);
     }
 
-    public static Bitmap getCover(Uri comicUri) throws IOException {
+    public static Bitmap createCover(Comic c, InputStream is) throws IOException {
+        if (c == null)
+            return null;
 
-        File coverFile = Utils.getCoverCacheFile(comicUri.getPath(), "jpg");
+        return getCover(getComicCoverUri(c), is);
+    }
+
+    public static Bitmap getCover(Comic c) throws IOException {
+        if (c == null)
+            return null;
+
+        return getCover(getComicCoverUri(c), null);
+    }
+
+    private static Bitmap getCover(Uri comicUri, InputStream coverStream) throws IOException {
+        Context ctx = MainApplication.getAppContext();
+
+        Integer id = Integer.valueOf(comicUri.getFragment());
+        Comic c = Storage.getStorage(ctx).getComic(id);
+        File coverFile = Utils.getCoverCacheFile(c);
 
         // reuse saved cover cache file
         if (coverFile.isFile()) {
@@ -56,14 +75,23 @@ public class LocalCoverHandler extends RequestHandler {
         BufferedInputStream bis = null;
         FileOutputStream outputStream = null;
         try {
-            parser = ParserFactory.create(comicUri.getPath());
+            InputStream stream;
+            if ( coverStream != null) {
+                stream = coverStream;
+            } else {
+                parser = ParserFactory.create(comicUri.getPath());
 
-            if (parser == null)
-                throw new IOException("no parser for '" + comicUri + "'.");
-            if (parser.numPages() < 1)
-                throw new IOException("comic '" + comicUri + "' has no pages.");
+                if (parser == null)
+                    throw new IOException("no parser for '" + comicUri + "'.");
+                if (parser.numPages() < 1)
+                    throw new IOException("comic '" + comicUri + "' has no pages.");
 
-            InputStream stream = parser.getPage(0);
+                stream = parser.getPage(0);
+
+                // update db entry
+                Storage.getStorage(ctx).updateBook(c.getId(), parser.getType(), parser.numPages());
+            }
+
             bis = new BufferedInputStream(stream);
             byte[] data = Utils.toByteArray(bis);
 
@@ -87,7 +115,7 @@ public class LocalCoverHandler extends RequestHandler {
                 result = Bitmap.createBitmap(result, 0, 0, width, hLimit);
                 oldResult.recycle();
             } else if (width > height && width > wLimit) {
-                result = Bitmap.createBitmap(result, width-wLimit-1, 0, wLimit, height);
+                result = Bitmap.createBitmap(result, width - wLimit - 1, 0, wLimit, height);
                 oldResult.recycle();
             }
 
@@ -96,10 +124,15 @@ public class LocalCoverHandler extends RequestHandler {
             if (!folder.exists())
                 folder.mkdirs();
 
-            outputStream = new FileOutputStream(coverFile);
-            boolean success = result.compress(Bitmap.CompressFormat.JPEG, 85, outputStream);
-            if (!success)
-                coverFile.delete();
+            // cache result
+            synchronized (LocalCoverHandler.class) {
+                if (coverFile != null) {
+                    outputStream = new FileOutputStream(coverFile);
+                    boolean success = result.compress(Bitmap.CompressFormat.JPEG, 85, outputStream);
+                    if (!success)
+                        coverFile.delete();
+                }
+            }
 
             return result;
         } catch (Exception e) {
@@ -116,10 +149,12 @@ public class LocalCoverHandler extends RequestHandler {
     }
 
     public static Uri getComicCoverUri(Comic comic) {
-        return new Uri.Builder()
-                .scheme(HANDLER_URI)
-                .path(comic.getFile().getAbsolutePath())
-                .fragment(comic.getType())
-                .build();
+        Uri.Builder b = new Uri.Builder().scheme(HANDLER_URI);
+        if (comic != null) {
+            b.path(comic.getFile().getAbsolutePath());
+            // fragment containing the db id is actually used
+            b.fragment(String.valueOf(comic.getId()));
+        }
+        return b.build();
     }
 }
