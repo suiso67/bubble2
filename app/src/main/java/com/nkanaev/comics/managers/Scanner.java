@@ -9,7 +9,6 @@ import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
-import com.nkanaev.comics.parsers.DirectoryParser;
 import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
 
@@ -70,7 +69,7 @@ public class Scanner {
     }
 
     public void scanLibrary() {
-        scanLibrary(null,false);
+        scanLibrary(null, false);
     }
 
     public void scanLibrary(File limitToSubFolder, boolean refreshAll) {
@@ -175,87 +174,97 @@ public class Scanner {
                     }
                 }
 */
-                // search and add "unknown" comics
+                File baseFolder = mSubFolder != null ? mSubFolder : libDirFile;
+                // initial run, add to db for quick ui result, parse in second pass
                 Deque<File> directories = new ArrayDeque<>();
-                directories.add(mSubFolder != null ? mSubFolder : libDirFile);
+                directories.add(baseFolder);
                 while (!directories.isEmpty()) {
                     if (mIsStopped)
                         break;
 
                     File dir = directories.pop();
                     File[] files = dir.listFiles();
+                    // no files, no fun
                     if (files == null)
                         continue;
 
-                    int i = 0;
                     for (File file : files) {
-                        i++;
                         if (mIsStopped)
                             break;
 
                         // add folder to search list, but continue (might be a dir-comic)
                         if (mSubFolder == null && file.isDirectory()) {
                             directories.add(file);
-                        } else if (file.isFile() && !Utils.isArchive(file.getName())) {
+                        }
+
+                        if (file.isFile() && !Utils.isArchive(file.getName())) {
                             // ignore unknown files
+                            continue;
+                        } else if (file.isDirectory() && !Utils.isDir(file.getAbsolutePath())) {
+                            // ignore non-image folders
                             continue;
                         }
 
-                        // skip known good comics (pages>0) to keep startup fast
-                        // unless we are limited to a subfolder, then the refresh is forced
-                        if (!mRefreshAll) {
-                            Comic storedComic = findComicInList(storedComics,file);
-                            if (storedComic!=null && storedComic.getTotalPages()>0) {
-                                storedComics.remove(storedComic);
-                                continue;
-                            }
-                        }
-
-                        Parser parser = null;
-                        try {
-                            parser = ParserFactory.create(file);
-                            Log.d("Scanner#148", file.toString());
-                            // no parser? check log
-                            if (parser == null)
-                                continue;
-
-                            int count = 0;
-                            try {
-                                parser.parse();
-                                count = parser.numPages();
-                            } catch (Exception e) {
-                                Log.e("Scanner", "parse", e);
-                            }
-
-                            // ignore non-comic folders
-                            if (parser.getType().equals(DirectoryParser.TYPE) && count < 1)
-                                continue;
-
-                            // add/update comic meta data for next run
-                            // keep empty comic files, might point to bugs
-                            Comic storedComic = findComicInList(storedComics,file);
-                            if (storedComic!=null) {
-                                storage.updateBook(storedComic.getId(), parser.getType(), count);
-                                storedComics.remove(storedComic);
-                                Utils.deleteCoverCacheFile(storedComic);
-                            } else {
-                                storage.addBook(file, parser.getType(), count);
-                            }
-                            // update only every 10th comic for performance reasons
-                            if (i % 10 == 0) notifyMediaUpdated();
-                        } catch (Exception e) {
-                            Log.e("Scanner", "update", e);
+                        // add/update comic meta data for next run
+                        // keep empty comic files, might point to bugs
+                        Comic storedComic = findComicInList(storedComics, file);
+                        // new book
+                        if (storedComic != null){
+                            // memorize "refound" comic
+                            storedComics.remove(storedComic);
+                        } else {
+                            storage.addBook(file, null, 0);
                         }
                     }
                 }
 
-                // delete removed comics/cleanup cover cache
+                // leftover storedComics weren't found, let's remove them
                 // unless we were rudely interrupted
                 if (!mIsStopped)
                     for (Comic missing : storedComics) {
                         Utils.deleteCoverCacheFile(missing);
                         storage.removeComic(missing.getId());
                     }
+
+                // second pass: search and parse zero-page comics
+                storedComics = storage.listComics(mSubFolder != null ? mSubFolder.toString() : null);
+                for (int i = 0; i < storedComics.size() && !mIsStopped; i++) {
+
+                    Comic storedComic = storedComics.get(i);
+                    // ignore known parsed comics, unless update is forced
+                    if (!mRefreshAll && storedComic.getTotalPages() > 0)
+                        continue;
+
+                    Parser parser = null;
+                    int count = 0;
+                    try {
+                        parser = ParserFactory.create(storedComic.getFile());
+                        Log.d("Scanner#244", storedComic.getFile().toString());
+                        // no parser? check log
+                        if (parser == null)
+                            continue;
+
+                        try {
+                            parser.parse();
+                            count = parser.numPages();
+                            // cache cover using already initialized parser
+                            LocalCoverHandler.createCover(storedComic,parser.getPage(0));
+                        } catch (Exception e) {
+                            Log.e("Scanning#253", "parse", e);
+                        } finally {
+                            Utils.close(parser);
+                        }
+
+                        // update comic, keep empty comic files, might point to bugs
+                        storage.updateBook(storedComic.getId(), parser.getType(), count);
+                        Utils.deleteCoverCacheFile(storedComic);
+
+                        // update only every 10th comic for performance reasons
+                        if (i % 10 == 0) notifyMediaUpdated();
+                    } catch (Exception e) {
+                        Log.e("Scanner", "update", e);
+                    }
+                }
 
             } finally {
                 mIsStopped = false;
