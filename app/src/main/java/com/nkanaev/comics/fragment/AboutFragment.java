@@ -124,7 +124,7 @@ public class AboutFragment extends Fragment implements View.OnClickListener {
                             getDependencyEntries("7-Zip-JBinding-4Android")),
                     "GNU LGPL 2.1 or later + unRAR restriction",
                     "Igor Pavlov, Boris Brodski, Fredrik Claesson",
-                    "https://github.com/omicronapps/7-Zip-JBinding-4Android"
+                    "https://github.com/edeso/7-Zip-JBinding-4Android"
             ),
             new LibraryDescription(
                     "Zstd-jni",
