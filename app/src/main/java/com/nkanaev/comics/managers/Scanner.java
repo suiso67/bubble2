@@ -178,6 +178,7 @@ public class Scanner {
                 // initial run, add to db for quick ui result, parse in second pass
                 Deque<File> directories = new ArrayDeque<>();
                 directories.add(baseFolder);
+                long lastNotifyMediaUpdated = Utils.now();
                 while (!directories.isEmpty()) {
                     if (mIsStopped)
                         break;
@@ -215,6 +216,12 @@ public class Scanner {
                         } else {
                             storage.addBook(file, null, 0);
                         }
+                    }
+
+                    // notify for each folder, maximum every 0.5s
+                    if (Utils.milliSecondsSince(lastNotifyMediaUpdated) > 500) {
+                        notifyMediaUpdated();
+                        lastNotifyMediaUpdated = Utils.now();
                     }
                 }
 
@@ -259,8 +266,11 @@ public class Scanner {
                         storage.updateBook(storedComic.getId(), parser.getType(), count);
                         Utils.deleteCoverCacheFile(storedComic);
 
-                        // update only every 10th comic for performance reasons
-                        if (i % 10 == 0) notifyMediaUpdated();
+                        // notify library views, maximum every 0.5s
+                        if (Utils.milliSecondsSince(lastNotifyMediaUpdated) > 500) {
+                            notifyMediaUpdated();
+                            lastNotifyMediaUpdated = Utils.now();
+                        }
                     } catch (Exception e) {
                         Log.e("Scanner", "update", e);
                     }
