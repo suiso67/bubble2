@@ -25,9 +25,9 @@ repositories {
     mavenLocal()
     google()
     // jp2-android repo (MIA)
-    //maven { url "https://jcenter.bintray.com/" }
+    //maven { url = "https://jcenter.bintray.com/" }
     // 7-Zip-JBinding-4Android 16.02-2.02 repo
-    maven { url 'https://jitpack.io' }
+    maven { url = 'https://jitpack.io' }
     // commons-compress rc-1 location
     //maven { url "https://repository.apache.org/content/repositories/orgapachecommons-1628/" }
 }
