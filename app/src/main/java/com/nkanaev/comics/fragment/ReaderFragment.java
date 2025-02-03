@@ -250,7 +250,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 .addRequestHandler(mComicHandler)
                 .build();
 
-        mGestureDetector = new GestureDetector(getActivity(), new MyTouchListener());
+        mGestureDetector = new GestureDetector(getActivity(), new NavigationOverlayTouchListener());
 
         SharedPreferences preferences = MainApplication.getPreferences();
         int viewModeInt = preferences.getInt(
@@ -840,7 +840,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         }
     }
 
-    private class MyTouchListener extends GestureDetector.SimpleOnGestureListener {
+    private class NavigationOverlayTouchListener extends GestureDetector.SimpleOnGestureListener {
         /**
          * switch menus and pageseekbar on/off on long press anywhere
          *
@@ -859,14 +859,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             float width = (float) mViewPager.getWidth();
             float height = (float) mViewPager.getHeight();
 
-            // hotspot only 60% centered
-            int div = 10;
-            if (x < width / div * 2 || x > width / div * 8
-                    || y < height / div * 2 || y > height / div * 8)
-                return;
+            boolean isXInnerTouch = isInnerTouch(x, width, (float) 0.2);
+            boolean isYInnerTouch = isInnerTouch(y, height, (float) 0.2);
 
-            boolean fullScreen = !isFullscreen();
-            setFullscreen(fullScreen);
+            if (isXInnerTouch && isYInnerTouch) {
+                toggleFullscreen();
+            }
         }
 
         /**
@@ -878,45 +876,69 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
             float x = e.getX();
+            float width = (float) mViewPager.getWidth();
 
-            // tap left side
-            if (x < (float) mViewPager.getWidth() / 10 * 3) {
-                if (mIsLeftToRight) {
-                    if (getCurrentPage() == 1)
-                        hitBeginning();
-                    else
-                        setCurrentPage(getCurrentPage() - 1);
+            boolean isLeftTouch = isLeftTouch(x, width, (float) 0.3);
+            boolean isRightTouch = isRightTouch(x, width, (float) 0.3);
+            if (isLeftTouch || isRightTouch) {
+                handlePageTurning(isLeftTouch);
+                return true;
+            } else {
+                if (!isFullscreen()) {
+                    setFullscreen(true);
+                    return true;
                 } else {
-                    if (getCurrentPage() == mPageCount)
-                        hitEnding();
-                    else
-                        setCurrentPage(getCurrentPage() + 1);
+                    return false;
                 }
-                return true;
             }
-            // tap right side
-            else if (x > (float) mViewPager.getWidth() / 10 * 7) {
+        }
+
+        private void handlePageTurning(boolean isLeftTouch) {
+            if (isLeftTouch) {
                 if (mIsLeftToRight) {
-                    if (getCurrentPage() == mPageCount)
-                        hitEnding();
-                    else
-                        setCurrentPage(getCurrentPage() + 1);
+                    goToPreviousPage();
                 } else {
-                    if (getCurrentPage() == 1)
-                        hitBeginning();
-                    else
-                        setCurrentPage(getCurrentPage() - 1);
+                    goToNextPage();
                 }
-                return true;
+            } else {
+                if (mIsLeftToRight) {
+                    goToNextPage();
+                } else {
+                    goToPreviousPage();
+                }
             }
+        }
 
-            // switch of menus if not navigating
-            if (!isFullscreen()) {
-                setFullscreen(true);
-                return true;
+        private void goToPreviousPage() {
+            if (getCurrentPage() == 1) {
+                hitBeginning();
+            } else {
+                setCurrentPage(getCurrentPage() - 1);
             }
+        }
 
-            return false;
+        private void goToNextPage() {
+            if (getCurrentPage() == mPageCount) {
+                hitEnding();
+            } else {
+                setCurrentPage(getCurrentPage() + 1);
+            }
+        }
+
+        private boolean isInnerTouch(float point, float length, float percentage) {
+            return !isOuterTouch(point, length, percentage);
+        }
+
+        private boolean isOuterTouch(float point, float length, float percentage) {
+            return isLeftTouch(point, length, percentage) || isRightTouch(point, length, percentage);
+        }
+
+        private boolean isLeftTouch(float point, float length, float percentage) {
+            return point < length * percentage;
+        }
+
+        private boolean isRightTouch(float point, float length, float percentage) {
+            return point > length * (1 - percentage);
         }
     }
 
@@ -1022,6 +1044,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         }
 
         mIsFullscreen = fullscreen;
+    }
+
+    private void toggleFullscreen() {
+        setFullscreen(!isFullscreen());
     }
 
     private boolean isFullscreen() {
