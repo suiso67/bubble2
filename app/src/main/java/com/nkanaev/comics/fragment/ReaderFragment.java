@@ -75,7 +75,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     public static final String STATE_PAGE_ROTATIONS = "STATE_PAGE_ROTATIONS";
 
     private ComicViewPager mViewPager;
-    private View mPageNavLayout;
+    private View mNavigationOverlay;
     private SeekBar mPageSeekBar;
     private TextView mPageNavTextView;
     private TextView mPageInfoTextView;
@@ -265,10 +265,10 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_reader, container, false);
-        mPageNavLayout = getActivity().findViewById(R.id.pageNavLayout);
+        mNavigationOverlay = getActivity().findViewById(R.id.navigation_overlay);
 
         // setup seekbar
-        mPageSeekBar = (SeekBar) mPageNavLayout.findViewById(R.id.pageSeekBar);
+        mPageSeekBar = (SeekBar) mNavigationOverlay.findViewById(R.id.pageSeekBar);
         mPageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -292,12 +292,12 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         });
         updateSeekBar();
 
-        mPageNavTextView = (TextView) mPageNavLayout.findViewById(R.id.pageNavTextView);
+        mPageNavTextView = (TextView) mNavigationOverlay.findViewById(R.id.pageNavTextView);
         mPageNavTextView.setText(""); // strip dummy text
 
         // setup page info button
-        mPageInfoButton = mPageNavLayout.findViewById(R.id.pageInfoButton);
-        mPageInfoTextView = mPageNavLayout.findViewById(R.id.pageInfoTextView);
+        mPageInfoButton = mNavigationOverlay.findViewById(R.id.pageInfoButton);
+        mPageInfoTextView = mNavigationOverlay.findViewById(R.id.pageInfoTextView);
         mPageInfoTextView.setText(""); // strip dummy text
         setPageInfoShown(mIsPageInfoShown);
         View.OnClickListener ocl = new View.OnClickListener() {
@@ -966,7 +966,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
         if (fullscreen) {
             if (actionBar != null) actionBar.hide();
-            mPageNavLayout.setVisibility(View.INVISIBLE);
+            mNavigationOverlay.setVisibility(View.INVISIBLE);
 
 //            wic.hide(WindowInsetsCompat.Type.systemBars());
 
@@ -1004,7 +1004,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
             mPageSeekBar.setMax(mPageCount - 1);
             if (actionBar != null) actionBar.show();
-            mPageNavLayout.setVisibility(View.VISIBLE);
+            mNavigationOverlay.setVisibility(View.VISIBLE);
 
             // WORKAROUND:
             // status bar & navigation bar background won't show, being transparent,

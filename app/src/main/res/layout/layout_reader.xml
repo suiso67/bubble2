@@ -12,31 +12,30 @@
             android:layout_height="match_parent"
             android:fitsSystemWindows="false"/>
     <RelativeLayout
+            android:id="@+id/navigation_overlay"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fitsSystemWindows="true">
+            android:background="@color/darkest_trans40"
+            android:fitsSystemWindows="false">
         <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar_reader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/darkest_semitransparent"
-                app:theme="@style/MyDarkToolbarTheme"/>
+                app:theme="@style/MyDarkToolbarTheme"
+                android:fitsSystemWindows="true"/>
         <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
-                android:layout_marginBottom="40dp"
-                android:id="@+id/pageNavLayout"
-                android:visibility="invisible">
+                android:fitsSystemWindows="true">
             <LinearLayout
                     android:clickable="true"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
 
                     android:orientation="vertical"
-                    android:background="@drawable/reader_nav_bg"
                     android:gravity="center_horizontal"
                     android:paddingTop="10dp"
                     android:paddingLeft="10dp"
