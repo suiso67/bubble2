@@ -34,6 +34,7 @@ import androidx.fragment.app.Fragment;
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
+import androidx.preference.PreferenceManager;
 import com.nkanaev.comics.BuildConfig;
 import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.MainApplication;
@@ -58,6 +59,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.lang.IllegalStateException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
@@ -250,7 +252,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 .addRequestHandler(mComicHandler)
                 .build();
 
-        mGestureDetector = new GestureDetector(getActivity(), new SingleTapConfirmNavigationOverlayTouchListener());
+        initGestureDetector();
 
         SharedPreferences preferences = MainApplication.getPreferences();
         int viewModeInt = preferences.getInt(
@@ -847,6 +849,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
             boolean isLeftTouch = isLeftTouch(x, width, (float) 0.3);
             boolean isRightTouch = isRightTouch(x, width, (float) 0.3);
+
             if (isLeftTouch || isRightTouch) {
                 handlePageTurning(isLeftTouch);
                 return true;
@@ -861,7 +864,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
         }
 
-        private void handlePageTurning(boolean isLeftTouch) {
+        protected void handlePageTurning(boolean isLeftTouch) {
             if (isLeftTouch) {
                 if (mIsLeftToRight) {
                     goToPreviousPage();
@@ -877,7 +880,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
         }
 
-        private void goToPreviousPage() {
+        protected void goToPreviousPage() {
             if (getCurrentPage() == 1) {
                 hitBeginning();
             } else {
@@ -885,7 +888,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
         }
 
-        private void goToNextPage() {
+        protected void goToNextPage() {
             if (getCurrentPage() == mPageCount) {
                 hitEnding();
             } else {
@@ -893,19 +896,19 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
         }
 
-        private boolean isInnerTouch(float point, float length, float percentage) {
+        protected boolean isInnerTouch(float point, float length, float percentage) {
             return !isOuterTouch(point, length, percentage);
         }
 
-        private boolean isOuterTouch(float point, float length, float percentage) {
+        protected boolean isOuterTouch(float point, float length, float percentage) {
             return isLeftTouch(point, length, percentage) || isRightTouch(point, length, percentage);
         }
 
-        private boolean isLeftTouch(float point, float length, float percentage) {
+        protected boolean isLeftTouch(float point, float length, float percentage) {
             return point < length * percentage;
         }
 
-        private boolean isRightTouch(float point, float length, float percentage) {
+        protected boolean isRightTouch(float point, float length, float percentage) {
             return point > length * (1 - percentage);
         }
     }
@@ -928,6 +931,27 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         @Override
         public void onLongPress(MotionEvent e) {
             handleEvent(e);
+        }
+
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+            float x = e.getX();
+            float width = (float) mViewPager.getWidth();
+
+            boolean isLeftTouch = isLeftTouch(x, width, (float) 0.3);
+            boolean isRightTouch = isRightTouch(x, width, (float) 0.3);
+
+            if (isLeftTouch || isRightTouch) {
+                handlePageTurning(isLeftTouch);
+                return true;
+            } else {
+                if (!isFullscreen()) {
+                    setFullscreen(true);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
         }
     }
 
@@ -1174,6 +1198,30 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             Utils.close(fOut);
             //Utils.close(bitmap);
         }
+    }
+
+    private void initGestureDetector() {
+        final String prefKeySingleTap = getString(R.string.preferences_reader_nav_overlay_activation_type_single_tap);
+        final String prefKeySingleTapConfirmed = getString(R.string.preferences_reader_nav_overlay_activation_type_single_tap_confirmed);
+        final String prefKeyLongPress = getString(R.string.preferences_reader_nav_overlay_activation_type_long_press);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String activationType = preferences.getString(
+                getString(R.string.preferences_reader_nav_overlay_activation_type_key),
+                getString(R.string.preferences_reader_nav_overlay_activation_type_long_press));
+
+        GestureDetector.SimpleOnGestureListener listener;
+        if (activationType.equals(prefKeySingleTap)) {
+            listener = new SingleTapUpNavigationOverlayTouchListener();
+        } else if (activationType.equals(prefKeySingleTapConfirmed)) {
+            listener = new SingleTapConfirmNavigationOverlayTouchListener();
+        } else if (activationType.equals(prefKeyLongPress)) {
+            listener = new LongPressNavigationOverlayTouchListener();
+        } else {
+            throw new IllegalStateException(String.format("Unknown activationType %s", activationType));
+        }
+
+        mGestureDetector = new GestureDetector(getActivity(), listener);
     }
 
     @Override

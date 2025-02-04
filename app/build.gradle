@@ -149,6 +149,8 @@ dependencies {
     //implementation files('lib/jp2-android-1.0.3.aar')
     implementation 'dev.keiji.jp2:jp2-android:1.0.5'
 
+    implementation "androidx.preference:preference:1.2.1"
+
     // workaround fix 'Duplicate class kotlin.collections.jdk8.CollectionsJDK8Kt found in modules ...'
     //implementation(platform("org.jetbrains.kotlin:kotlin-bom:2.0.0"))
 
