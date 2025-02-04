@@ -250,7 +250,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                 .addRequestHandler(mComicHandler)
                 .build();
 
-        mGestureDetector = new GestureDetector(getActivity(), new NavigationOverlayTouchListener());
+        mGestureDetector = new GestureDetector(getActivity(), new SingleTapConfirmNavigationOverlayTouchListener());
 
         SharedPreferences preferences = MainApplication.getPreferences();
         int viewModeInt = preferences.getInt(
@@ -841,40 +841,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     }
 
     private class NavigationOverlayTouchListener extends GestureDetector.SimpleOnGestureListener {
-        /**
-         * switch menus and pageseekbar on/off on long press anywhere
-         *
-         * @param e The initial on down motion event that started the longpress.
-         */
-        @Override
-        public void onLongPress(MotionEvent e) {
-            // always switch of menus first
-            if (!isFullscreen()) {
-                setFullscreen(true);
-                return;
-            }
-
-            float x = e.getX();
-            float y = e.getY();
-            float width = (float) mViewPager.getWidth();
-            float height = (float) mViewPager.getHeight();
-
-            boolean isXInnerTouch = isInnerTouch(x, width, (float) 0.2);
-            boolean isYInnerTouch = isInnerTouch(y, height, (float) 0.2);
-
-            if (isXInnerTouch && isYInnerTouch) {
-                toggleFullscreen();
-            }
-        }
-
-        /**
-         * single taps on left/ride side switch to prev/next page
-         *
-         * @param e The down motion event of the single-tap.
-         * @return boolean true if the event is consumed, else false
-         */
-        @Override
-        public boolean onSingleTapConfirmed(MotionEvent e) {
+        protected boolean handleEvent(MotionEvent e) {
             float x = e.getX();
             float width = (float) mViewPager.getWidth();
 
@@ -888,6 +855,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
                     setFullscreen(true);
                     return true;
                 } else {
+                    setFullscreen(false);
                     return false;
                 }
             }
@@ -939,6 +907,27 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
 
         private boolean isRightTouch(float point, float length, float percentage) {
             return point > length * (1 - percentage);
+        }
+    }
+
+    private class SingleTapUpNavigationOverlayTouchListener extends NavigationOverlayTouchListener {
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            return handleEvent(e);
+        }
+    }
+
+    private class SingleTapConfirmNavigationOverlayTouchListener extends NavigationOverlayTouchListener {
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+            return handleEvent(e);
+        }
+    }
+
+    private class LongPressNavigationOverlayTouchListener extends NavigationOverlayTouchListener {
+        @Override
+        public void onLongPress(MotionEvent e) {
+            handleEvent(e);
         }
     }
 
@@ -1044,10 +1033,6 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
         }
 
         mIsFullscreen = fullscreen;
-    }
-
-    private void toggleFullscreen() {
-        setFullscreen(!isFullscreen());
     }
 
     private boolean isFullscreen() {
