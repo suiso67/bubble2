@@ -843,12 +843,28 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
     }
 
     private class NavigationOverlayTouchListener extends GestureDetector.SimpleOnGestureListener {
+        private final float THRESHOLD_MAX = (float) 0.3;
+        private final float THRESHOLD_MIN = (float) 0.1;
+
+        protected float mActivationThreshold;
+
+        public NavigationOverlayTouchListener() {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+            int numerator = preferences.getInt(
+                getString(R.string.preferences_reader_nav_activation_threshold_key),
+                0);
+
+            float diff = THRESHOLD_MAX - THRESHOLD_MIN;
+            float percentage = numerator / (float) 100.0;
+            mActivationThreshold = THRESHOLD_MIN + (diff * percentage);
+        }
+
         protected boolean handleEvent(MotionEvent e) {
             float x = e.getX();
             float width = (float) mViewPager.getWidth();
 
-            boolean isLeftTouch = isLeftTouch(x, width, (float) 0.3);
-            boolean isRightTouch = isRightTouch(x, width, (float) 0.3);
+            boolean isLeftTouch = isLeftTouch(x, width, mActivationThreshold);
+            boolean isRightTouch = isRightTouch(x, width, mActivationThreshold);
 
             if (isLeftTouch || isRightTouch) {
                 handlePageTurning(isLeftTouch);
@@ -938,8 +954,8 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             float x = e.getX();
             float width = (float) mViewPager.getWidth();
 
-            boolean isLeftTouch = isLeftTouch(x, width, (float) 0.3);
-            boolean isRightTouch = isRightTouch(x, width, (float) 0.3);
+            boolean isLeftTouch = isLeftTouch(x, width, mActivationThreshold);
+            boolean isRightTouch = isRightTouch(x, width, mActivationThreshold);
 
             if (isLeftTouch || isRightTouch) {
                 handlePageTurning(isLeftTouch);

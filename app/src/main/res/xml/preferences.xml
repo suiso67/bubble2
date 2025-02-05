@@ -5,6 +5,9 @@
         app:title="@string/preferences_reader_nav_overlay_activation_type"
         app:entries="@array/reader_nav_overlay_activation_types"
         app:entryValues="@array/reader_nav_overlay_activation_types"
-        app:useSimpleSummaryProvider="true"
-        />
+        app:useSimpleSummaryProvider="true" />
+
+    <SeekBarPreference
+        app:key="@string/preferences_reader_nav_activation_threshold_key"
+        app:title="@string/preferences_reader_nav_activation_threshold" />
 </PreferenceScreen>

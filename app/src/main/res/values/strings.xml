@@ -86,4 +86,7 @@
     <string name="preferences_reader_nav_overlay_activation_type_single_tap">Single tap</string>
     <string name="preferences_reader_nav_overlay_activation_type_single_tap_confirmed">Single tap allowing double tap to zoom(slower)</string>
     <string name="preferences_reader_nav_overlay_activation_type_long_press">Long tap</string>
+
+    <string name="preferences_reader_nav_activation_threshold">Left/Right tap area to turn page</string>
+    <string name="preferences_reader_nav_activation_threshold_key">preferences_reader_nav_activation_threshold_key</string>
 </resources>
