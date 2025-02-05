@@ -1003,8 +1003,6 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             if (actionBar != null) actionBar.hide();
             mNavigationOverlay.setVisibility(View.INVISIBLE);
 
-//            wic.hide(WindowInsetsCompat.Type.systemBars());
-
             int flag = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                     | View.SYSTEM_UI_FLAG_FULLSCREEN;
@@ -1015,20 +1013,7 @@ public class ReaderFragment extends Fragment implements View.OnTouchListener {
             }
             decorView.setSystemUiVisibility(flag);
 
-            // replaced by value in ReaderTheme style
-            /*
-            // allow full screen over display cutouts/holes (since Android 9)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                Window w = getActivity().getWindow();
-                WindowManager.LayoutParams layoutParams = w.getAttributes();
-                layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-                w.setAttributes(layoutParams);
-            }
-            */
-
         } else {
-//            wic.show(WindowInsetsCompat.Type.systemBars());
-
             int flag = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
             if (Utils.isKitKatOrLater()) {

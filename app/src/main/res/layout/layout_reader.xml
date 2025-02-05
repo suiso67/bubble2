@@ -15,21 +15,21 @@
             android:id="@+id/navigation_overlay"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/darkest_trans40"
             android:fitsSystemWindows="false">
         <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar_reader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:theme="@style/MyDarkToolbarTheme"
-                android:fitsSystemWindows="true"/>
+                android:background="@color/reader_nav_bg"
+                app:theme="@style/MyDarkToolbarTheme"/>
         <RelativeLayout
+                android:id="@+id/reader_bottom_nav_wrapper"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
-                android:fitsSystemWindows="true">
+                android:background="@color/reader_nav_bg">
             <LinearLayout
                     android:clickable="true"
                     android:layout_width="match_parent"
