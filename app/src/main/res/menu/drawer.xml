@@ -9,6 +9,9 @@
         <item android:id="@+id/drawer_menu_browser"
               android:icon="@drawable/ic_folder_open_24"
               android:title="@string/menu_browser"/>
+        <item android:id="@+id/drawer_menu_thumbnail_browser"
+              android:icon="@drawable/ic_folder_24"
+              android:title="@string/menu_thumbnail_browser"/>
         <item android:id="@+id/drawer_menu_about"
               android:icon="@drawable/ic_info_24"
               android:title="@string/menu_about"/>

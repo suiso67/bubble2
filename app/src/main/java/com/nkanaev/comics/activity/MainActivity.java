@@ -18,6 +18,7 @@ import com.google.android.material.navigation.NavigationView.OnNavigationItemSel
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.fragment.AboutFragment;
 import com.nkanaev.comics.fragment.BrowserFragment;
+import com.nkanaev.comics.fragment.ThumbnailBrowserFragment;
 import com.nkanaev.comics.fragment.LibraryFragment;
 import com.nkanaev.comics.fragment.PreferencesFragment;
 import com.nkanaev.comics.managers.LocalCoverHandler;
@@ -202,6 +203,9 @@ public class MainActivity extends AppCompatActivity
                     case R.id.drawer_menu_browser:
                         setFragment(new BrowserFragment());
                         break;
+                    case R.id.drawer_menu_thumbnail_browser:
+                        setFragment(new ThumbnailBrowserFragment());
+                        break;
                     case R.id.drawer_menu_about:
                         setFragment(new AboutFragment());
                         break;
@@ -221,16 +225,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onBackStackChanged() {
         mDrawerToggle.setDrawerIndicatorEnabled(getSupportFragmentManager().getBackStackEntryCount() == 0);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (!popFragment()) {
-            finish();
-        }
-        // activating it will disable back button in library browser
-        // so yeah, even if IntelliJ sugests it, keep the super call disabled
-        //super.onBackPressed();
     }
 
     @Override

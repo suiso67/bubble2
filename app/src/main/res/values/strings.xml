@@ -49,6 +49,7 @@
 
     <string name="menu_library">Library</string>
     <string name="menu_browser">Browser</string>
+    <string name="menu_thumbnail_browser">Thumbnail Browser</string>
     <string name="menu_about">About</string>
     <string name="menu_preferences">Preferences</string>
 

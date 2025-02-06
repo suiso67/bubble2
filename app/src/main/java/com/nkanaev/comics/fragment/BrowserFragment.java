@@ -34,11 +34,12 @@ public class BrowserFragment extends Fragment
     private final static String STATE_CURRENT_DIR = "stateCurrentDir";
 
     private ListView mListView;
-    private DirectoryAdapter mBrowserAdapter;
-    private File mCurrentDir;
-    private File mRootDir;
-    private File[] mSubdirs = new File[]{};
     private SwipeRefreshLayout mRefreshLayout;
+
+    private File mRootDir;
+    protected DirectoryAdapter mBrowserAdapter;
+    protected File mCurrentDir;
+    protected File[] mSubdirs = new File[]{};
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -60,20 +61,10 @@ public class BrowserFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_browser, container, false);
 
-        mBrowserAdapter = new ThumbnailDirectoryAdapter(getContext(), mCurrentDir, mSubdirs);
-        mListView = (ListView) view.findViewById(R.id.listview_browser);
-        mListView.setAdapter(mBrowserAdapter);
-        mListView.setOnItemClickListener(this);
-        mListView.setOnItemLongClickListener(this);
+        initListView(view);
+        initRefreshView(view);
 
         setCurrentDirectory(mCurrentDir);
-
-        mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.SwipeRefreshLayout);
-        if (mRefreshLayout!=null) {
-            mRefreshLayout.setColorSchemeResources(R.color.primary);
-            mRefreshLayout.setOnRefreshListener(this);
-            mRefreshLayout.setEnabled(true);
-        }
 
         return view;
     }
@@ -94,7 +85,19 @@ public class BrowserFragment extends Fragment
         super.onDestroyView();
     }
 
-    private void setCurrentDirectory(File dir) {
+    private void initListView(View view) {
+        mBrowserAdapter = createDirectoryAdapter();
+        mListView = (ListView) view.findViewById(R.id.listview_browser);
+        mListView.setAdapter(mBrowserAdapter);
+        mListView.setOnItemClickListener(this);
+        mListView.setOnItemLongClickListener(this);
+    }
+
+    protected DirectoryAdapter createDirectoryAdapter() {
+        return new DirectoryAdapter(getContext(), mCurrentDir, mSubdirs);
+    }
+
+    protected void setCurrentDirectory(File dir) {
         mCurrentDir = dir;
         ArrayList<File> subDirs = new ArrayList<>();
 
@@ -150,6 +153,15 @@ public class BrowserFragment extends Fragment
 
         //mDirTextView.setText(dir.getAbsolutePath());
         ((MainActivity)getActivity()).setSubTitle(dir.getAbsolutePath());
+    }
+
+    private void initRefreshView(View view) {
+        mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.SwipeRefreshLayout);
+        if (mRefreshLayout!=null) {
+            mRefreshLayout.setColorSchemeResources(R.color.primary);
+            mRefreshLayout.setOnRefreshListener(this);
+            mRefreshLayout.setEnabled(true);
+        }
     }
 
     @Override

@@ -22,8 +22,6 @@ import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
 import com.squareup.picasso.Picasso;
 
-import android.util.Log;
-
 public class ThumbnailDirectoryAdapter extends DirectoryAdapter {
     private Picasso mPicasso;
 

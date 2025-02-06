@@ -19,8 +19,7 @@ import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
 
 public class DirectoryAdapter extends BaseAdapter {
-    private File mRootDir;
-
+    protected File mRootDir;
     protected Context mContext;
     protected File mCurrentDirectory;
     protected File[] mSubdirectories;
