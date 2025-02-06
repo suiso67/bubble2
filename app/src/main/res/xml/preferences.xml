@@ -9,5 +9,6 @@
 
     <SeekBarPreference
         app:key="@string/preferences_reader_nav_activation_threshold_key"
-        app:title="@string/preferences_reader_nav_activation_threshold" />
+        app:title="@string/preferences_reader_nav_activation_threshold"
+        app:summary="@string/preferences_reader_nav_activation_threshold_summary" />
 </PreferenceScreen>

@@ -89,4 +89,5 @@
 
     <string name="preferences_reader_nav_activation_threshold">Left/Right tap area to turn page</string>
     <string name="preferences_reader_nav_activation_threshold_key">preferences_reader_nav_activation_threshold_key</string>
+    <string name="preferences_reader_nav_activation_threshold_summary">10\% ~ 30\%</string>
 </resources>
