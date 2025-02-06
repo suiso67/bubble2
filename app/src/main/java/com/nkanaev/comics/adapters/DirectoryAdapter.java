@@ -11,18 +11,26 @@ import android.view.ViewGroup;
 
 import java.io.File;
 
+import com.nkanaev.comics.Constants;
+import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.managers.Utils;
 import com.nkanaev.comics.parsers.Parser;
 import com.nkanaev.comics.parsers.ParserFactory;
 
 public class DirectoryAdapter extends BaseAdapter {
-    private static final File ROOT_DIRECTORY = new File("/");
+    private File mRootDir;
 
-    private File mCurrentDirectory;
-    private File[] mSubdirectories;
+    protected Context mContext;
+    protected File mCurrentDirectory;
+    protected File[] mSubdirectories;
 
-    public DirectoryAdapter(File currentDirectory, File[] subdirectories) {
+    public DirectoryAdapter(Context context, File currentDirectory, File[] subdirectories) {
+        String rootDirPath = MainApplication.getPreferences()
+                .getString(Constants.SETTINGS_LIBRARY_DIR, "");
+        mRootDir = new File(rootDirPath);
+
+        mContext = context;
         mCurrentDirectory = currentDirectory;
         mSubdirectories = subdirectories;
     }
@@ -52,32 +60,35 @@ public class DirectoryAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Context context = parent.getContext();
-        final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        final LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.row_directory, parent, false);
         }
 
-        initPath(context, convertView, position);
-        initIcon(context, convertView, position);
+        initPath(convertView, position);
+        initIcon(convertView, position);
 
         return convertView;
     }
 
-    private void initPath(Context context, View convertView, int position) {
+    protected void initPath(View convertView, int position) {
         TextView textView = (TextView) convertView.findViewById(R.id.directory_row_text);
         File file = mSubdirectories[position];
 
-        boolean isRootDirectory = mCurrentDirectory.getAbsolutePath().equals(ROOT_DIRECTORY.getAbsolutePath());
-        if (position == 0 && !isRootDirectory) {
+        if (isParentDirectoryItem(position)) {
             textView.setText("..");
         } else {
             textView.setText(file.getName());
         }
     }
 
-    private void initIcon(Context context, View convertView, int position) {
+    protected boolean isParentDirectoryItem(int position) {
+        boolean isRootDirectory = mCurrentDirectory.getAbsolutePath().equals(mRootDir.getAbsolutePath());
+        return position == 0 && !isRootDirectory;
+    }
+
+    private void initIcon(View convertView, int position) {
         File file = mSubdirectories[position];
 
         ImageView view = (ImageView) convertView.findViewById(R.id.directory_row_icon);
@@ -86,7 +97,7 @@ public class DirectoryAdapter extends BaseAdapter {
 
         view.setImageResource(R.drawable.ic_folder_24);
         int colorRes = R.color.circle_grey;
-        circleDrawable.setColor(context.getResources().getColor(colorRes));
+        circleDrawable.setColor(mContext.getResources().getColor(colorRes));
         circle.setVisibility(View.VISIBLE);
 
         // ignore top parent dir entry
@@ -114,7 +125,7 @@ public class DirectoryAdapter extends BaseAdapter {
                     }
                 }
 
-            circleDrawable.setColor(context.getResources().getColor(colorRes));
+            circleDrawable.setColor(mContext.getResources().getColor(colorRes));
             return;
         }
 
@@ -136,6 +147,6 @@ public class DirectoryAdapter extends BaseAdapter {
             colorRes = R.color.circle_orange;
         }
 
-        circleDrawable.setColor(context.getResources().getColor(colorRes));
+        circleDrawable.setColor(mContext.getResources().getColor(colorRes));
     }
 }

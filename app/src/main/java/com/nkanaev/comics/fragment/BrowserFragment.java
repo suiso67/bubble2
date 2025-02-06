@@ -11,10 +11,13 @@ import android.view.ViewGroup;
 import android.widget.*;
 import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import com.nkanaev.comics.Constants;
 import com.nkanaev.comics.R;
+import com.nkanaev.comics.MainApplication;
 import com.nkanaev.comics.activity.MainActivity;
 import com.nkanaev.comics.activity.ReaderActivity;
 import com.nkanaev.comics.adapters.DirectoryAdapter;
+import com.nkanaev.comics.adapters.ThumbnailDirectoryAdapter;
 import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 import com.nkanaev.comics.parsers.Parser;
@@ -33,18 +36,21 @@ public class BrowserFragment extends Fragment
     private ListView mListView;
     private DirectoryAdapter mBrowserAdapter;
     private File mCurrentDir;
-    private final File mRootDir = new File("/");
+    private File mRootDir;
     private File[] mSubdirs = new File[]{};
     private SwipeRefreshLayout mRefreshLayout;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        String rootDirPath = MainApplication.getPreferences()
+                .getString(Constants.SETTINGS_LIBRARY_DIR, "");
+        mRootDir = new File(rootDirPath);
 
         if (savedInstanceState != null) {
             mCurrentDir = (File) savedInstanceState.getSerializable(STATE_CURRENT_DIR);
         } else {
-            mCurrentDir = Environment.getExternalStorageDirectory();
+            mCurrentDir = mRootDir;
         }
 
         getActivity().setTitle(R.string.menu_browser);
@@ -54,7 +60,7 @@ public class BrowserFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_browser, container, false);
 
-        mBrowserAdapter = new DirectoryAdapter(mCurrentDir, mSubdirs);
+        mBrowserAdapter = new ThumbnailDirectoryAdapter(getContext(), mCurrentDir, mSubdirs);
         mListView = (ListView) view.findViewById(R.id.listview_browser);
         mListView.setAdapter(mBrowserAdapter);
         mListView.setOnItemClickListener(this);

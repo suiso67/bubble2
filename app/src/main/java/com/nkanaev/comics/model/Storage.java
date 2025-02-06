@@ -218,6 +218,30 @@ public class Storage {
         return comics;
     }
 
+    public ArrayList<Comic> listComicsUnder(String path) {
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+        String selection = Book.COLUMN_NAME_FILEPATH + " LIKE \"" + path +  "%\"";
+
+        Cursor c = db.query(
+            Book.TABLE_NAME,
+            Book.columns,
+            selection,
+            null, null, null, SORT_ORDER);
+        ArrayList<Comic> comics = new ArrayList<>();
+
+        c.moveToFirst();
+        if (c.getCount() > 0) {
+            do {
+                comics.add(comicFromCursor(c));
+            } while (c.moveToNext());
+        }
+
+        c.close();
+
+        return comics;
+    }
+
     public long getPathLatestUpdatedAt(String path){
 
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
