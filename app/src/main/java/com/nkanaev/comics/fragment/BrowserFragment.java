@@ -14,6 +14,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.nkanaev.comics.R;
 import com.nkanaev.comics.activity.MainActivity;
 import com.nkanaev.comics.activity.ReaderActivity;
+import com.nkanaev.comics.adapters.DirectoryAdapter;
 import com.nkanaev.comics.managers.IgnoreCaseComparator;
 import com.nkanaev.comics.managers.Utils;
 import com.nkanaev.comics.parsers.Parser;
@@ -30,6 +31,7 @@ public class BrowserFragment extends Fragment
     private final static String STATE_CURRENT_DIR = "stateCurrentDir";
 
     private ListView mListView;
+    private DirectoryAdapter mBrowserAdapter;
     private File mCurrentDir;
     private final File mRootDir = new File("/");
     private File[] mSubdirs = new File[]{};
@@ -52,18 +54,13 @@ public class BrowserFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_browser, container, false);
 
-        /*
-        ViewGroup toolbar = (ViewGroup) getActivity().findViewById(R.id.toolbar);
-        ViewGroup breadcrumbLayout = (ViewGroup) inflater.inflate(R.layout.breadcrumb, toolbar, false);
-        toolbar.addView(breadcrumbLayout);
-        mDirTextView = (TextView) breadcrumbLayout.findViewById(R.id.dir_textview);
-        */
-        setCurrentDirectory(mCurrentDir);
-
+        mBrowserAdapter = new DirectoryAdapter(mCurrentDir, mSubdirs);
         mListView = (ListView) view.findViewById(R.id.listview_browser);
-        mListView.setAdapter(new DirectoryAdapter());
+        mListView.setAdapter(mBrowserAdapter);
         mListView.setOnItemClickListener(this);
         mListView.setOnItemLongClickListener(this);
+
+        setCurrentDirectory(mCurrentDir);
 
         mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.SwipeRefreshLayout);
         if (mRefreshLayout!=null) {
@@ -138,6 +135,9 @@ public class BrowserFragment extends Fragment
 
         mSubdirs = subDirs.toArray(new File[subDirs.size()]);
 
+        mBrowserAdapter.setCurrentDirectory(mCurrentDir);
+        mBrowserAdapter.setSubdirectories(mSubdirs);
+
         if (mListView != null) {
             mListView.invalidateViews();
         }
@@ -187,114 +187,11 @@ public class BrowserFragment extends Fragment
         return true;
     }
 
-    private void setIcon(int position, View convertView, File file) {
-        ImageView view = (ImageView) convertView.findViewById(R.id.directory_row_icon);
-        ImageView circle = (ImageView) convertView.findViewById(R.id.directory_row_circle);
-        GradientDrawable circleDrawable = (GradientDrawable) circle.getDrawable();
-        //GradientDrawable shape = (GradientDrawable) view.getBackground();
-        //ImageView rainbow = (ImageView) convertView.findViewById(R.id.directory_row_rainbow);
-        //rainbow.setVisibility(View.INVISIBLE);
-
-        // default is folder icon on grey circle
-        view.setImageResource(R.drawable.ic_folder_24);
-        int colorRes = R.color.circle_grey;
-        circleDrawable.setColor(getResources().getColor(colorRes));
-        circle.setVisibility(View.VISIBLE);
-
-        // ignore top parent dir entry
-        if (position == 0)
-            return;
-
-        if (file.isDirectory()) {
-            // is it a dir comic?
-            try {
-                Parser p = ParserFactory.create(file);
-                if (p.numPages()>0) {
-                    view.setImageResource(R.drawable.ic_image_folder_24);
-                    colorRes = R.color.circle_teal;
-                }
-            } catch (Exception ignored) {
-            }
-
-            // TODO: file listing on folders with many files slows down scrolling
-            File[] files = file.listFiles();
-            if (files != null)
-                for (File f : files) {
-                    if (Utils.isArchive(f.getName())) {
-                        // show rainbow
-                        circle.setVisibility(View.INVISIBLE);
-                        break;
-                    }
-                }
-
-            circleDrawable.setColor(getResources().getColor(colorRes));
-            return;
-        }
-
-        view.setImageResource(R.drawable.ic_article_24);
-        String name = file.getName();
-        if (!Utils.isArchive(name))
-            return;
-
-        view.setImageResource(R.drawable.ic_text_image_document_24);
-        if (Utils.isPdf(name)) {
-            colorRes = R.color.circle_blue;
-        } else if (Utils.isZip(name)) {
-            colorRes = R.color.circle_green;
-        } else if (Utils.isRar(name)) {
-            colorRes = R.color.circle_red;
-        } else if (Utils.isSevenZ(name)) {
-            colorRes = R.color.circle_yellow;
-        } else if (Utils.isTarball(name)){
-            colorRes = R.color.circle_orange;
-        }
-
-        //shape.setColor(getResources().getColor(colorRes));
-        circleDrawable.setColor(getResources().getColor(colorRes));
-    }
-
     @Override
     public void onRefresh() {
         // refresh on show
         if (mCurrentDir!=null)
             setCurrentDirectory(mCurrentDir);
         mRefreshLayout.setRefreshing(false);
-    }
-
-    private final class DirectoryAdapter extends BaseAdapter {
-        @Override
-        public int getCount() {
-            return mSubdirs.length;
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return 0;
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return mSubdirs[position];
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = getActivity().getLayoutInflater().inflate(R.layout.row_directory, parent, false);
-            }
-
-            File file = mSubdirs[position];
-            TextView textView = (TextView) convertView.findViewById(R.id.directory_row_text);
-
-            if (position == 0 && !mCurrentDir.getAbsolutePath().equals(mRootDir.getAbsolutePath())) {
-                textView.setText("..");
-            } else {
-                textView.setText(file.getName());
-            }
-
-            setIcon(position, convertView, file);
-
-            return convertView;
-        }
     }
 }
