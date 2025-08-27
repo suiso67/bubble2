@@ -29,6 +29,10 @@ import com.nkanaev.comics.R;
 import com.nkanaev.comics.model.Comic;
 import com.nkanaev.comics.model.Storage;
 import com.nkanaev.comics.parsers.Parser;
+import com.radzivon.bartoshyk.avif.coder.HeifCoder;
+import com.radzivon.bartoshyk.avif.coder.PreferredColorConfig;
+import com.radzivon.bartoshyk.avif.coder.ScaleMode;
+import com.radzivon.bartoshyk.avif.coder.ScalingQuality;
 
 import javax.microedition.khronos.egl.EGL10;
 import java.io.*;
@@ -109,7 +113,7 @@ public final class Utils {
     }
 
     public static boolean isImage(String filename) {
-        return filename.matches("(?i).*\\.(jpe?g|bmp|gif|png|webp|jp2|j2k)$");
+        return filename.matches("(?i).*\\.(jpe?g|bmp|gif|png|webp|jp2|j2k|avif)$");
     }
 
     public static boolean isJP2Stream(BufferedInputStream bis) throws IOException {
@@ -769,5 +773,50 @@ public final class Utils {
     public static void disablePendingTransition(Activity activity){
         if (activity!=null)
             activity.overridePendingTransition(0,0);
+    }
+
+    public static boolean isAvif(InputStream stream) {
+        try {
+            byte[] avifHeader = new byte[] { 0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66 };
+            byte[] buffer = new byte[12];
+            stream.read(buffer);
+            stream.reset();
+
+            byte[] fileSignature = Arrays.copyOfRange(buffer, 4, 12);
+
+            return Arrays.equals(fileSignature, avifHeader);
+        } catch(IOException e) {
+            return false;
+        }
+    }
+
+    public static Bitmap decodeAvif(InputStream inputStream) {
+        return decodeAvif(inputStream, -1, -1);
+    }
+
+    public static Bitmap decodeAvif(InputStream inputStream, int width, int height) {
+        try {
+            byte[] array = inputStream.readAllBytes();
+            Bitmap bitmap = null;
+
+            if (width > 0 && height > 0) {
+                bitmap = new HeifCoder().decodeSampled(
+                        array,
+                        width,
+                        height,
+                        PreferredColorConfig.DEFAULT,
+                        ScaleMode.FIT,
+                        ScalingQuality.DEFAULT
+                );
+            } else {
+                bitmap = new HeifCoder().decode(array, PreferredColorConfig.DEFAULT);
+            }
+
+            return bitmap;
+        } catch (IOException e) {
+            // Handle the error. This is CRUCIAL!
+            System.err.println("ImageDecoder failed: " + e.getMessage());  // Or use Log.e
+            return null; // Or throw an exception, depending on your error handling strategy.
+        }
     }
 }

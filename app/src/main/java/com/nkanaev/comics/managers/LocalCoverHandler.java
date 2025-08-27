@@ -74,8 +74,8 @@ public class LocalCoverHandler extends RequestHandler {
         Parser parser = null;
         BufferedInputStream bis = null;
         FileOutputStream outputStream = null;
+        InputStream stream = null;
         try {
-            InputStream stream;
             if ( coverStream != null) {
                 stream = coverStream;
             } else {
@@ -92,18 +92,22 @@ public class LocalCoverHandler extends RequestHandler {
                 Storage.getStorage(ctx).updateBook(c.getId(), parser.getType(), parser.numPages());
             }
 
-            bis = new BufferedInputStream(stream);
-            byte[] data = Utils.toByteArray(bis);
+            Bitmap result = null;
+            if (Utils.isAvif(stream)) {
+                result = Utils.decodeAvif(stream, Constants.COVER_THUMBNAIL_WIDTH, Constants.COVER_THUMBNAIL_HEIGHT);
+            } else {
+                bis = new BufferedInputStream(stream);
+                byte[] data = Utils.toByteArray(bis);
 
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            BitmapFactory.decodeByteArray(data, 0, data.length, options);
-            options.inSampleSize = Utils.calculateInSampleSize(options,
-                    Constants.COVER_THUMBNAIL_WIDTH, Constants.COVER_THUMBNAIL_HEIGHT);
-            options.inJustDecodeBounds = false;
-            //options.inPreferredConfig = Bitmap.Config.RGB_565;
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
+                BitmapFactory.decodeByteArray(data, 0, data.length, options);
+                options.inSampleSize = Utils.calculateInSampleSize(options,
+                        Constants.COVER_THUMBNAIL_WIDTH, Constants.COVER_THUMBNAIL_HEIGHT);
+                options.inJustDecodeBounds = false;
 
-            Bitmap result = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+                result = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+            }
 
             // crop result to coverlike dimensions if needed
             int height = result.getHeight();
@@ -142,6 +146,7 @@ public class LocalCoverHandler extends RequestHandler {
             throw (IOException) e;
         } finally {
             Utils.close(parser);
+            Utils.close(stream);
             Utils.close(bis);
             Utils.close(outputStream);
         }

@@ -41,7 +41,7 @@ android {
         applicationId = "com.github.edeso.bubble2"
         namespace = "com.nkanaev.comics"
 
-        minSdk = 21
+        minSdk = 31
         targetSdk = 35
         //targetSdkPreview "VanillaIceCream"
         multiDexEnabled = true
@@ -144,6 +144,8 @@ dependencies {
     implementation 'dev.keiji.jp2:jp2-android:1.0.5'
 
     implementation "androidx.preference:preference:1.2.1"
+
+    implementation 'com.github.awxkee:avif-coder:2.1.4' // or any version above picker from release tags
 
     // workaround fix 'Duplicate class kotlin.collections.jdk8.CollectionsJDK8Kt found in modules ...'
     //implementation(platform("org.jetbrains.kotlin:kotlin-bom:2.0.0"))

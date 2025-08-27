@@ -1,6 +1,7 @@
 package com.nkanaev.comics.managers;
 
 import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
@@ -9,8 +10,11 @@ import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Request;
 import com.squareup.picasso.RequestHandler;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.FileOutputStream;
+import java.util.UUID;
 
 
 public class LocalComicHandler extends RequestHandler {
@@ -58,7 +62,14 @@ public class LocalComicHandler extends RequestHandler {
         }
 
         stream = mParser.getPage(pageNum);
-        Bitmap result = BitmapFactory.decodeStream(stream, null, options);
+
+        Bitmap result = null;
+        if (Utils.isAvif(stream)) {
+            result = Utils.decodeAvif(stream, w, h);
+        } else {
+            result = BitmapFactory.decodeStream(stream, null, options);
+        }
+
         if (Utils.isKitKatOrLater()) {
             int m = result.getAllocationByteCount();
             Log.d("alloc " + id, String.valueOf(m));
